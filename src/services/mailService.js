@@ -29,9 +29,9 @@ async function sendTicketEmail(to, info) {
 
   // Send email with embedded QR code
   await transporter.sendMail({
-    from:    smtp.user,
+    from: `"VGU Career Service" <${process.env.SMTP_USER}>`,
     to,
-    subject: 'Your Entrance Ticket',
+    subject: 'TEST TICKET',
     html,
     attachments: [
       {

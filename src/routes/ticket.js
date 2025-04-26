@@ -2,6 +2,7 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { sendTicketEmail } = require('../services/mailService');
+const { createPassObject } = require('../services/googleWalletService');
 const QRCode = require('qrcode');
 
 const router = express.Router();
@@ -33,11 +34,15 @@ router.post(
         }
       });
 
+      // const googleWalletUrl = createPassObject({ email, name, code });
+
       // Send the ticket email
       await sendTicketEmail(email, {
         name,
         code,
         qrBuffer,
+        googleWalletUrl: 'https://example.com/google-wallet-url', // Placeholder for Google Wallet URL
+        appleWalletUrl: 'https://example.com/apple-wallet-url', // Placeholder for Apple Wallet URL
       });
 
       return res.json({ success: true, message: 'Email sent successfully!' });

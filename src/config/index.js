@@ -9,8 +9,7 @@ const schema = Joi.object({
   FIREBASE_PROJECT_ID: Joi.string().required(),
   FIREBASE_CLIENT_EMAIL: Joi.string().required(),
   FIREBASE_PRIVATE_KEY: Joi.string().required(),
-  GW_SERVICE_ACCOUNT_EMAIL: Joi.string().required(),
-  GW_PRIVATE_KEY: Joi.string().required(),
+  GW_SERVICE_ACCOUNT: Joi.string().required(),
   GW_ISSUER_ID: Joi.string().required(),
   AW_P12_PATH: Joi.string().required(),
   AW_P12_PASSWORD: Joi.string().required(),
@@ -37,8 +36,7 @@ module.exports = {
     privateKey: env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
   },
   googleWallet: {
-    serviceAccountEmail: env.GW_SERVICE_ACCOUNT_EMAIL,
-    privateKey: env.GW_PRIVATE_KEY.replace(/\\n/g, '\n'),
+    serviceAccount: env.GW_SERVICE_ACCOUNT,
     issuerId: env.GW_ISSUER_ID,
   },
   appleWallet: {

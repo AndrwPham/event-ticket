@@ -1,8 +1,9 @@
 const { GoogleAuth } = require('google-auth-library');
 const jwt = require('jsonwebtoken');
-const credentials = require('../../wallet-service-account.json');
+const { googleWallet } = require('../config');
+const credentials = require(googleWallet.serviceAccount);
 
-const issuerId = '3388000000022243308';
+const issuerId = googleWallet.issuerId;
 const classId = `${issuerId}.cfied_2025.test2`;
 const baseUrl = 'https://walletobjects.googleapis.com/walletobjects/v1';
 

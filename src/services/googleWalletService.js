@@ -4,7 +4,7 @@ const { googleWallet } = require('../config');
 const credentials = require(googleWallet.serviceAccount);
 
 const issuerId = googleWallet.issuerId;
-const classId = `${issuerId}.cfied_2025.test2`;
+const classId = `${issuerId}.cfied_2025.test4`;
 const baseUrl = 'https://walletobjects.googleapis.com/walletobjects/v1';
 
 const httpClient = new GoogleAuth({
@@ -16,8 +16,40 @@ const httpClient = new GoogleAuth({
  * Create the Pass Class (only called once at server start)
  */
 async function createPassClass() {
-  const genericClass = {
+  const eventTicketClass = {
     "id": `${classId}`,
+    "issuerName": "VGU Career Services",
+    "reviewStatus": "UNDER_REVIEW",
+    "eventName": {
+      "defaultValue": { "language": "en-US", "value": "Career Fair and Industrial Exploration Day 2025" }
+    },
+    "logo": {
+      "sourceUri": {
+        "uri": "https://raw.githubusercontent.com/fuisl/cfied25-ticket/main/src/assets/logo.jpg"
+      },
+      "contentDescription": { "defaultValue": { "language": "en-US", "value": "LOGO" } }
+    },
+    "heroImage": {
+      "sourceUri": {
+        "uri": "https://raw.githubusercontent.com/fuisl/cfied25-ticket/main/src/assets/banner.jpg"
+      },
+      "contentDescription": { "defaultValue": { "language": "en-US", "value": "HERO IMAGE" } }
+    },
+    "eventId": "CFIED2025",
+    "venue": {
+      "name": { "defaultValue": { "language": "en-US", "value": "Conventional Hall, VGU Campus" } },
+      "address": { "defaultValue": { "language": "en-US", "value": "Vanh Dai 4 St., Thoi Hoa Ward\nBen Cat, Binh Duong" } }
+    },
+    "dateTime": {
+      "doorsOpen": "2025-05-14T08:00:00+07:00",
+      "start": "2025-05-14T08:30:00+07:00",
+      "end": "2025-05-14T13:30:00+07:00"
+    },
+    "merchantLocation":
+      [{
+        "latitude": 11.0572,
+        "longitude": 106.6442
+      }],
     "classTemplateInfo": {
       "cardTemplateOverride": {
         "cardRowTemplateInfos": [
@@ -51,7 +83,7 @@ async function createPassClass() {
   try {
     // Check if class exists
     await httpClient.request({
-      url: `${baseUrl}/genericClass/${classId}`,
+      url: `${baseUrl}/eventTicketClass/${classId}`,
       method: 'GET'
     });
 
@@ -60,9 +92,9 @@ async function createPassClass() {
     if (err.response && err.response.status === 404) {
       console.log('Creating new Wallet class...');
       await httpClient.request({
-        url: `${baseUrl}/genericClass`,
+        url: `${baseUrl}/eventTicketClass`,
         method: 'POST',
-        data: genericClass
+        data: eventTicketClass
       });
       console.log('✅ Google Wallet class created successfully.');
     } else {
@@ -76,18 +108,13 @@ async function createPassClass() {
  * Create a Wallet pass for the user
  */
 async function createPassObject(email, fullName, code) {
-  const objectSuffix = `${email.replace(/[^\w.-]/g, '_')}_2`;
+  const objectSuffix = `${email.replace(/[^\w.-]/g, '_')}_test1`;
   const objectId = `${issuerId}.${objectSuffix}`;
 
-  const genericObject = {
+  const eventTicketObject = {
     "id": objectId,
     "classId": classId,
-    "logo": {
-      "sourceUri": {
-        "uri": "https://scontent.fsgn2-6.fna.fbcdn.net/v/t39.30808-6/488146270_122110518188820438_1310271617401206351_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=uaP-JbDaQI4Q7kNvwFjH5BB&_nc_oc=Adl3ce9KLBmVdYX79wuNeqNjrngSXRs6YbOs9LOQYQK1K0QuGL9YwejBKEpXyFwchWm_WgKi0FkatF22lWt6Npfg&_nc_zt=23&_nc_ht=scontent.fsgn2-6.fna&_nc_gid=Xsi_mlHWttFhHT3iuu2CdA&oh=00_AfHUPkpfrdAtoFwf4ZjSF5hzN-hRqdYhF3tD4b2HQHPr9w&oe=680E57A9"
-      },
-      "contentDescription": { "defaultValue": { "language": "en-US", "value": "LOGO" } }
-    },
+    "state": "ACTIVE",
     "cardTitle": {
       "defaultValue": {
         "language": "en-US",
@@ -106,9 +133,22 @@ async function createPassObject(email, fullName, code) {
         "value": fullName
       }
     },
+    "linkModulesData": [
+      {
+        "uri": {
+          "uri": "https://www.facebook.com/VGU.CFIED",
+          "description": { "defaultValue": { "language": "en-US", "value": "CFIED2025 Facebook Fanpage" } }
+        }
+      },
+      {
+        "uri": {
+          "uri": "https://careerfair.vgu.edu.vn",
+          "description": { "defaultValue": { "language": "en-US", "value": "CFIED2025 Website" } }
+        }
+      }
+    ],
     "textModulesData": [
-      { "id": "booth_visited", "header": "BOOTH VISITED", "body": "0" },
-      { "id": "lucky_number", "header": "LUCKY NUMBER", "body": "79" }
+      { "id": "booth_visited", "header": "Booth Visited", "body": "0" },
     ],
     "barcode": {
       "type": "QR_CODE",
@@ -116,12 +156,6 @@ async function createPassObject(email, fullName, code) {
       "alternateText": ""
     },
     "hexBackgroundColor": "#003f20",
-    "heroImage": {
-      "sourceUri": {
-        "uri": "https://scontent.fsgn2-6.fna.fbcdn.net/v/t39.30808-6/488680488_122110516778820438_4090527805399189186_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=hgoFX4w8PkEQ7kNvwEkP8ZB&_nc_oc=AdkUi8qesjc5RkSJL3ruIUq732FPPX4lr_yjGt2WzU9-usKAG1EUdPtuOTL6Yy1xrcnIlgMfZWRq7xJquqRgAf4N&_nc_zt=23&_nc_ht=scontent.fsgn2-6.fna&_nc_gid=ZiIpYqx878eQEm1e5LP9Pw&oh=00_AfGBkvRXJ5mUTMi-Nvep9DkW4OwbnFY3ozV0QzwrUswRGA&oe=680E6E74"
-      },
-      "contentDescription": { "defaultValue": { "language": "en-US", "value": "HERO IMAGE" } }
-    }
   };
 
   const claims = {
@@ -130,7 +164,7 @@ async function createPassObject(email, fullName, code) {
     origins: [],
     typ: 'savetowallet',
     payload: {
-      genericObjects: [genericObject]
+      eventTicketObjects: [eventTicketObject]
     }
   };
 

@@ -107,24 +107,24 @@ async function createPassClass() {
 /**
  * Create a Wallet pass for the user
  */
-async function createPassObject(email, fullName, code) {
-  const objectSuffix = `${email.replace(/[^\w.-]/g, '_')}_test1`;
+async function createOrUpdatePassObject(email, fullName, code) {
+  const objectSuffix = `${email.replace(/[^\w.-]/g, '_')}`;
   const objectId = `${issuerId}.${objectSuffix}`;
 
   const eventTicketObject = {
     "id": objectId,
     "classId": classId,
+    "ticketType": {
+      "defaultValue": {
+        "language": "en-US",
+        "value": "General Admission"
+      }
+    },
     "state": "ACTIVE",
     "cardTitle": {
       "defaultValue": {
         "language": "en-US",
         "value": "CFIED 2025"
-      }
-    },
-    "subheader": {
-      "defaultValue": {
-        "language": "en-US",
-        "value": "Attendee"
       }
     },
     "header": {
@@ -158,6 +158,40 @@ async function createPassObject(email, fullName, code) {
     "hexBackgroundColor": "#003f20",
   };
 
+  let exists = false;
+  try {
+    await httpClient.request({
+      url: `${baseUrl}/eventTicketObject/${objectId}`,
+      method: 'GET',
+    });
+    exists = true;
+    console.log('🔄 Wallet object exists, updating…');
+  } catch (err) {
+    if (err.response && err.response.status === 404) {
+      console.log('➕ Wallet object not found, creating…');
+    } else {
+      console.error('❌ Error checking object existence:', err);
+      throw err;
+    }
+  }
+
+  if (exists) {
+    // You can choose PATCH with updateMask or full PUT to replace
+    await httpClient.request({
+      url: `${baseUrl}/eventTicketObject/${objectId}`,
+      method: 'PUT',
+      data: eventTicketObject,
+    });
+    console.log('✅ Wallet object updated.');
+  } else {
+    await httpClient.request({
+      url: `${baseUrl}/eventTicketObject`,
+      method: 'POST',
+      data: eventTicketObject,
+    });
+    console.log('✅ Wallet object created.');
+  }
+
   const claims = {
     iss: credentials.client_email,
     aud: 'google',
@@ -176,5 +210,5 @@ async function createPassObject(email, fullName, code) {
 
 module.exports = {
   createPassClass,
-  createPassObject
+  createPassObject: createOrUpdatePassObject,
 };

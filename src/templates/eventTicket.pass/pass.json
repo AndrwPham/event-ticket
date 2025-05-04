@@ -1,0 +1,52 @@
+{
+  "formatVersion": 1,
+  "passTypeIdentifier": "pass.vn.edu.vgu.careerfair.cfied25",
+  "serialNumber": "123456",
+  "teamIdentifier": "C2239MGQ69",
+  "organizationName": "VGU Career Services",
+  "description": "Entrance ticket for Career Fair and Industrial Exploration Day 2025",
+  "logoText": "CFIED 2025",
+  "eventTicket": {
+    "headerFields": [
+      {
+        "dateStyle": "PKDateStyleMedium",
+        "isRelative": true,
+        "key": "doors-open",
+        "label": "Doors open",
+        "timeStyle": "PKDateStyleShort",
+        "value": "2025-05-14T08:00+07:00"
+      }
+    ],
+    "secondaryFields": [
+      {
+        "key": "name",
+        "label": "Attendee",
+        "value": "Tran Hai Duong",
+        "textAlignment": "PKTextAlignmentLeft"
+      },
+      {
+        "key": "boothVisited",
+        "label": "Booth Visited",
+        "value": "0",
+        "textAlignment": "PKTextAlignmentRight"
+      }
+    ],
+    "auxiliaryFields": [
+      {
+        "key": "admissionLevel",
+        "label": "Admission Level",
+        "value": "General Admission"
+      }
+    ]
+  },
+  "barcodes": [
+    {
+      "format": "PKBarcodeFormatQR",
+      "message": "TEST123",
+      "messageEncoding": "iso-8859-1"
+    }
+  ],
+  "backgroundColor": "rgb(1,63,32)",
+  "foregroundColor": "rgb(174,209,64)",
+  "labelColor": "rgb(227,234,152)"
+}

@@ -4,7 +4,8 @@ const ticketRouter = require('./routes/ticket');
 const errorHandler = require('./middleware/errorHandler');
 
 // Import the Google Wallet module
-const { createPassClass } = require('./services/googleWalletService'); // I assume you saved your Wallet code as walletService.js under src/services
+const { createPassClass } = require('./services/googleWalletService');
+const { initTemplate } = require('./services/appleWalletService');
 
 const app = express();
 app.use(express.json());
@@ -19,8 +20,7 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, async () => {
-  console.log(`✅ Ticketing API is running on port ${PORT}`);
-  console.log('Server is ready to accept requests.');
+  console.log(`✅ Ticketing API is running on port ${PORT}`);  
 
   try {
     await createPassClass();
@@ -29,5 +29,13 @@ app.listen(PORT, async () => {
     console.error('❌ Failed to create/check Google Wallet class.', err);
   }
 
+  try {
+    await initTemplate();
+    console.log('✅ Apple Wallet template check/init complete.');
+  } catch (err) {
+    console.error('❌ Failed to create/check Apple Wallet template.', err);
+  }
+
+  console.log('Server is ready to accept requests.');
   console.log('Listening for incoming requests...');
 });

@@ -15,24 +15,6 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const googlePngBuffer = sharp(
-  path.join(__dirname, '../assets/google-wallet.svg')
-)
-  .resize({ width: 240 })
-  .png()
-  .toBuffer();
-
-const applePngBuffer = sharp(
-  path.join(__dirname, '../assets/apple-wallet.svg')
-)
-  .resize({ width: 240 })
-  .png()
-  .toBuffer();
-
-// 3️⃣ Build base64 data URIs
-const googleBtnDataUri = googlePngBuffer.toString('base64');
-const appleBtnDataUri = applePngBuffer.toString('base64');
-
 /**
  * Sends the ticket email.
  * @param {string} to      Recipient email address
@@ -42,42 +24,52 @@ const appleBtnDataUri = applePngBuffer.toString('base64');
  *   - qrBuffer: Buffer       // QR code image buffer
  */
 async function sendTicketEmail(to, info) {
-  const qrAttachment = {
-    filename: 'qrcode.png',
-    content: info.qrBuffer,
-    cid: 'qr',
-    contentDisposition: 'inline'
-  };
-
-  const googleBtnPng = await sharp(
+  const googlePngBuffer = await sharp(
     path.join(__dirname, '../assets/google-wallet.svg')
   )
-    .resize({ width: 240 })  // match your intended display size
+    .resize({ width: 240 })
     .png()
     .toBuffer();
-
-  const appleBtnPng = await sharp(
+  
+  const applePngBuffer = await sharp(
     path.join(__dirname, '../assets/apple-wallet.svg')
   )
     .resize({ width: 240 })
     .png()
     .toBuffer();
+  
 
-  const googleBtnAttachment = {
-    filename: 'google-wallet.png',
-    content: googleBtnPng,
-    cid: 'googleBtn',
-    contentDisposition: 'inline',
-    contentType: 'image/png'
-  };
+  const attachments = [
+    {
+      filename: 'qrcode.png',
+      content: info.qrBuffer,
+      cid: 'qr',
+      contentDisposition: 'inline'
+    },
+    {
+      filename: 'google-wallet.png',
+      content: googlePngBuffer,
+      cid: 'googleBtn',
+      contentDisposition: 'inline',
+      contentType: 'image/png'
+    },
+    {
+      filename: 'apple-wallet.png',
+      content: applePngBuffer,
+      cid: 'appleBtn',
+      contentDisposition: 'inline',
+      contentType: 'image/png'
+    }
+  ];
 
-  const appleBtnAttachment = {
-    filename: 'apple-wallet.png',
-    content: appleBtnPng,
-    cid: 'appleBtn',
-    contentDisposition: 'inline',
-    contentType: 'image/png'
-  };
+  if (info.attachments && Array.isArray(info.attachments)) {
+    info.attachments.forEach(att => {
+      if (att.filename.endsWith('.pkpass') && !att.contentType) {
+        att.contentType = 'application/vnd.apple.pkpass';
+      }
+      attachments.push(att);
+    });
+  }
 
   const html = renderTemplate('ticket', {
     name: info.name,
@@ -91,11 +83,7 @@ async function sendTicketEmail(to, info) {
     to,
     subject: 'CFIED 2025 Ticket',
     html,
-    attachments: [
-      qrAttachment,
-      googleBtnAttachment,
-      appleBtnAttachment
-    ]
+    attachments,
   });
 }
 

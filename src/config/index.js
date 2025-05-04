@@ -11,10 +11,16 @@ const schema = Joi.object({
   FIREBASE_PRIVATE_KEY: Joi.string().required(),
   GW_SERVICE_ACCOUNT: Joi.string().required(),
   GW_ISSUER_ID: Joi.string().required(),
-  AW_P12_PATH: Joi.string().required(),
-  AW_P12_PASSWORD: Joi.string().required(),
+  AW_WWDR_PATH: Joi.string().required(),
+  AW_SIGNER_CERT_PATH: Joi.string().required(),
+  AW_SIGNER_KEY_PATH: Joi.string().required(),
+  AW_SIGNER_KEY_PASSPHRASE: Joi.string().required(),
+  AW_TEAM_ID: Joi.string().length(10).required(),
+  AW_PASS_TYPE_ID: Joi.string().required(),
+  AW_TEMPLATE_FOLDER: Joi.string().required(),          // e.g. './templates/cfied.pass'
+  AW_WEB_SERVICE_URL: Joi.string().uri().optional(),
 })
-  .unknown()
+  .unknown()  // allow other ENV vars
   .required();
 
 const { error, value: env } = schema.validate(process.env);
@@ -40,7 +46,13 @@ module.exports = {
     issuerId: env.GW_ISSUER_ID,
   },
   appleWallet: {
-    p12Path: env.AW_P12_PATH,
-    p12Password: env.AW_P12_PASSWORD,
+    wwdrPath: env.AW_WWDR_PATH,
+    signerCertPath: env.AW_SIGNER_CERT_PATH,
+    signerKeyPath: env.AW_SIGNER_KEY_PATH,
+    signerKeyPassphrase: env.AW_SIGNER_KEY_PASSPHRASE,
+    teamIdentifier: env.AW_TEAM_ID,
+    passTypeIdentifier: env.AW_PASS_TYPE_ID,
+    templateFolder: env.AW_TEMPLATE_FOLDER,
+    webServiceURL: env.AW_WEB_SERVICE_URL,  // may be undefined
   },
 };

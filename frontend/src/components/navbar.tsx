@@ -3,10 +3,10 @@ import { FiSearch } from 'react-icons/fi';
 
 const Navbar: FC = () => {
     return (
-        <nav className="bg-[#1D0E3C] text-white px-6 py-4 flex items-center justify-between">
+        <nav className="bg-[#1D0E3C] text-white px-6 py-4 flex flex-row items-center justify-between">
             {/* Left: Search Bar */}
-            <div className="flex items-center gap-3 w-5/6 max-w-3xl pl-56">
-                <div className="flex items-center w-full bg-white rounded-full px-4 py-2 shadow-sm">
+            <div className="flex flex-row justify-end basis-1/2">
+                <div className="flex flex-row items-center w-2/3 bg-white rounded-full px-4 py-2 shadow-sm mr-10">
                     <FiSearch className="text-black mr-2" />
                     <input
                         type="text"
@@ -17,7 +17,7 @@ const Navbar: FC = () => {
             </div>
 
             {/* Right: Navigation Links */}
-            <div className="flex items-end gap-12 text-sm font-medium">
+            <div className="flex flex-row items-center justify-end basis-1/2 gap-12 text-sm font-medium">
                 <a href="#" className="hover:underline">Contact Sales</a>
                 <a
                     href="#"

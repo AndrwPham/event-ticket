@@ -62,11 +62,24 @@ async function createPassForUser(email, fullName, code) {
   const pass = await PKPass.from(
     passTemplate,
     {
-      serialNumber,
-      name: fullName,
+      serialNumber
     }
   );
   pass.setBarcodes(code);
+  pass.secondaryFields.push(
+    {
+      "key": "name",
+      "label": "Attendee",
+      "value": fullName,
+      "textAlignment": "PKTextAlignmentLeft"
+    },
+    {
+      "key": "boothVisited",
+      "label": "Booth Visited",
+      "value": "0",
+      "textAlignment": "PKTextAlignmentRight"
+    }
+  )
 
   return pass.getAsBuffer();
 }

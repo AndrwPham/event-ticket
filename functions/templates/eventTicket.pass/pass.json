@@ -9,34 +9,15 @@
   "eventTicket": {
     "headerFields": [
       {
-        "dateStyle": "PKDateStyleMedium",
-        "isRelative": true,
         "key": "doors-open",
         "label": "Doors open",
+        "isRelative": true,
+        "dateStyle": "PKDateStyleShort",
         "timeStyle": "PKDateStyleShort",
         "value": "2025-05-14T08:00+07:00"
       }
     ],
     "secondaryFields": [
-      {
-        "key": "name",
-        "label": "Attendee",
-        "value": "Tran Hai Duong",
-        "textAlignment": "PKTextAlignmentLeft"
-      },
-      {
-        "key": "boothVisited",
-        "label": "Booth Visited",
-        "value": "0",
-        "textAlignment": "PKTextAlignmentRight"
-      }
-    ],
-    "auxiliaryFields": [
-      {
-        "key": "admissionLevel",
-        "label": "Admission Level",
-        "value": "General Admission"
-      }
     ]
   },
   "barcodes": [

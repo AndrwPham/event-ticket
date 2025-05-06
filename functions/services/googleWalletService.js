@@ -59,7 +59,7 @@ async function createPassClass() {
                 "firstValue": {
                   "fields": [
                     {
-                      "fieldPath": "object.textModulesData['booth_visited']"
+                      "fieldPath": "object.textModulesData['full_name']"
                     }
                   ]
                 }
@@ -68,7 +68,7 @@ async function createPassClass() {
                 "firstValue": {
                   "fields": [
                     {
-                      "fieldPath": "object.textModulesData['lucky_number']"
+                      "fieldPath": "object.textModulesData['booth_visited']"
                     }
                   ]
                 }
@@ -127,12 +127,6 @@ async function createOrUpdatePassObject(email, fullName, code) {
         "value": "CFIED 2025"
       }
     },
-    "header": {
-      "defaultValue": {
-        "language": "en-US",
-        "value": fullName
-      }
-    },
     "linkModulesData": [
       {
         "uri": {
@@ -148,6 +142,7 @@ async function createOrUpdatePassObject(email, fullName, code) {
       }
     ],
     "textModulesData": [
+      { "id": "full_name", "header": "Attendee", "body": fullName },
       { "id": "booth_visited", "header": "Booth Visited", "body": "0" },
     ],
     "barcode": {

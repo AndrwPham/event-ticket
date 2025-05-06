@@ -37,7 +37,10 @@ router.post(
 
       const googleWalletUrl = await createPassObject(email, name, code);
 
-      const appleWalletBuffer = await createPassForUser(email, name, code);
+      const appleWalletUrl = `${process.env.APP_BASE_URL}/api/appleWallet/pass`
+        + `?email=${encodeURIComponent(email)}`
+        + `&name=${encodeURIComponent(name)}`
+        + `&code=${encodeURIComponent(code)}`;
 
       // Send the ticket email
       await sendTicketEmail(email, {
@@ -45,12 +48,7 @@ router.post(
         code,
         qrBuffer,
         googleWalletUrl: googleWalletUrl, // Placeholder for Google Wallet URL
-        attachments: [
-          {
-            filename: `${code}.pkpass`,
-            content: appleWalletBuffer,
-          }
-        ]
+        appleWalletUrl: appleWalletUrl, // Placeholder for Apple Wallet URL
       });
 
       return res.json({ success: true, message: 'Email sent successfully!' });

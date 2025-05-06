@@ -62,14 +62,14 @@ async function sendTicketEmail(to, info) {
     }
   ];
 
-  if (info.attachments && Array.isArray(info.attachments)) {
-    info.attachments.forEach(att => {
-      if (att.filename.endsWith('.pkpass') && !att.contentType) {
-        att.contentType = 'application/vnd.apple.pkpass';
-      }
-      attachments.push(att);
-    });
-  }
+  // if (info.attachments && Array.isArray(info.attachments)) {
+  //   info.attachments.forEach(att => {
+  //     if (att.filename.endsWith('.pkpass') && !att.contentType) {
+  //       att.contentType = 'application/vnd.apple.pkpass';
+  //     }
+  //     attachments.push(att);
+  //   });
+  // }
 
   const html = renderTemplate('ticket', {
     name: info.name,

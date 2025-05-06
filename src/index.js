@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const appleWalletRouter = require('./routes/appleWallet');
 const ticketRouter = require('./routes/ticket');
 const errorHandler = require('./middleware/errorHandler');
 
@@ -12,6 +13,7 @@ app.use(express.json());
 
 // Mount ticket routes
 app.use('/api/tickets', ticketRouter);
+app.use('/api/appleWallet', appleWalletRouter);
 
 // Error handler middleware
 app.use(errorHandler);

@@ -7,9 +7,18 @@ const QRCode = require('qrcode');
 
 const router = express.Router();
 
-// POST /api/tickets/email
+function requireApiKey(req, res, next) {
+  const apiKey = req.header('x-api-key');
+  if (!apiKey || apiKey !== process.env.EMAIL_API_KEY) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  next();
+}
+
+// Apply the requireApiKey middleware to the email route
 router.post(
   '/email',
+  requireApiKey,
   [
     body('email').isEmail(),
     body('name').notEmpty(),

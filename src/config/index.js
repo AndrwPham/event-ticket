@@ -6,9 +6,6 @@ const schema = Joi.object({
   SMTP_PORT: Joi.number().required(),
   SMTP_USER: Joi.string().required(),
   SMTP_PASS: Joi.string().required(),
-  FIREBASE_PROJECT_ID: Joi.string().required(),
-  FIREBASE_CLIENT_EMAIL: Joi.string().required(),
-  FIREBASE_PRIVATE_KEY: Joi.string().required(),
   GW_SERVICE_ACCOUNT: Joi.string().required(),
   GW_ISSUER_ID: Joi.string().required(),
   AW_WWDR_PATH: Joi.string().required(),
@@ -35,11 +32,6 @@ module.exports = {
     port: env.SMTP_PORT,
     user: env.SMTP_USER,
     pass: env.SMTP_PASS,
-  },
-  firebase: {
-    projectId: env.FIREBASE_PROJECT_ID,
-    clientEmail: env.FIREBASE_CLIENT_EMAIL,
-    privateKey: env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
   },
   googleWallet: {
     serviceAccount: env.GW_SERVICE_ACCOUNT,

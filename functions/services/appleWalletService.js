@@ -14,7 +14,6 @@ const {
   webServiceURL,        // e.g. 'https://your.server.com/appleWallet'
 } = appleWallet;
 
-// --- 2. Read certificates into memory ---
 const certificates = {
   wwdr:       fs.readFileSync(path.resolve(__dirname, wwdrPath)),
   signerCert: fs.readFileSync(path.resolve(__dirname, signerCertPath)),
@@ -22,9 +21,7 @@ const certificates = {
   signerKeyPassphrase
 };
 
-// --- 3. Prepare base props for your template passes ---
 const baseProps = {
-  // Standard pass metadata
   teamIdentifier,
   passTypeIdentifier,
   organizationName: "VGU Career Services",
@@ -32,9 +29,6 @@ const baseProps = {
   webServiceURL,    // Enables remote update calls
 };
 
-/**
- * A cached "runtime template" which we clone for each user.
- */
 let passTemplate = null;
 
 /**
@@ -63,10 +57,8 @@ async function createPassForUser(email, fullName, code) {
     throw new Error('Template not initialized! Call initTemplate() first.');
   }
 
-  // Make a filesystem-safe serial number
   const serialNumber = email.replace(/[^\w.-]/g, '_');
 
-  // Clone the template and override dynamic fields
   const pass = await PKPass.from(
     passTemplate,
     {

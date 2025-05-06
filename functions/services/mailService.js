@@ -62,15 +62,6 @@ async function sendTicketEmail(to, info) {
     }
   ];
 
-  // if (info.attachments && Array.isArray(info.attachments)) {
-  //   info.attachments.forEach(att => {
-  //     if (att.filename.endsWith('.pkpass') && !att.contentType) {
-  //       att.contentType = 'application/vnd.apple.pkpass';
-  //     }
-  //     attachments.push(att);
-  //   });
-  // }
-
   const html = renderTemplate('ticket', {
     name: info.name,
     code: info.code,
@@ -79,7 +70,7 @@ async function sendTicketEmail(to, info) {
   });
 
   await transporter.sendMail({
-    from: `"VGU Career Service" <${process.env.SMTP_USER}>`,
+    from: `"VGU Career Service Team" <${process.env.SMTP_USER}>`,
     to,
     subject: 'CFIED 2025 Ticket',
     html,

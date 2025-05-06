@@ -1,19 +1,43 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
+const functions = require('firebase-functions');
+const express = require('express');
 
-const {onRequest} = require("firebase-functions/v2/https");
-const logger = require("firebase-functions/logger");
+const ticketRouter = require('./routes/ticket');
+const appleWalletRouter = require('./routes/appleWallet');
+const errorHandler = require('./middleware/errorHandler');
+const { createPassClass } = require('./services/googleWalletService');
+const { initTemplate } = require('./services/appleWalletService');
 
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
+const app = express();
+app.use(express.json());
 
-// exports.helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+// Routes
+app.use('/api/tickets', ticketRouter);
+app.use('/api/appleWallet', appleWalletRouter);
+
+// Health check
+app.get('/__ping', (req, res) => res.status(200).send('pong'));
+
+// Error handling middleware (must come after routes)
+app.use(errorHandler);
+
+// Cold start preparation — only runs once per container
+const ready = Promise.all([
+  createPassClass().then(() => {
+    console.log('✅ Google Wallet class ready');
+  }).catch(err => {
+    console.error('❌ Google Wallet init error:', err);
+  }),
+
+  initTemplate().then(() => {
+    console.log('✅ Apple Wallet template ready');
+  }).catch(err => {
+    console.error('❌ Apple Wallet init error:', err);
+  }),
+]);
+
+// Function handler
+exports.api = functions.https.onRequest(async (req, res) => {
+  console.log('📬 Request:', req.method, req.url);
+  await ready;
+  return app(req, res);
+});

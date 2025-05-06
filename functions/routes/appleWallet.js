@@ -16,7 +16,7 @@ router.get('/pass', async (req, res, next) => {
     res.set({
       'Content-Type': 'application/vnd.apple.pkpass',
       'Content-Disposition': `attachment; filename="${code}.pkpass"`,
-      'Cache-Control': 'no-cache'  // might cache later for dynamic updates
+      'Cache-Control': 'public, max-age=3600'
     });
 
     res.send(passBuffer);

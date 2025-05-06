@@ -18,6 +18,13 @@
       }
     ],
     "secondaryFields": [
+    ],
+    "auxiliaryFields": [
+      {
+        "key": "admission_level",
+        "label": "Admission Level",
+        "value": "General Admission"
+      }
     ]
   },
   "barcodes": [

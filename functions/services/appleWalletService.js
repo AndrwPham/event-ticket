@@ -15,9 +15,9 @@ const {
 } = appleWallet;
 
 const certificates = {
-  wwdr:       fs.readFileSync(path.resolve(__dirname, wwdrPath)),
+  wwdr: fs.readFileSync(path.resolve(__dirname, wwdrPath)),
   signerCert: fs.readFileSync(path.resolve(__dirname, signerCertPath)),
-  signerKey:  fs.readFileSync(path.resolve(__dirname, signerKeyPath)),
+  signerKey: fs.readFileSync(path.resolve(__dirname, signerKeyPath)),
   signerKeyPassphrase
 };
 
@@ -52,7 +52,7 @@ async function initTemplate() {
  * @param {string} code      – QR code / barcode value
  * @returns {Buffer}         – raw .pkpass data
  */
-async function createPassForUser(email, fullName, code) {
+async function createPassForUser(email, fullName, code, booth_visited = 0) {
   if (!passTemplate) {
     throw new Error('Template not initialized! Call initTemplate() first.');
   }
@@ -76,10 +76,10 @@ async function createPassForUser(email, fullName, code) {
     {
       "key": "boothVisited",
       "label": "Booth Visited",
-      "value": "0",
+      "value": booth_visited,
       "textAlignment": "PKTextAlignmentRight"
     }
-  )
+  );
 
   return pass.getAsBuffer();
 }

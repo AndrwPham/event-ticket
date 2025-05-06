@@ -107,7 +107,7 @@ async function createPassClass() {
 /**
  * Create a Wallet pass for the user
  */
-async function createOrUpdatePassObject(email, fullName, code) {
+async function createOrUpdatePassObject(email, fullName, code, booth_visited = 0) {
   const objectSuffix = `${email.replace(/[^\w.-]/g, '_')}`;
   const objectId = `${issuerId}.${objectSuffix}`;
 
@@ -143,7 +143,7 @@ async function createOrUpdatePassObject(email, fullName, code) {
     ],
     "textModulesData": [
       { "id": "full_name", "header": "Attendee", "body": fullName },
-      { "id": "booth_visited", "header": "Booth Visited", "body": "0" },
+      { "id": "booth_visited", "header": "Booth Visited", "body": booth_visited },
     ],
     "barcode": {
       "type": "QR_CODE",

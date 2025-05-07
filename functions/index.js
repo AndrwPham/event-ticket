@@ -3,6 +3,7 @@ const express = require('express');
 
 const ticketRouter = require('./routes/ticket');
 const appleWalletRouter = require('./routes/appleWallet');
+const updateRouter = require('./routes/updateBoothVisited');
 const errorHandler = require('./middleware/errorHandler');
 const { createPassClass } = require('./services/googleWalletService');
 const { initTemplate } = require('./services/appleWalletService');
@@ -13,6 +14,7 @@ app.use(express.json());
 // Routes
 app.use('/api/tickets', ticketRouter);
 app.use('/api/appleWallet', appleWalletRouter);
+app.use('/api', updateRouter);
 
 // Health check
 app.get('/__ping', (req, res) => res.status(200).send('pong'));

@@ -143,7 +143,7 @@ async function createOrUpdatePassObject(email, fullName, code, booth_visited = 0
     ],
     "textModulesData": [
       { "id": "full_name", "header": "Attendee", "body": fullName },
-      { "id": "booth_visited", "header": "Booth Visited", "body": booth_visited },
+      { "id": "booth_visited", "header": "Booth visited", "body": booth_visited },
     ],
     "barcode": {
       "type": "QR_CODE",

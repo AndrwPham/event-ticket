@@ -9,6 +9,16 @@ const {
 
 const router = express.Router();
 const db = admin.firestore();
+const apn = require('@parse/node-apn');
+
+const apnProvider = new apn.Provider({
+    token: {
+        key: path.resolve(__dirname, appleWallet.apnKeyPath),
+        keyId: appleWallet.apnKeyId,
+        teamId: appleWallet.teamIdentifier,
+    },
+    production: true
+});
 
 initTemplate().catch(err => {
     console.error('❌ Failed to initialize Apple pass template:', err);
@@ -50,7 +60,6 @@ function requireAppleToken(req, res, next) {
  */
 router.get(
     '/v1/devices/:deviceLibraryIdentifier/registrations/:passTypeIdentifier',
-    requireAppleToken,
     async (req, res, next) => {
         try {
             const { deviceLibraryIdentifier, passTypeIdentifier } = req.params;
@@ -298,31 +307,48 @@ router.post(
             const { passTypeIdentifier } = req.params;
             const { serialNumbers } = req.body;
 
-            if (!Array.isArray(serialNumbers)) {
-                return res.status(400).send('Missing serialNumbers array');
+            // 0) Validate input
+            if (
+                !Array.isArray(serialNumbers) ||
+                serialNumbers.length === 0
+            ) {
+                return res
+                    .status(400)
+                    .send('`serialNumbers` must be a non-empty array');
             }
 
-            // 1) Find all registrations for this passTypeIdentifier + any of these serials
-            const regsSnap = await db
-                .collection('registrations')
-                .where('passTypeIdentifier', '==', passTypeIdentifier)
-                .where('serialNumber', 'in', serialNumbers)
-                .get();
+            const deviceSet = new Set();
+            for (let i = 0; i < serialNumbers.length; i += 10) {
+                const chunk = serialNumbers.slice(i, i + 10);
+                const regsSnap = await db
+                    .collection('registrations')
+                    .where('passTypeIdentifier', '==', passTypeIdentifier)
+                    .where('serialNumber', 'in', chunk)
+                    .get();
 
-            // Collect each unique deviceLibraryIdentifier
-            const deviceIds = Array.from(new Set(
-                regsSnap.docs.map(doc => doc.data().deviceLibraryIdentifier)
-            ));
+                regsSnap.forEach(doc => {
+                    deviceSet.add(doc.data().deviceLibraryIdentifier);
+                });
+            }
 
-            // 2) Lookup each device’s pushToken
+            if (deviceSet.size === 0) {
+                return res.json({ success: true, pushed: 0 });
+            }
+
+            // 2) Lookup each device’s stored pushToken
             const tokens = [];
-            await Promise.all(deviceIds.map(async deviceId => {
-                const devSnap = await db.collection('devices').doc(deviceId).get();
-                if (devSnap.exists) {
-                    const { pushToken } = devSnap.data();
-                    if (pushToken) tokens.push(pushToken);
+            for (const deviceId of deviceSet) {
+                const devSnap = await db
+                    .collection('devices')
+                    .doc(deviceId)
+                    .get();
+                if (!devSnap.exists) continue;
+
+                const pushToken = devSnap.data().pushToken;
+                if (typeof pushToken === 'string' && pushToken.length > 0) {
+                    tokens.push(pushToken);
                 }
-            }));
+            }
 
             if (tokens.length === 0) {
                 return res.json({ success: true, pushed: 0 });
@@ -330,22 +356,125 @@ router.post(
 
             // 3) Build & send the silent APN notification
             const note = new apn.Notification({
-                topic: process.env.APPLE_PASS_TOPIC,   // e.g. "pass.vn.edu.vgu.careerfair.cfied25"
+                topic: appleWallet.passTypeIdentifier,
                 pushType: 'background',
                 contentAvailable: true,
-                payload: {}                            // empty JSON as required
+                payload: {}
             });
 
             const result = await apnProvider.send(note, tokens);
-            console.log('APNs result:', result);
+            console.log('APNs result:', JSON.stringify(result));
 
-            // 4) Cleanup any invalid tokens
             for (const failure of result.failed) {
                 const badToken = failure.device;
-                const status = failure.status;              // e.g. 410
-                const reason = failure.response?.reason;    // e.g. "Unregistered"
-                if ([410, 400].includes(status) || ['BadDeviceToken', 'Unregistered'].includes(reason)) {
-                    // find & delete the device record
+                const status = failure.status;
+                const reason = failure.response?.reason;
+
+                if (
+                    [400, 410].includes(status) ||
+                    ['BadDeviceToken', 'Unregistered'].includes(reason)
+                ) {
+                    // Find the offending device record
+                    const badDevSnap = await db
+                        .collection('devices')
+                        .where('pushToken', '==', badToken)
+                        .limit(1)
+                        .get();
+
+                    if (!badDevSnap.empty) {
+                        const badId = badDevSnap.docs[0].id;
+                        // Delete the device
+                        await db.collection('devices').doc(badId).delete();
+                        // Delete all its registrations
+                        const regsToDel = await db
+                            .collection('registrations')
+                            .where('deviceLibraryIdentifier', '==', badId)
+                            .get();
+                        regsToDel.forEach(d => d.ref.delete());
+                    }
+                }
+            }
+
+            return res.json({ success: true, pushed: result.sent.length });
+        } catch (err) {
+            next(err);
+        }
+    }
+);
+
+
+/**
+ * POST /v1/push/:passTypeIdentifier/:serialNumber
+ * 
+ * Header:
+ *   Authorization: ApplePass <authenticationToken>
+ * 
+ * Path params:
+ *   passTypeIdentifier – your passType ID
+ *   serialNumber       – the single serial to update
+ *
+ * Response:
+ *   { success: true, pushed: <number of tokens sent> }
+ */
+router.post(
+    '/v1/push/:passTypeIdentifier/:serialNumber',
+    requireAppleToken,
+    async (req, res, next) => {
+        try {
+            const { passTypeIdentifier, serialNumber } = req.params;
+
+            // 1) Find all registrations for that one serial
+            const regsSnap = await db
+                .collection('registrations')
+                .where('passTypeIdentifier', '==', passTypeIdentifier)
+                .where('serialNumber', '==', serialNumber)
+                .get();
+
+            if (regsSnap.empty) {
+                // No devices have registered that pass
+                return res.json({ success: true, pushed: 0 });
+            }
+
+            // 2) Collect unique deviceLibraryIdentifiers
+            const deviceIds = new Set(
+                regsSnap.docs.map(d => d.data().deviceLibraryIdentifier)
+            );
+
+            // 3) Lookup each device’s pushToken
+            const tokens = [];
+            for (const deviceId of deviceIds) {
+                const devSnap = await db.collection('devices').doc(deviceId).get();
+                if (!devSnap.exists) continue;
+                const pushToken = devSnap.data().pushToken;
+                if (typeof pushToken === 'string' && pushToken) {
+                    tokens.push(pushToken);
+                }
+            }
+
+            if (tokens.length === 0) {
+                return res.json({ success: true, pushed: 0 });
+            }
+
+            // 4) Build & send the silent APN notification
+            const note = new apn.Notification({
+                topic: appleWallet.passTypeIdentifier,
+                pushType: 'background',
+                contentAvailable: true,
+                payload: {}
+            });
+            const result = await apnProvider.send(note, tokens);
+            console.log('Selective APNs result:', JSON.stringify(result));
+
+            // 5) Cleanup any invalid tokens (same as before)
+            for (const failure of result.failed) {
+                const badToken = failure.device;
+                const status = failure.status;
+                const reason = failure.response?.reason;
+
+                if (
+                    [400, 410].includes(status) ||
+                    ['BadDeviceToken', 'Unregistered'].includes(reason)
+                ) {
                     const badDevSnap = await db
                         .collection('devices')
                         .where('pushToken', '==', badToken)
@@ -355,17 +484,16 @@ router.post(
                     if (!badDevSnap.empty) {
                         const badId = badDevSnap.docs[0].id;
                         await db.collection('devices').doc(badId).delete();
-                        // remove all registrations for that device
-                        const regsToDelete = await db
+                        const regsToDel = await db
                             .collection('registrations')
                             .where('deviceLibraryIdentifier', '==', badId)
                             .get();
-                        regsToDelete.forEach(d => d.ref.delete());
+                        regsToDel.forEach(d => d.ref.delete());
                     }
                 }
             }
 
-            // 5) Return how many pushes were sent
+            // 6) Return how many pushes succeeded
             return res.json({ success: true, pushed: result.sent.length });
         } catch (err) {
             next(err);

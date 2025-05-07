@@ -1,4 +1,5 @@
 import { FC } from 'react';
+import { Link } from 'react-router-dom';
 import { FiSearch } from 'react-icons/fi';
 
 const Navbar: FC = () => {
@@ -18,16 +19,16 @@ const Navbar: FC = () => {
 
             {/* Right: Navigation Links */}
             <div className="flex flex-row items-center justify-end basis-1/2 gap-12 text-sm font-medium">
-                <a href="#" className="hover:underline">Contact Sales</a>
-                <a
-                    href="#"
+                <Link to="#" className="hover:underline">Contact Sales</Link>
+                <Link
+                    to="#"
                     className="border border-white rounded-full px-4 py-1 hover:bg-white hover:text-[#1A0B49] transition"
                 >
                     Create Event
-                </a>
-                <a href="#" className="hover:underline">Tickets</a>
-                <a href="#" className="hover:underline">Log In</a>
-                <a href="#" className="hover:underline">Sign Up</a>
+                </Link>
+                <Link to="#" className="hover:underline">Tickets</Link>
+                <Link to="#" className="hover:underline">Log In</Link>
+                <Link to="/signup" className="hover:underline">Sign Up</Link>
             </div>
         </nav>
     );

@@ -66,7 +66,8 @@ router.post(
         name,
         code: lookupCode,
         objectId,
-        serial
+        serial,
+        boothVisited: 0,
       });
 
       // 4) generate the QR code

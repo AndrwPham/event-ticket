@@ -3,6 +3,7 @@ const path = require('path');
 const { PKPass } = require('passkit-generator');
 
 const { appleWallet } = require('../config');
+const { auth } = require('firebase-admin');
 const {
   wwdrPath,
   signerCertPath,
@@ -10,8 +11,9 @@ const {
   signerKeyPassphrase,
   teamIdentifier,
   passTypeIdentifier,
-  templateFolder,       // e.g. './templates/cfied.pass'
-  webServiceURL,        // e.g. 'https://your.server.com/appleWallet'
+  templateFolder,
+  webServiceURL,
+  authToken
 } = appleWallet;
 
 const certificates = {
@@ -26,7 +28,8 @@ const baseProps = {
   passTypeIdentifier,
   organizationName: "VGU Career Services",
   description: "Entrance ticket for Career Fair and Industrial Exploration Day 2025",
-  webServiceURL,    // Enables remote update calls
+  webServiceURL,
+  authenticationToken: authToken,
 };
 
 let passTemplate = null;

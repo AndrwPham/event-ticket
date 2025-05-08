@@ -60,68 +60,59 @@ function requireAppleToken(req, res, next) {
  */
 router.get(
     '/v1/devices/:deviceLibraryIdentifier/registrations/:passTypeIdentifier',
+    // requireAppleToken, --> no need it here!
     async (req, res, next) => {
         try {
             const { deviceLibraryIdentifier, passTypeIdentifier } = req.params;
             const sinceParam = req.query.passesUpdatedSince;
-            // Convert the query param to a Date (defaults to epoch)
-            const sinceDate = sinceParam
-                ? new Date(Number(sinceParam) * 1000)
-                : new Date(0);
+            const sinceMs = sinceParam ? Number(sinceParam) * 1000 : 0;
 
-            // 1) Find all registrations for this device + pass type
+            // 1) pull your registrations
             const regsSnap = await db
                 .collection('registrations')
                 .where('deviceLibraryIdentifier', '==', deviceLibraryIdentifier)
                 .where('passTypeIdentifier', '==', passTypeIdentifier)
                 .get();
 
-            // If there are no registrations at all, return empty + now
+            // If nothing registered, no matching passes → 204
             if (regsSnap.empty) {
-                return res.json({
-                    serialNumbers: [],
-                    lastUpdated: Math.floor(Date.now() / 1000)
-                });
+                return res.status(204).send();
             }
 
-            // 2) For each registration, load the pass record and filter by updatedAt
-            const serialNumbers = [];
-            let maxUpdatedMs = sinceDate.getTime();
+            // 2) scan for passes updated since that tag
+            let maxUpdatedMs = sinceMs;
+            const serials = [];
 
-            for (const regDoc of regsSnap.docs) {
-                const { passTypeIdentifier: ptid, serialNumber } = regDoc.data();
-                // We store passes under "passes/{passTypeIdentifier_serialNumber}"
+            for (const doc of regsSnap.docs) {
+                const { passTypeIdentifier: ptid, serialNumber } = doc.data();
                 const passId = `${ptid}_${serialNumber}`;
                 const passSnap = await db.collection('passes').doc(passId).get();
                 if (!passSnap.exists) continue;
 
-                const passData = passSnap.data();
-                const updatedAtTs = passData.updatedAt;  // should be a Firestore Timestamp
-
-                if (
-                    updatedAtTs &&
-                    typeof updatedAtTs.toMillis === 'function'
-                ) {
-                    const updatedMs = updatedAtTs.toMillis();
-                    if (updatedMs > sinceDate.getTime()) {
-                        serialNumbers.push(passData.serialNumber);
-                        if (updatedMs > maxUpdatedMs) {
-                            maxUpdatedMs = updatedMs;
-                        }
-                    }
+                const ts = passSnap.data().updatedAt?.toMillis?.();
+                if (ts > sinceMs) {
+                    serials.push(serialNumber);
+                    maxUpdatedMs = Math.max(maxUpdatedMs, ts);
                 }
             }
 
-            const lastUpdated = serialNumbers.length
-                ? Math.floor(maxUpdatedMs / 1000)
-                : Number(sinceParam) || 0;
+            // 3a) if any changed → 200 + JSON
+            if (serials.length) {
+                return res.status(200).json({
+                    serialNumbers: serials,
+                    lastUpdated: String(Math.floor(maxUpdatedMs / 1000))
+                });
+            }
 
-            return res.json({ serialNumbers, lastUpdated });
+            // 3b) otherwise → 204 no body
+            return res.status(204).send();
+
         } catch (err) {
             next(err);
         }
     }
 );
+
 
 
 /**

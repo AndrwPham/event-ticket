@@ -1,14 +1,14 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const admin = require('firebase-admin');
-
+const axios = require('axios');
 const { createPassObject } = require('../services/googleWalletService');
-// const { updateBoothVisited: updateAppleBooth } = require('../services/appleWalletService');
+const { appleWallet } = require('../config');
+const { webServiceURL, passTypeIdentifier, authToken } = appleWallet;
 
 if (!admin.apps.length) {
     admin.initializeApp();
 }
-
 const db = admin.firestore();
 const router = express.Router();
 
@@ -20,10 +20,6 @@ function requireApiKey(req, res, next) {
     next();
 }
 
-/**
- * POST /api/boothVisited
- * Body: { code: 'ABC123', boothVisited: 5 }
- */
 router.post(
     '/boothVisited',
     requireApiKey,
@@ -35,33 +31,70 @@ router.post(
             .isInt({ min: 0 }).withMessage('boothVisited must be a non-negative integer'),
     ],
     async (req, res, next) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
-
-        const { code, boothVisited } = req.body;
-
         try {
+            // 1) Validate request body
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({ errors: errors.array() });
+            }
+            const { code, boothVisited } = req.body;
+
+            // 2) Lookup ticket
             const ticketRef = db.collection('tickets').doc(code);
-            const snap = await ticketRef.get();
-            if (!snap.exists) {
+            const ticketSnap = await ticketRef.get();
+            if (!ticketSnap.exists) {
                 return res.status(404).json({ error: 'Ticket not found.' });
             }
+            const { email, name, serial } = ticketSnap.data();
 
-            const { email, name, objectId } = snap.data();
+            // 3) Update ticket’s boothVisited
+            await ticketRef.update({ boothVisited });
 
-            if (!email || !name) {
-                return res.status(400).json({ error: 'Email or name not found in ticket.' });
-            }
+            // 4) Bump updatedAt on your “passes” doc so Wallet sees a change
+            const { passTypeIdentifier, webServiceURL, authToken } = appleWallet;
+            const passId = `${passTypeIdentifier}_${serial}`;
+            await db
+                .collection('passes')
+                .doc(passId)
+                .set(
+                    { updatedAt: admin.firestore.FieldValue.serverTimestamp() },
+                    { merge: true }
+                );
+
+            // 5) Update Google Wallet object (optional)
             await createPassObject(email, name, code, boothVisited);
 
-            // await updateAppleBooth(email, name, code, boothVisited);
+            const pushUrl = `${webServiceURL}/v1/push/${passTypeIdentifier}`;
 
+            const pushResponse = await axios.post(
+                pushUrl,
+                { serialNumbers: [serial] },
+                {
+                    headers: {
+                        Authorization: `ApplePass ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    validateStatus: () => true
+                }
+            );
+            console.log('⬅️ Push status:', pushResponse.status, pushResponse.data);
+
+            if (pushResponse.status < 200 || pushResponse.status >= 300) {
+                return res
+                    .status(502)
+                    .json({
+                        error: 'Failed to notify Apple push service',
+                        status: pushResponse.status,
+                        body: pushResponse.data
+                    });
+            }
+
+            // 7) Success
             return res.json({ success: true, boothVisited });
+
         } catch (err) {
-            console.error('❌ Error updating boothVisited:', err);
-            return next(err);
+            console.error('❌ /api/boothVisited error:', err);
+            next(err);
         }
     }
 );

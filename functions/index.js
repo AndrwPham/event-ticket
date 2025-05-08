@@ -40,7 +40,7 @@ const ready = Promise.all([
 ]);
 
 // Function handler
-exports.api = functions.https.onRequest(async (req, res) => {
+exports.ticket = functions.https.onRequest(async (req, res) => {
   console.log('📬 Request:', req.method, req.url);
   await ready;
   return app(req, res);

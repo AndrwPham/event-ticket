@@ -2,6 +2,8 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const admin = require('firebase-admin');
 const axios = require('axios');
+const cors = require('cors');
+const { corsOptionsDelegate } = require('../middleware/cors');
 const { createPassObject } = require('../services/googleWalletService');
 const { appleWallet } = require('../config');
 const { webServiceURL, passTypeIdentifier, authToken } = appleWallet;
@@ -11,6 +13,8 @@ if (!admin.apps.length) {
 }
 const db = admin.firestore();
 const router = express.Router();
+
+router.use(cors(corsOptionsDelegate));
 
 function requireApiKey(req, res, next) {
     const apiKey = req.header('x-api-key');
@@ -22,6 +26,7 @@ function requireApiKey(req, res, next) {
 
 router.post(
     '/boothVisited',
+    cors(corsOptionsDelegate),
     requireApiKey,
     [
         body('code')

@@ -3,7 +3,7 @@ import { FiSearch } from "react-icons/fi";
 
 const Navbar: FC = () => {
     return (
-        <nav className="bg-[#1D0E3C] text-white px-6 py-4 flex flex-row items-center justify-between">
+        <nav className="bg-darkBlue text-white px-6 py-4 flex flex-row items-center justify-between">
             {/* Left: Search Bar */}
             <div className="flex flex-row justify-end basis-1/2">
                 <div className="flex flex-row items-center w-2/3 bg-white rounded-full px-4 py-2 shadow-sm mr-10">

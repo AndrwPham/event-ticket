@@ -64,6 +64,11 @@ const UpcomingEvents: React.FC = () => {
             <div className="w-5/6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-14 mx-auto my-6">
                 {getEvents()}
             </div>
+            <div className="flex justify-center py-4">
+                <button className="px-6 py-2 border-2 border-[#2D1D53] rounded-full text-[#2D1D53] font-semibold hover:bg-[#2D1D53] hover:text-white transition">
+                    Load More
+                </button>
+            </div>
         </section>
     );
 };

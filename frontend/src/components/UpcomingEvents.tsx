@@ -57,14 +57,14 @@ const getEvents = () => {
 
 const UpcomingEvents: React.FC = () => {
     return (
-        <section className="my-8 px-4">
-            <h2 className="w-5/6 text-2xl font-bold mx-auto mt-20">
+        <section className="py-8 px-4">
+            <h2 className="w-5/6 text-2xl font-bold mx-auto mt-3 lg:mt-8">
                 Upcoming Events
             </h2>
             <div className="w-5/6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-14 mx-auto my-6">
                 {getEvents()}
             </div>
-            <div className="flex justify-center py-4">
+            <div className="flex justify-center pt-4">
                 <button className="px-6 py-2 border-2 border-[#2D1D53] rounded-full text-[#2D1D53] font-semibold hover:bg-[#2D1D53] hover:text-white transition">
                     Load More
                 </button>

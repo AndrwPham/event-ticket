@@ -8,140 +8,128 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  email     String   @unique
-  password  String
-  username  String    @unique
-  accessToken String?
-  refreshToken String?
-  confirmed Boolean @default(false)
-  role      String   @default("USER") // e.g. "USER", "ADMIN"
-  confirmToken String? //mail confirmation token
-  confirmTokenExpiresAt DateTime?
-  resetToken String? //reset password token
-  resetTokenExpiresAt DateTime?
+  id                      String      @id @default(auto()) @map("_id") @db.ObjectId
+  email                   String      @unique
+  password                String
+  username                String      @unique
+  accessToken             String?
+  refreshToken            String?
+  confirmed               Boolean     @default(false)
+  role                    String      @default("USER") // e.g. "USER", "ADMIN"
+  confirmToken            String? //mail confirmation token
+  confirmTokenExpiresAt   DateTime?
+  resetToken              String? //reset password token
+  resetTokenExpiresAt     DateTime?
 
-  avatars    Image[]   @relation("UserAvatar")
-  avatarId  String?
-
-  tickets   Ticket[]  @relation("UserTickets")
-  orders    Order[]   @relation("UserOrders")
-  reviews   Review[]  @relation("UserReviews")
-  events    Event[]   @relation("UserEvents")
+  avatars                 Image[]     @relation("UserAvatar")
+  orders                  Order[]     @relation("UserOrders")  //for organizer of the event
+  tickets                 TicketItem[]    @relation("UserTicketItems") //for user who bought the ticket
+  reviews                 Review[]    @relation("UserReviews")
+  events                  Event[]     @relation("UserEvents")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Event {
-  id             String     @id @default(auto()) @map("_id") @db.ObjectId
-  title          String
-  description    String
-  date           DateTime
-  city           String?
-  district       String?
-  ward           String?
-  street         String?
-  user           User       @relation("UserEvents", fields: [userId], references: [id])
-  userId         String
-  isOnline       Boolean   @default(false)
-  category       Category   @relation(fields: [categoryId], references: [id])
-  categoryId     String
-  images         Image[]    @relation("EventImages")
-  tickets        Ticket[]   @relation("EventTickets")
-  reviews        Review[]   @relation("EventReviews")
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  id                      String      @id @default(auto()) @map("_id") @db.ObjectId
+  title                   String
+  description             String
+  date                    DateTime
+  city                    String?
+  district                String?
+  ward                    String?
+  street                  String?
+  isOnline                Boolean     @default(false)
+  user                    User        @relation("UserEvents", fields: [userId], references: [id])
+  userId                  String      //organizer
+  category                Category    @relation("CategoryEvents", fields: [categoryId], references: [id])
+  categoryId              String
+  images                  Image[]     @relation("EventImages")
+  tickets                 Ticket[]    @relation("EventTickets")
+  reviews                 Review[]    @relation("EventReviews")
+  createdAt               DateTime    @default(now())
+  updatedAt               DateTime    @updatedAt
+
+  @@index([userId])
 }
 
 model Ticket {
-  id             String     @id @default(auto()) @map("_id") @db.ObjectId
-  name           String
-  description    String?
-  price          Float
-  quantity       Int
-  type           String
-  status         TicketStatus @default(AVAILABLE)
-  event          Event      @relation("EventTickets", fields: [eventId], references: [id])
-  eventId        String
-  user           User?      @relation("UserTickets", fields: [userId], references: [id])
-  userId         String?
-  images         Image[]    @relation("TicketImages")
-  imageId        String?
-  order          Order?     @relation("OrderTickets", fields: [orderId], references: [id])
-  orderId        String?
-  createdAt      DateTime   @default(now())
+  id                      String      @id @default(auto()) @map("_id") @db.ObjectId
+  name                    String
+  description             String?
+  price                   Float
+  quantity                Int
+  type                    String
+  status                  String
+  event                   Event         @relation("EventTickets", fields: [eventId], references: [id])
+  eventId                 String
+  images                  Image[]       @relation("TicketImages")
+  ticketItems             TicketItem[]  @relation("TicketItems")
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+
+  @@index([eventId])
 }
 
 model Order {
-  id             String      @id @default(auto()) @map("_id") @db.ObjectId
-  user           User        @relation("UserOrders", fields: [userId], references: [id])
-  userId         String
-  tickets        Ticket[]   @relation("OrderTickets")
-  totalPrice     Float
-  status         OrderStatus @default(PENDING)
-  payment        Payment?     @relation("OrderPayment")
-  paymentId      String
-  createdAt      DateTime    @default(now())
+  id                      String        @id @default(auto()) @map("_id") @db.ObjectId
+  totalPrice              Float
+  status                  String       
+  method                  String
+  user                    User          @relation("UserOrders", fields: [userId], references: [id])
+  userId                  String
+  ticketItems             TicketItem[]  @relation("OrderTicket")
+  createdAt               DateTime      @default(now())
+  
+  @@index ([userId])
 }
 
-model Payment {
-  id             String        @id @default(auto()) @map("_id") @db.ObjectId
-  order          Order         @relation("OrderPayment", fields: [orderId], references: [id])
-  orderId        String        @unique
-  method         String        
-  amount         Float
-  paidAt         DateTime?
-  status         PaymentStatus @default(PENDING)
+model TicketItem{
+  id                      String        @id @default(auto()) @map("_id") @db.ObjectId
+  ticket                  Ticket        @relation("TicketItems", fields: [ticketId], references: [id])
+  ticketId                String
+  order                   Order         @relation("OrderTicket", fields: [orderId], references: [id])
+  orderId                 String      
+  user                    User          @relation("UserTicketItems", fields: [userId], references: [id])
+  userId                  String
+
+  @@index([ticketId])
+  @@index([orderId])
+  @@index([userId])
 }
 
 model Review {
   id             String    @id @default(auto()) @map("_id") @db.ObjectId
   content        String
   rating         Int       
-  user           User      @relation("UserReviews", fields: [userId], references: [id])
+  user           User?      @relation("UserReviews", fields: [userId], references: [id], onDelete: Cascade)
   userId         String
-  event          Event     @relation("EventReviews", fields: [eventId], references: [id])
+  event          Event?     @relation("EventReviews", fields: [eventId], references: [id], onDelete: Cascade)
   eventId        String
   createdAt      DateTime  @default(now())
+
+  @@index([userId])
+  @@index([eventId])
 }
 
 model Category {
   id             String    @id @default(auto()) @map("_id") @db.ObjectId
   name           String    @unique
-  events         Event[]
+  events         Event[]   @relation("CategoryEvents")
+  eventId        String
 }
-
 model Image {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   type      String   //"logo | banner | avatar | ticket"
   url       String
   createdAt DateTime @default(now())
-  event     Event?   @relation("EventImages", fields: [eventId], references: [id])
+  event     Event?   @relation("EventImages", fields: [eventId], references: [id], onDelete: Cascade)
   eventId   String?
 
-  ticket    Ticket?  @relation("TicketImages", fields: [ticketId], references: [id])
+  ticket    Ticket?  @relation("TicketImages", fields: [ticketId], references: [id], onDelete: Cascade)
   ticketId  String?
 
-  user      User?    @relation("UserAvatar", fields: [userId], references: [id])
+  user      User?    @relation("UserAvatar", fields: [userId], references: [id], onDelete: Cascade)
   userId    String?
-}
-
-enum TicketStatus {
-  AVAILABLE
-  RESERVED
-  SOLD
-  CANCELLED
-}
-
-enum OrderStatus {
-  PENDING
-  COMPLETED
-  CANCELLED
-}
-
-enum PaymentStatus {
-  PENDING
-  PAID
-  FAILED
 }

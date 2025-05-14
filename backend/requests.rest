@@ -46,3 +46,20 @@ Content-Type: application/json
     "url": "www.example.com",
     "type": "avatar"
 }
+
+###
+POST http://localhost:5000/tickets
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ODIzODExNzgwYjYzMzU4YTc0NTQ4MGQiLCJpYXQiOjE3NDcyNTc3MTUsImV4cCI6MTc0NzI1ODYxNX0.mR3L6I8Qq4DuAJPWd5uZkdNPC4Lrto4B0gOmvrwr_ZY
+Content-Type: application/json
+
+{
+    "name": "ticket 1",
+    "description": "ticket of event 1",
+    "price": 10.0,
+    "quantity": 10,
+    "type": "VIP",
+    "status": "AVAILABLE",
+    "eventId": "6823be639c3cc10bcdb3834e",
+    "quantity": 10000,
+    "price": 100000
+}

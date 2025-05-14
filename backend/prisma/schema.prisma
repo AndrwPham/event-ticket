@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  email     String   @unique
+  password  String
+  username  String    @unique
+  accessToken String?
+  refreshToken String?
+  confirmed Boolean @default(false)
+  role      String   @default("USER") // e.g. "USER", "ADMIN"
+  confirmToken String? //mail confirmation token
+  confirmTokenExpiresAt DateTime?
+  resetToken String? //reset password token
+  resetTokenExpiresAt DateTime?
+
+  avatars    Image[]   @relation("UserAvatar")
+  avatarId  String?
+
+  tickets   Ticket[]  @relation("UserTickets")
+  orders    Order[]   @relation("UserOrders")
+  reviews   Review[]  @relation("UserReviews")
+  events    Event[]   @relation("UserEvents")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Event {
+  id             String     @id @default(auto()) @map("_id") @db.ObjectId
+  title          String
+  description    String
+  date           DateTime
+  city           String?
+  district       String?
+  ward           String?
+  street         String?
+  user           User       @relation("UserEvents", fields: [userId], references: [id])
+  userId         String
+  isOnline       Boolean   @default(false)
+  category       Category   @relation(fields: [categoryId], references: [id])
+  categoryId     String
+  images         Image[]    @relation("EventImages")
+  tickets        Ticket[]   @relation("EventTickets")
+  reviews        Review[]   @relation("EventReviews")
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+model Ticket {
+  id             String     @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  description    String?
+  price          Float
+  quantity       Int
+  type           String
+  status         TicketStatus @default(AVAILABLE)
+  event          Event      @relation("EventTickets", fields: [eventId], references: [id])
+  eventId        String
+  user           User?      @relation("UserTickets", fields: [userId], references: [id])
+  userId         String?
+  images         Image[]    @relation("TicketImages")
+  imageId        String?
+  order          Order?     @relation("OrderTickets", fields: [orderId], references: [id])
+  orderId        String?
+  createdAt      DateTime   @default(now())
+}
+
+model Order {
+  id             String      @id @default(auto()) @map("_id") @db.ObjectId
+  user           User        @relation("UserOrders", fields: [userId], references: [id])
+  userId         String
+  tickets        Ticket[]   @relation("OrderTickets")
+  totalPrice     Float
+  status         OrderStatus @default(PENDING)
+  payment        Payment?     @relation("OrderPayment")
+  paymentId      String
+  createdAt      DateTime    @default(now())
+}
+
+model Payment {
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  order          Order         @relation("OrderPayment", fields: [orderId], references: [id])
+  orderId        String        @unique
+  method         String        
+  amount         Float
+  paidAt         DateTime?
+  status         PaymentStatus @default(PENDING)
+}
+
+model Review {
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  content        String
+  rating         Int       
+  user           User      @relation("UserReviews", fields: [userId], references: [id])
+  userId         String
+  event          Event     @relation("EventReviews", fields: [eventId], references: [id])
+  eventId        String
+  createdAt      DateTime  @default(now())
+}
+
+model Category {
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  name           String    @unique
+  events         Event[]
+}
+
+model Image {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  type      String   //"logo | banner | avatar | ticket"
+  url       String
+  createdAt DateTime @default(now())
+  event     Event?   @relation("EventImages", fields: [eventId], references: [id])
+  eventId   String?
+
+  ticket    Ticket?  @relation("TicketImages", fields: [ticketId], references: [id])
+  ticketId  String?
+
+  user      User?    @relation("UserAvatar", fields: [userId], references: [id])
+  userId    String?
+}
+
+enum TicketStatus {
+  AVAILABLE
+  RESERVED
+  SOLD
+  CANCELLED
+}
+
+enum OrderStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}

@@ -3,6 +3,7 @@ const path = require('path');
 const { PKPass } = require('passkit-generator');
 
 const { appleWallet } = require('../config');
+const { auth } = require('firebase-admin');
 const {
   wwdrPath,
   signerCertPath,
@@ -10,31 +11,27 @@ const {
   signerKeyPassphrase,
   teamIdentifier,
   passTypeIdentifier,
-  templateFolder,       // e.g. './templates/cfied.pass'
-  webServiceURL,        // e.g. 'https://your.server.com/appleWallet'
+  templateFolder,
+  webServiceURL,
+  authToken
 } = appleWallet;
 
-// --- 2. Read certificates into memory ---
 const certificates = {
-  wwdr:       fs.readFileSync(path.resolve(__dirname, wwdrPath)),
+  wwdr: fs.readFileSync(path.resolve(__dirname, wwdrPath)),
   signerCert: fs.readFileSync(path.resolve(__dirname, signerCertPath)),
-  signerKey:  fs.readFileSync(path.resolve(__dirname, signerKeyPath)),
+  signerKey: fs.readFileSync(path.resolve(__dirname, signerKeyPath)),
   signerKeyPassphrase
 };
 
-// --- 3. Prepare base props for your template passes ---
 const baseProps = {
-  // Standard pass metadata
   teamIdentifier,
   passTypeIdentifier,
   organizationName: "VGU Career Services",
   description: "Entrance ticket for Career Fair and Industrial Exploration Day 2025",
-  webServiceURL,    // Enables remote update calls
+  webServiceURL,
+  authenticationToken: authToken,
 };
 
-/**
- * A cached "runtime template" which we clone for each user.
- */
 let passTemplate = null;
 
 /**
@@ -58,23 +55,34 @@ async function initTemplate() {
  * @param {string} code      – QR code / barcode value
  * @returns {Buffer}         – raw .pkpass data
  */
-async function createPassForUser(email, fullName, code) {
+async function createPassForUser(email, fullName, code, booth_visited = 0) {
   if (!passTemplate) {
     throw new Error('Template not initialized! Call initTemplate() first.');
   }
 
-  // Make a filesystem-safe serial number
   const serialNumber = email.replace(/[^\w.-]/g, '_');
 
-  // Clone the template and override dynamic fields
   const pass = await PKPass.from(
     passTemplate,
     {
-      serialNumber,
-      name: fullName,
+      serialNumber
     }
   );
   pass.setBarcodes(code);
+  pass.secondaryFields.push(
+    {
+      "key": "name",
+      "label": "Attendee",
+      "value": fullName,
+      "textAlignment": "PKTextAlignmentLeft"
+    },
+    {
+      "key": "boothVisited",
+      "label": "Booth Visited",
+      "value": booth_visited,
+      "textAlignment": "PKTextAlignmentRight"
+    }
+  );
 
   return pass.getAsBuffer();
 }

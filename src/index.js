@@ -1,43 +1,47 @@
-require('dotenv').config();
+const functions = require('firebase-functions');
 const express = require('express');
-const appleWalletRouter = require('./routes/appleWallet');
-const ticketRouter = require('./routes/ticket');
-const errorHandler = require('./middleware/errorHandler');
 
-// Import the Google Wallet module
+const ticketRouter = require('./routes/ticket');
+const appleWalletRouter = require('./routes/appleWallet');
+const updateRouter = require('./routes/updateBoothVisited');
+const appleWalletWebServiceRouter = require('./routes/appleWalletWebService');
+const errorHandler = require('./middleware/errorHandler');
 const { createPassClass } = require('./services/googleWalletService');
 const { initTemplate } = require('./services/appleWalletService');
 
 const app = express();
 app.use(express.json());
 
-// Mount ticket routes
+// Routes
 app.use('/api/tickets', ticketRouter);
 app.use('/api/appleWallet', appleWalletRouter);
+app.use('/api', updateRouter);
+app.use('/', appleWalletWebServiceRouter);
 
-// Error handler middleware
+// Health check
+app.get('/__ping', (req, res) => res.status(200).send('pong'));
+
+// Error handling middleware (must come after routes)
 app.use(errorHandler);
 
-// Start server
-const PORT = process.env.PORT || 3000;
+// Cold start preparation — only runs once per container
+const ready = Promise.all([
+  createPassClass().then(() => {
+    console.log('✅ Google Wallet class ready');
+  }).catch(err => {
+    console.error('❌ Google Wallet init error:', err);
+  }),
 
-app.listen(PORT, async () => {
-  console.log(`✅ Ticketing API is running on port ${PORT}`);  
+  initTemplate().then(() => {
+    console.log('✅ Apple Wallet template ready');
+  }).catch(err => {
+    console.error('❌ Apple Wallet init error:', err);
+  }),
+]);
 
-  try {
-    await createPassClass();
-    console.log('✅ Google Wallet class check/init complete.');
-  } catch (err) {
-    console.error('❌ Failed to create/check Google Wallet class.', err);
-  }
-
-  try {
-    await initTemplate();
-    console.log('✅ Apple Wallet template check/init complete.');
-  } catch (err) {
-    console.error('❌ Failed to create/check Apple Wallet template.', err);
-  }
-
-  console.log('Server is ready to accept requests.');
-  console.log('Listening for incoming requests...');
+// Function handler
+exports.ticket = functions.https.onRequest(async (req, res) => {
+  console.log('📬 Request:', req.method, req.url);
+  await ready;
+  return app(req, res);
 });

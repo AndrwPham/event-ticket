@@ -4,7 +4,7 @@ const { googleWallet } = require('../config');
 const credentials = require(googleWallet.serviceAccount);
 
 const issuerId = googleWallet.issuerId;
-const classId = `${issuerId}.cfied_2025.test4`;
+const classId = `${issuerId}.cfied_2025.generalAdmission`;
 const baseUrl = 'https://walletobjects.googleapis.com/walletobjects/v1';
 
 const httpClient = new GoogleAuth({
@@ -59,7 +59,7 @@ async function createPassClass() {
                 "firstValue": {
                   "fields": [
                     {
-                      "fieldPath": "object.textModulesData['booth_visited']"
+                      "fieldPath": "object.textModulesData['full_name']"
                     }
                   ]
                 }
@@ -68,7 +68,7 @@ async function createPassClass() {
                 "firstValue": {
                   "fields": [
                     {
-                      "fieldPath": "object.textModulesData['lucky_number']"
+                      "fieldPath": "object.textModulesData['booth_visited']"
                     }
                   ]
                 }
@@ -107,7 +107,7 @@ async function createPassClass() {
 /**
  * Create a Wallet pass for the user
  */
-async function createOrUpdatePassObject(email, fullName, code) {
+async function createOrUpdatePassObject(email, fullName, code, booth_visited = 0) {
   const objectSuffix = `${email.replace(/[^\w.-]/g, '_')}`;
   const objectId = `${issuerId}.${objectSuffix}`;
 
@@ -127,12 +127,6 @@ async function createOrUpdatePassObject(email, fullName, code) {
         "value": "CFIED 2025"
       }
     },
-    "header": {
-      "defaultValue": {
-        "language": "en-US",
-        "value": fullName
-      }
-    },
     "linkModulesData": [
       {
         "uri": {
@@ -148,7 +142,8 @@ async function createOrUpdatePassObject(email, fullName, code) {
       }
     ],
     "textModulesData": [
-      { "id": "booth_visited", "header": "Booth Visited", "body": "0" },
+      { "id": "full_name", "header": "Attendee", "body": fullName },
+      { "id": "booth_visited", "header": "Booth visited", "body": booth_visited },
     ],
     "barcode": {
       "type": "QR_CODE",

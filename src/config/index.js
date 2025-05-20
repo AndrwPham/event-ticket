@@ -1,7 +1,9 @@
+require('dotenv').config();
+
+const { auth } = require('firebase-admin');
 const Joi = require('joi');
 
 const schema = Joi.object({
-  PORT: Joi.number().default(3000),
   SMTP_HOST: Joi.string().required(),
   SMTP_PORT: Joi.number().required(),
   SMTP_USER: Joi.string().required(),
@@ -16,6 +18,9 @@ const schema = Joi.object({
   AW_PASS_TYPE_ID: Joi.string().required(),
   AW_TEMPLATE_FOLDER: Joi.string().required(),          // e.g. './templates/cfied.pass'
   AW_WEB_SERVICE_URL: Joi.string().uri().optional(),
+  AW_APN_KEY_PATH: Joi.string().optional(),         // e.g. './AuthKey_XXXXXXXX.p8'
+  AW_APN_KEY_ID: Joi.string().optional(),
+  APPLE_AUTH_TOKEN: Joi.string().optional()      // e.g. 'XXXXXXXXXX' from Apple Dev
 })
   .unknown()  // allow other ENV vars
   .required();
@@ -26,7 +31,6 @@ if (error) {
 }
 
 module.exports = {
-  PORT: env.PORT,
   smtp: {
     host: env.SMTP_HOST,
     port: env.SMTP_PORT,
@@ -46,5 +50,8 @@ module.exports = {
     passTypeIdentifier: env.AW_PASS_TYPE_ID,
     templateFolder: env.AW_TEMPLATE_FOLDER,
     webServiceURL: env.AW_WEB_SERVICE_URL,  // may be undefined
+    apnKeyPath: env.AW_APN_KEY_PATH,
+    apnKeyId: env.AW_APN_KEY_ID,
+    authToken: env.APPLE_AUTH_TOKEN,
   },
 };

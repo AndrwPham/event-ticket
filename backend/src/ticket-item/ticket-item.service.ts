@@ -20,13 +20,15 @@ export class TicketItemService {
     }
 
     return this.prisma.$transaction([
+        //create ticket item 
         this.prisma.ticketItem.create({
-        data: {
-            ticket: { connect: { id: dto.ticketId } },
+          data: {
             user: { connect: { id: dto.userId } },
+            ticket: { connect: { id: dto.ticketId } },
             order: { connect: { id: dto.orderId } },
-        },
+          },
         }),
+        //decrement ticket quantity
         this.prisma.ticket.update({
         where: { id: dto.ticketId },
         data: {
@@ -34,6 +36,8 @@ export class TicketItemService {
         },
         }),
     ]);
+
+    
   }
 
   async findAll() {

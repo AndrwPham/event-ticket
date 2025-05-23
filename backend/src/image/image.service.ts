@@ -7,7 +7,15 @@ export class ImageService {
   constructor(private prisma: PrismaService) {}
 
   create(dto: CreateImageDto) {
-    return this.prisma.image.create({ data: dto });
+    return this.prisma.image.create({ 
+      data: {
+        url: dto.url,
+        type: dto.type,
+        user: { connect: { id: dto.userId } },
+        event: { connect: { id: dto.eventId } },
+        ticket: { connect: { id: dto.ticketId } },
+      }
+    });
   }
 
   findAll() {

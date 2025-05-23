@@ -29,22 +29,22 @@ export class EventController {
 
   @Get('category/:categoryId')
   findByCategory(@Param('categoryId') categoryId: string) {
-    return this.eventService.findbyCategory(categoryId);
+    return this.eventService.findByCategory(categoryId);
   }
 
   @Get('city/:cityId')
   findByCity(@Param('cityId') cityId: string) {
-    return this.eventService.findbyCity(cityId);
+    return this.eventService.findByCity(cityId);
   }
 
   @Get('district/:districtId')
   findByDistrict(@Param('districtId') districtId: string) {
-    return this.eventService.findbyDistrict(districtId);
+    return this.eventService.findByDistrict(districtId);
   }
 
   @Get('ward/:wardId')
   findByWard(@Param('wardId') wardId: string) {
-    return this.eventService.findbyWard(wardId);
+    return this.eventService.findByWard(wardId);
   }
 
   @UseGuards(JwtAuthGuard)

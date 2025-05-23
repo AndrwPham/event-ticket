@@ -10,8 +10,8 @@ export class ReviewService {
   async create(dto: CreateReviewDto) {
     return this.prisma.review.create({
       data: {
-        content: dto.content,
         rating: dto.rating,
+        content: dto.content,
         user: { connect: { id: dto.userId } },
         event: { connect: { id: dto.eventId } },
       },

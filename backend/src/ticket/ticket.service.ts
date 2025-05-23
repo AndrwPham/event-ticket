@@ -7,7 +7,16 @@ export class TicketService {
   constructor(private prisma: PrismaService) {}
 
   create(dto: CreateTicketDto) {
-    return this.prisma.ticket.create({ data: dto });
+    return this.prisma.ticket.create({
+      data: {
+        name: dto.name,
+        price: dto.price,
+        quantity: dto.quantity,
+        class: dto.class,
+        status: dto.status,
+        event: { connect: { id: dto.eventId } },
+      },
+    });
   }
 
   findAll() {

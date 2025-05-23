@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateEventDto } from './dto/create-event.dto';
 
@@ -7,19 +7,51 @@ export class EventService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateEventDto) {
-    return await this.prisma.event.create({
-      data: {
-        ...dto,
-      },
+    const { categoryIds, organizerIds, ...eventData } = dto;
+
+    const event = await this.prisma.event.create({
+      data: eventData,
     });
+
+    const eventCategoryLinks = await Promise.all(
+      categoryIds.map((categoryId) =>
+        this.prisma.eventCategory.create({
+          data: {
+            eventId: event.id,
+            categoryId,
+          },
+        })
+      )
+    );
+
+    const eventOrganizerLinks = await Promise.all(
+      organizerIds.map((userId) =>
+        this.prisma.eventOrganizer.create({
+          data: {
+            eventId: event.id,
+            userId,
+          },
+        })
+      )
+    );
+
+    return {
+      event,
+      eventCategoryLinks,
+      eventOrganizerLinks,
+    };
   }
 
   findAll() {
     return this.prisma.event.findMany({
       include: {
         images: true,
-        category: true,
         tickets: true,
+        categories: {
+          include: {
+            category: true,
+          },
+        },
       },
     });
   }
@@ -29,69 +61,105 @@ export class EventService {
       where: { id },
       include: {
         images: true,
-        category: true,
         tickets: true,
+        categories: {
+          include: {
+            category: true,
+          },
+        },
       },
     });
   }
 
-  findbyCategory(categoryId: string) {
+  async findByCategory(categoryId: string) {
+    const eventCategories = await this.prisma.eventCategory.findMany({
+      where: { categoryId },
+      include: {
+        event: {
+          include: {
+            images: true,
+            tickets: true,
+            categories: {
+              include: { category: true },
+            },
+          },
+        },
+      },
+    });
+
+    return eventCategories.map((ec) => ec.event);
+  }
+
+  findByCity(city: string) {
     return this.prisma.event.findMany({
-      where: { 
-        categoryId 
-    },
+      where: { city },
       include: {
         images: true,
-        category: true,
         tickets: true,
+        categories: {
+          include: {
+            category: true,
+          },
+        },
       },
     });
   }
 
-  findbyCity(city: string) {
+  findByDistrict(district: string) {
     return this.prisma.event.findMany({
-      where: { 
-        city 
-    },
+      where: { district },
       include: {
         images: true,
-        category: true,
         tickets: true,
+        categories: {
+          include: {
+            category: true,
+          },
+        },
       },
     });
   }
 
-  findbyDistrict(district: string) {
+  findByWard(ward: string) {
     return this.prisma.event.findMany({
-      where: { 
-        district 
-    },
+      where: { ward },
       include: {
         images: true,
-        category: true,
         tickets: true,
+        categories: {
+          include: {
+            category: true,
+          },
+        },
       },
     });
   }
 
-  findbyWard(ward: string) {
-    return this.prisma.event.findMany({
-      where: { 
-        ward 
-    },
-      include: {
-        images: true,
-        category: true,
-        tickets: true,
-      },
-    });
-  }
+  async update(id: string, dto: CreateEventDto) {
+    const { categoryIds, ...eventData } = dto;
 
-  update(id: string, dto: CreateEventDto) {
-    return this.prisma.event.update({
+    const updatedEvent = await this.prisma.event.update({
       where: { id },
-      data: dto,
+      data: eventData,
     });
+
+    await this.prisma.eventCategory.deleteMany({ where: { eventId: id } });
+
+    const newLinks = await Promise.all(
+      categoryIds.map((categoryId) =>
+        this.prisma.eventCategory.create({
+          data: {
+            eventId: id,
+            categoryId,
+          },
+        })
+      )
+    );
+
+    return {
+      updatedEvent,
+      updatedEventCategories: newLinks,
+    };
   }
 
   remove(id: string) {

@@ -47,7 +47,7 @@ This guide provides an overview of all available API routes in the backend syste
 * **Body**: `{ "refreshToken": "string" }`
 
 ---
-#From here all routes just need a normal header: Content-Type: application/json. With specific POST, PATCH, DELETE need additional Authorization: Bearer <access_token> header!
+# From here all routes just need a normal header: Content-Type: application/json. With specific POST, PATCH, DELETE need additional Authorization: Bearer <access_token> header!
 
 ## 📅 EventController `/events`
 

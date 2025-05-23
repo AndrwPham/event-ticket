@@ -15,10 +15,10 @@ export class AuthService {
     return bcrypt.compare(raw, hash);
   }
 
-  async register(email: string, username: string, password: string) {
-    const hashed = await this.hash(password);
+  async register(dto) {
+    const hashed = await this.hash(dto.password);
     const user = await this.prisma.user.create({
-      data: { email, username, password: hashed },
+      data: { ...dto, password: hashed },
     });
     const tokens = await this.getTokens(user.id);
     await this.updateRefreshToken(user.id, tokens.refreshToken);

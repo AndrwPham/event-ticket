@@ -1,4 +1,4 @@
 export class CreateCategoryDto {
   name: string;
-  eventId: string;
+  eventId?: string;
 }

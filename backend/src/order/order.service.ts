@@ -10,7 +10,7 @@ export class OrderService {
   async create(dto: CreateOrderDto) {
     // Lookup ticketItems and calculate total price
     const ticketItems = await this.prisma.ticketItem.findMany({
-      where: { id: { in: dto.ticketItemIds } },
+      where: { id: { in: dto.ticketItems } },
       include: { ticket: true },
     });
 
@@ -26,7 +26,7 @@ export class OrderService {
       data: {
         user: { connect: { id: dto.userId } },
         ticketItems: {
-          connect: dto.ticketItemIds.map((id) => ({ id })),
+          connect: dto.ticketItems.map((id) => ({ id })),
         },
         totalPrice,
         status: 'PENDING',

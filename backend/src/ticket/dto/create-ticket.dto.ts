@@ -2,9 +2,7 @@ export class CreateTicketDto {
   name: string;
   price: number;
   quantity: number;
-  type: string;
-  status: string;
+  class: string;
+  status: "available" | "unavailable";
   eventId: string;
-  userId: string;
-  orderId: string;
 }

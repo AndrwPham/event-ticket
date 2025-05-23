@@ -62,6 +62,7 @@ model Event {
 }
 
 model Ticket {
+  
   id                      String        @id @default(auto()) @map("_id") @db.ObjectId
   name                    String
   description             String?
@@ -70,7 +71,7 @@ model Ticket {
   class                   String
   status                  String
 
-  event                   Event         @relation("EventTickets", fields: [eventId], references: [id])
+  event                   Event         @relation("EventTickets", fields: [eventId], references: [id], onDelete: Cascade)
   eventId                 String
   images                  Image[]       @relation("TicketImages")
   ticketItems             TicketItem[]  @relation("TicketItems")
@@ -82,13 +83,14 @@ model Ticket {
 }
 
 model TicketItem{
+
   id                      String        @id @default(auto()) @map("_id") @db.ObjectId
 
-  ticket                  Ticket        @relation("TicketItems", fields: [ticketId], references: [id])
+  ticket                  Ticket        @relation("TicketItems", fields: [ticketId], references: [id], onDelete: Cascade)
   ticketId                String
-  order                   Order         @relation("OrderTicket", fields: [orderId], references: [id])
+  order                   Order         @relation("OrderTicket", fields: [orderId], references: [id], onDelete: Cascade)
   orderId                 String      
-  user                    User          @relation("UserTicketItems", fields: [userId], references: [id])
+  user                    User          @relation("UserTicketItems", fields: [userId], references: [id], onDelete: Cascade)
   userId                  String
 
   @@index([ticketId])
@@ -100,7 +102,7 @@ model Order {
   totalPrice              Float
   status                  String       
   method                  String
-  user                    User          @relation("UserOrders", fields: [userId], references: [id])
+  user                    User          @relation("UserOrders", fields: [userId], references: [id], onDelete: Cascade)
   userId                  String
   ticketItems             TicketItem[]  @relation("OrderTicket")
   createdAt               DateTime      @default(now())
@@ -160,7 +162,7 @@ model Image {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   type      String   //"logo | banner | avatar | ticket"
   url       String
-  createdAt DateTime @default(now())
+
   event     Event?   @relation("EventImages", fields: [eventId], references: [id], onDelete: Cascade)
   eventId   String?
 
@@ -169,4 +171,6 @@ model Image {
 
   user      User?    @relation("UserAvatar", fields: [userId], references: [id], onDelete: Cascade)
   userId    String?
+  
+  createdAt DateTime @default(now())
 }

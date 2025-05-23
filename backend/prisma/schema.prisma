@@ -21,12 +21,18 @@ model User {
   resetToken              String? //reset password token
   resetTokenExpiresAt     DateTime?
 
-  avatars                 Image[]     @relation("UserAvatar")
-  orders                  Order[]     @relation("UserOrders")  //for organizer of the event
-  tickets                 TicketItem[]    @relation("UserTicketItems") //for user who bought the ticket
-  reviews                 Review[]    @relation("UserReviews")
-  events                  Event[]     @relation("UserEvents")
+  last_name               String?
+  first_name              String?
 
+  phone                   String?
+  address                 String?
+  avatars                 Image[]             @relation("UserAvatar")
+
+  orders                  Order[]             @relation("UserOrders")
+  tickets                 TicketItem[]        @relation("UserTicketItems") //for user who bought the ticket
+  reviews                 Review[]            @relation("UserReviews")
+  events                  EventOrganizer[]    @relation("UserEvents") //for user who created the event
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -35,43 +41,60 @@ model Event {
   id                      String      @id @default(auto()) @map("_id") @db.ObjectId
   title                   String
   description             String
-  date                    DateTime
+  active_start_date       DateTime
+  active_end_date         DateTime
+  sale_start_date         DateTime
+  sale_end_date           DateTime
   city                    String?
   district                String?
   ward                    String?
   street                  String?
-  isOnline                Boolean     @default(false)
-  user                    User        @relation("UserEvents", fields: [userId], references: [id])
-  userId                  String      //organizer
-  category                Category    @relation("CategoryEvents", fields: [categoryId], references: [id])
-  categoryId              String
-  images                  Image[]     @relation("EventImages")
-  tickets                 Ticket[]    @relation("EventTickets")
-  reviews                 Review[]    @relation("EventReviews")
-  createdAt               DateTime    @default(now())
-  updatedAt               DateTime    @updatedAt
+  type                    String      // e.g. "online", "offline", "hybrid"
 
-  @@index([userId])
+  organizer               EventOrganizer[]    @relation("EventOrganizers")
+  categories              EventCategory[]     @relation("EventCategories")
+  images                  Image[]             @relation("EventImages")
+  tickets                 Ticket[]            @relation("EventTickets")
+  reviews                 Review[]            @relation("EventReviews")
+
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
 }
 
 model Ticket {
-  id                      String      @id @default(auto()) @map("_id") @db.ObjectId
+  id                      String        @id @default(auto()) @map("_id") @db.ObjectId
   name                    String
   description             String?
   price                   Float
   quantity                Int
-  type                    String
+  class                   String
   status                  String
+
   event                   Event         @relation("EventTickets", fields: [eventId], references: [id])
   eventId                 String
   images                  Image[]       @relation("TicketImages")
   ticketItems             TicketItem[]  @relation("TicketItems")
+
   createdAt               DateTime      @default(now())
   updatedAt               DateTime      @updatedAt
 
   @@index([eventId])
 }
 
+model TicketItem{
+  id                      String        @id @default(auto()) @map("_id") @db.ObjectId
+
+  ticket                  Ticket        @relation("TicketItems", fields: [ticketId], references: [id])
+  ticketId                String
+  order                   Order         @relation("OrderTicket", fields: [orderId], references: [id])
+  orderId                 String      
+  user                    User          @relation("UserTicketItems", fields: [userId], references: [id])
+  userId                  String
+
+  @@index([ticketId])
+  @@index([orderId])
+  @@index([userId])
+}
 model Order {
   id                      String        @id @default(auto()) @map("_id") @db.ObjectId
   totalPrice              Float
@@ -85,19 +108,6 @@ model Order {
   @@index ([userId])
 }
 
-model TicketItem{
-  id                      String        @id @default(auto()) @map("_id") @db.ObjectId
-  ticket                  Ticket        @relation("TicketItems", fields: [ticketId], references: [id])
-  ticketId                String
-  order                   Order         @relation("OrderTicket", fields: [orderId], references: [id])
-  orderId                 String      
-  user                    User          @relation("UserTicketItems", fields: [userId], references: [id])
-  userId                  String
-
-  @@index([ticketId])
-  @@index([orderId])
-  @@index([userId])
-}
 
 model Review {
   id             String    @id @default(auto()) @map("_id") @db.ObjectId
@@ -116,8 +126,35 @@ model Review {
 model Category {
   id             String    @id @default(auto()) @map("_id") @db.ObjectId
   name           String    @unique
-  events         Event[]   @relation("CategoryEvents")
-  eventId        String
+
+  events         EventCategory[] @relation("CategoryEvents")
+}
+
+model EventCategory {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+
+  eventId         String
+  event           Event     @relation("EventCategories", fields: [eventId], references: [id], onDelete: Cascade)
+
+  categoryId      String 
+  category        Category  @relation("CategoryEvents", fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([categoryId])
+}
+
+model EventOrganizer {
+
+  id             String     @id @default(auto()) @map("_id") @db.ObjectId
+
+  userId        String
+  user          User       @relation("UserEvents", fields: [userId], references: [id], onDelete: Cascade)
+
+  eventId       String
+  event         Event      @relation("EventOrganizers", fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([eventId])
 }
 model Image {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId

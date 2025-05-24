@@ -20,10 +20,7 @@ export class AuthService {
     const user = await this.prisma.user.create({
       data: { ...dto, password: hashed },
     });
-    const tokens = await this.getTokens(user.id);
-    await this.updateRefreshToken(user.id, tokens.refreshToken);
-    await this.updateAccessToken(user.id, tokens.accessToken);
-    return tokens;
+    return "User created successfully";
   }
 
   async login(username: string, password: string) {

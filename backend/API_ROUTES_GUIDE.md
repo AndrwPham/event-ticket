@@ -1,171 +1,268 @@
+# 📘 API Routes Documentation
 
-# API Guide for Frontend – Sending Data to NestJS Backend
-
-This guide explains how the frontend should interact with the NestJS backend to send data, including authentication, event creation, ticket handling, and more.
+This guide provides an overview of all available API routes in the backend system. Each section corresponds to a controller and its available endpoints.
 
 ---
 
-### Authentication Routes
+## 🔐 AuthController `/auth`
 
-### `POST /auth/register`
-Register a new user.
+### POST `/auth/register`
 
-**Request Body (JSON):**
+* **Description**: Register a new user
+* **Body**:
+
 ```json
 {
-  "email": "user@example.com",
-  "password": "yourPassword",
-  "fullName": "User Name"
+  "email": "string",
+  "username": "string",
+  "password": "string"
 }
 ```
 
-### `POST /auth/login`
-Log in and receive access and refresh tokens.
+### POST `/auth/login`
 
-**Request Body (JSON):**
+* **Description**: Login a user
+* **Body**:
+
 ```json
 {
-  "email": "user@example.com",
-  "password": "yourPassword"
+  "username": "string",
+  "password": "string"
 }
 ```
 
-**Response:**
-```json
-{
-  "access_token": "jwt-access-token",
-  "refresh_token": "jwt-refresh-token"
-}
-```
+### POST `/auth/logout`
 
-### `POST /auth/refresh`
-Use refresh token to get a new access token.
+* **Description**: Logout the current user
+* **Headers**: `Authorization: Bearer <token>`
 
-**Headers:**
-```
-Authorization: Bearer <refresh_token>
-```
+### GET `/auth/user`
+
+* **Description**: Get current logged-in user info
+* **Headers**: `Authorization: Bearer <token>`
+
+### POST `/auth/refresh`
+
+* **Description**: Refresh access token
+* **Body**: `{ "refreshToken": "string" }`
+
+---
+# From here all routes just need a normal header: Content-Type: application/json. With specific POST, PATCH, DELETE need additional Authorization: Bearer <access_token> header!
+
+## 📅 EventController `/events`
+
+### POST `/events`
+
+* **Description**: Create new event
+
+### GET `/events`
+
+* **Description**: Get all events
+
+### GET `/events/:id`
+
+* **Description**: Get event by ID
+
+### PATCH `/events/:id`
+
+* **Description**: Update event by ID
+
+### DELETE `/events/:id`
+
+* **Description**: Delete event by ID
+
+### GET `/events/category/:categoryId`
+
+* **Description**: Get events by category
+
+### GET `/events/city/:cityId`
+
+* **Description**: Get events by city
+
+### GET `/events/district/:districtId`
+
+* **Description**: Get events by district
+
+### GET `/events/ward/:wardId`
+
+* **Description**: Get events by ward
 
 ---
 
-## 📅 Event Routes
+## 🖼️ ImageController `/images`
 
-### `POST /events`
-Create a new event.
+### POST `/images`
 
-**Headers:**
-```
-Authorization: Bearer <access_token>
-Content-Type: Application-json
-```
+* **Description**: Upload image
 
-**Request Body (JSON):**
-```json
-{
-  "title": "Live Music Night",
-  "description": "A night of fun music!",
-  "categoryId": "abc123",
-  "cityId": "ct456",
-  "districtId": "dt789",
-  "wardId": "wd101",
-  "date": "2025-05-30T18:00:00Z"
-}
-```
+### GET `/images`
 
----
+* **Description**: Get all images
 
-## 🎫 Ticket Routes
+### GET `/images/:id`
 
-### `POST /tickets`
-Create a ticket type for an event.
+* **Description**: Get image by ID
 
-**Headers:**
-```
-Authorization: Bearer <access_token>
-Content-Type: Application-json
-```
+### GET `/images/images/:userId`
 
-**Request Body:**
-```json
-{
-  "eventId": "event123",
-  "name": "VIP",
-  "price": 500000,
-  "quantity": 100
-}
-```
+* **Description**: Get images by user ID
 
----
+### GET `/images/images/:userId/:type`
 
-## 🖼 Image Upload
+* **Description**: Get user images by type
 
-### `POST /images`
-Upload an image (e.g. event poster, user profile, ticket preview).
+### GET `/images/images/:eventId`
 
-**Headers:**
-```
-Authorization: Bearer <access_token>
-Content-Type: Application-json
-```
+* **Description**: Get images by event ID
 
-**Form Fields:**
-- `type`: `event` | `user` | `ticket` | `logo` | `banner` (no rule here just suggestions to fit frontend logic)
-- `url`: ID of related entity
+### GET `/images/images/:eventId/:type`
+
+* **Description**: Get event images by type
+
+### GET `/images/images/:ticket`
+
+* **Description**: Get images by ticket ID
+
+### GET `/images/images/:ticket/:type`
+
+* **Description**: Get ticket images by type
+
+### PATCH `/images/:id`
+
+* **Description**: Update image by ID
+
+### DELETE `/images/:id`
+
+* **Description**: Delete image by ID
 
 ---
 
-## 🛒 Order Tickets
+## 🎟️ TicketController `/tickets`
 
-### `POST /orders`
-Create an order for purchasing tickets.
+### POST `/tickets`
 
-**Headers:**
-```
-Authorization: Bearer <access_token>
-Content-Type: Application-json
-```
+* **Description**: Create ticket
 
-**Request Body:**
-```json
-{
-  "userId": "user123",
-  "ticketItems": [
-    { "ticketId": "ticketA", "quantity": 2 },
-    { "ticketId": "ticketB", "quantity": 1 }
-  ]
-}
-```
+### GET `/tickets`
 
----
+* **Description**: Get all tickets
 
-## 📝 Review an Event
+### GET `/tickets/:id`
 
-### `POST /reviews`
-Submit a review for an event.
+* **Description**: Get ticket by ID
 
-**Headers:**
-```
-Authorization: Bearer <access_token>
-Content-Type: Application-json
-```
+### GET `/tickets/event/:id`
 
-**Request Body:**
-```json
-{
-  "eventId": "event123",
-  "rating": 5,
-  "comment": "Amazing event!"
-}
-```
+* **Description**: Get tickets by event ID
+
+### PATCH `/tickets/:id`
+
+* **Description**: Update ticket
+
+### DELETE `/tickets/:id`
+
+* **Description**: Delete ticket
 
 ---
 
-## ℹ️ Notes
+## 📂 CategoryController `/categories`
 
-- Use `Authorization: Bearer <access_token>` for all authenticated requests.
-- Use correct `Content-Type` (`application/json` or `multipart/form-data`).
+### POST `/categories`
+
+* **Description**: Create category
+
+### GET `/categories`
+
+* **Description**: Get all categories
+
+### GET `/categories/:id`
+
+* **Description**: Get category by ID
+
+### PATCH `/categories/:id`
+
+* **Description**: Update category
+
+### DELETE `/categories/:id`
+
+* **Description**: Delete category
 
 ---
 
-For more endpoints (`PATCH`, `DELETE`, or `GET`), refer to the backend route logs or API documentation.
+## 📦 OrderController `/orders`
 
+### POST `/orders`
+
+* **Description**: Create new order
+
+### GET `/orders`
+
+* **Description**: Get all orders
+
+### GET `/orders/user/:userId`
+
+* **Description**: Get orders by user ID
+
+### PATCH `/orders/:id`
+
+* **Description**: Update order by ID
+
+### PATCH `/orders/:id/cancel`
+
+* **Description**: Cancel order
+
+### PATCH `/orders/:id/confirm`
+
+* **Description**: Confirm order
+
+---
+
+## 🎫 TicketItemController `/ticket-items`
+
+### POST `/ticket-items`
+
+* **Description**: Create ticket item
+
+### GET `/ticket-items`
+
+* **Description**: Get all ticket items
+
+### GET `/ticket-items/user/:userId`
+
+* **Description**: Get ticket items by user ID
+
+### GET `/ticket-items/order/:orderId`
+
+* **Description**: Get ticket items by order ID
+
+### GET `/ticket-items/ticket/:ticketId`
+
+* **Description**: Get ticket items by ticket ID
+
+---
+
+## ⭐ ReviewController `/reviews`
+
+### POST `/reviews`
+
+* **Description**: Post a review
+
+### GET `/reviews`
+
+* **Description**: Get all reviews
+
+### GET `/reviews/event/:eventId`
+
+* **Description**: Get reviews for an event
+
+### PATCH `/reviews/:id`
+
+* **Description**: Update review
+
+### DELETE `/reviews/:id`
+
+* **Description**: Delete review
+
+---
+
+> ⚠️ Don't forget to add one more authentication header (Bearer) for POST, PATCH, DELETE routes! 

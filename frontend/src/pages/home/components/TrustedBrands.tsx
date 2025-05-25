@@ -1,12 +1,12 @@
-import SpotifyLogo from "../assets/images/brands/spotify.svg";
-import GoogleLogo from "../assets/images/brands/google.svg";
-import StripeLogo from "../assets/images/brands/stripe.svg";
-import YouTubeLogo from "../assets/images/brands/youtube.svg";
-import MicrosoftLogo from "../assets/images/brands/microsoft.svg";
-import SMBCLogo from "../assets/images/brands/SMBC.svg";
-import ZoomLogo from "../assets/images/brands/zoom.svg";
-import UberLogo from "../assets/images/brands/uber.svg";
-import GrabLogo from "../assets/images/brands/grab.svg";
+import SpotifyLogo from "../../../assets/images/brands/spotify.svg";
+import GoogleLogo from "../../../assets/images/brands/google.svg";
+import StripeLogo from "../../../assets/images/brands/stripe.svg";
+import YouTubeLogo from "../../../assets/images/brands/youtube.svg";
+import MicrosoftLogo from "../../../assets/images/brands/microsoft.svg";
+import SMBCLogo from "../../../assets/images/brands/SMBC.svg";
+import ZoomLogo from "../../../assets/images/brands/zoom.svg";
+import UberLogo from "../../../assets/images/brands/uber.svg";
+import GrabLogo from "../../../assets/images/brands/grab.svg";
 
 const brands = [
     { name: "Spotify", src: SpotifyLogo },

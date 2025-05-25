@@ -1,7 +1,8 @@
+import { FC } from "react";
 import { FaFacebookF, FaLinkedinIn, FaInstagram } from "react-icons/fa";
 import { MdEmail } from "react-icons/md";
 
-const Footer = () => {
+const Footer: FC = () => {
     return (
         <footer className="bg-darkBlue text-white py-10 px-4">
             <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">

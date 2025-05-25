@@ -1,6 +1,7 @@
+import { FC } from "react"; // Add FC for TypeScript
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
-import firstBanner from "../assets/images/special_event_carousel_banner.png";
+import firstBanner from "../../../assets/images/special_event_carousel_banner.png";
 
 import "swiper/css";
 import "swiper/css/navigation";
@@ -8,14 +9,14 @@ import "swiper/css/pagination";
 import "swiper/css/autoplay";
 
 const carouselImages = [
-  firstBanner, // Replace with your own images or paths
-  "https://placehold.co/1100x600", // Replace with your own images or paths
-  "https://placehold.co/1100x600", // Replace with your own images or paths
+  firstBanner,
+  "https://placehold.co/1100x600",
+  "https://placehold.co/1100x600",
 ];
 
-const SpecialEventsCarousel = () => {
+const SpecialEventsCarousel: FC = () => {
   return (
-    <section className="my-8 px-4 ">
+    <section className="my-8 px-4">
       <h2 className="w-5/6 mx-auto text-2xl font-bold text-[#1A0B49] mb-4">
         Special Events
       </h2>

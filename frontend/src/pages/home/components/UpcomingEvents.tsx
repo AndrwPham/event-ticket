@@ -1,6 +1,5 @@
-import React from "React";
+import React from "react";
 import { FaTicketAlt } from "react-icons/fa";
-import { Link } from "react-router-dom";
 
 const eventTemplate = {
     title: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque porttitor sem libero, id pretium lorem elementum quis. ",

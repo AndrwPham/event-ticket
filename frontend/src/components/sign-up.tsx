@@ -1,30 +1,26 @@
-// src/pages/SignUp.tsx
 import React from 'react';
 
-const SignUp = () => {
+export default function SignUp() {
     const [email, setEmail] = React.useState('');
     const [password, setPassword] = React.useState('');
     const [retypePassword, setRetypePassword] = React.useState('');
-    const [error, setError] = React.useState('');
+    const [showError, setShowError] = React.useState(false);
 
-    const validatePassword = (pwd: string) => {
+    function validatePassword(pwd: string) {
         const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,32}$/;
         return regex.test(pwd);
-    };
+    }
 
-    const handleSubmit = (e: React.FormEvent) => {
+    function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        if (!validatePassword(password)) {
-            setError('Invalid password');
-            return;
+
+        if (!validatePassword(password) || password !== retypePassword) {
+            setShowError(true);
+        } else {
+            setShowError(false);
+            console.log({ email, password }); // send to backend here
         }
-        if (password !== retypePassword) {
-            setError("Passwords don't match");
-            return;
-        }
-        setError('');
-        console.log({ email, password }); // or send to backend
-    };
+    }
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-white text-black">
@@ -55,7 +51,7 @@ const SignUp = () => {
                         required
                         className="w-full border rounded px-4 py-2"
                     />
-                    {error && (
+                    {showError && (
                         <div className="p-4 border border-red-500 text-red-600 text-sm rounded">
                             <p className="font-bold mb-1">Invalid password</p>
                             <ul className="list-disc list-inside space-y-1">
@@ -68,8 +64,7 @@ const SignUp = () => {
                     )}
                     <button
                         type="submit"
-                        className="w-full bg-gray-300 text-white py-2 rounded opacity-50 cursor-not-allowed"
-                        disabled
+                        className="w-full bg-[#1D0E3C] text-white hover:bg-[#311f5a] py-2 rounded transition"
                     >
                         Continue
                     </button>
@@ -81,6 +76,4 @@ const SignUp = () => {
             </div>
         </div>
     );
-};
-
-export default SignUp;
+}

@@ -14,8 +14,12 @@ export default function SignUp() {
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
 
-        if (!validatePassword(password) || password !== retypePassword) {
+        const trimmedPassword = password.trim();
+        const trimmedRetypePassword = retypePassword.trim();
+
+        if (trimmedPassword !== trimmedRetypePassword) {
             setShowError(true);
+            console.log(`"${password}" === "${retypePassword}"`, password === retypePassword);
         } else {
             setShowError(false);
             console.log({ email, password }); // send to backend here

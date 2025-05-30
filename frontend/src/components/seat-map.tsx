@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import './seatmap.css';
+import './seat-map.css';
 
 interface SeatMapProperties {
     rowCount: number;

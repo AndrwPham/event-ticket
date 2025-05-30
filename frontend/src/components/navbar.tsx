@@ -2,10 +2,13 @@ import { FC } from 'react';
 import { Link } from 'react-router-dom';
 import { FiSearch } from 'react-icons/fi';
 
-const Navbar: FC = () => {
+interface NavbarProps {
+    onSignUpClick: () => void;
+}
+
+const Navbar: FC<NavbarProps> = ({ onSignUpClick }) => {
     return (
         <nav className="bg-[#1D0E3C] text-white px-6 py-4 flex flex-row items-center justify-between">
-            {/* Left: Search Bar */}
             <div className="flex flex-row justify-end basis-1/2">
                 <div className="flex flex-row items-center w-2/3 bg-white rounded-full px-4 py-2 shadow-sm mr-10">
                     <FiSearch className="text-black mr-2" />
@@ -17,7 +20,6 @@ const Navbar: FC = () => {
                 </div>
             </div>
 
-            {/* Right: Navigation Links */}
             <div className="flex flex-row items-center justify-end basis-1/2 gap-12 text-sm font-medium">
                 <Link to="#" className="hover:underline">Contact Sales</Link>
                 <Link
@@ -28,7 +30,7 @@ const Navbar: FC = () => {
                 </Link>
                 <Link to="#" className="hover:underline">Tickets</Link>
                 <Link to="#" className="hover:underline">Log In</Link>
-                <Link to="/signup" className="hover:underline">Sign Up</Link>
+                <button onClick={onSignUpClick} className="hover:underline">Sign Up</button>
             </div>
         </nav>
     );

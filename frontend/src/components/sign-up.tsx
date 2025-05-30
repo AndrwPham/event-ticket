@@ -1,6 +1,11 @@
+// components/sign-up.tsx
 import React from 'react';
 
-export default function SignUp() {
+interface SignUpProps {
+    onClose: () => void;
+}
+
+export default function SignUp({ onClose }: SignUpProps) {
     const [email, setEmail] = React.useState('');
     const [password, setPassword] = React.useState('');
     const [retypePassword, setRetypePassword] = React.useState('');
@@ -17,20 +22,21 @@ export default function SignUp() {
         const trimmedPassword = password.trim();
         const trimmedRetypePassword = retypePassword.trim();
 
-        if (trimmedPassword !== trimmedRetypePassword) {
+        if (!validatePassword(trimmedPassword) || trimmedPassword !== trimmedRetypePassword) {
             setShowError(true);
-            console.log(`"${password}" === "${retypePassword}"`, password === retypePassword);
         } else {
             setShowError(false);
-            console.log({ email, password }); // send to backend here
+            console.log({ email, password });
+            onClose(); // close popup after success
         }
     }
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-white text-black">
-            <div className="w-full max-w-md p-8 space-y-6">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="bg-white text-black p-8 rounded-lg w-full max-w-md relative">
+                <button onClick={onClose} className="absolute top-2 right-3 text-xl">&times;</button>
                 <h2 className="text-3xl font-bold text-center text-[#1D0E3C]">Sign Up</h2>
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4 mt-4">
                     <input
                         type="email"
                         placeholder="Input email address or phone number"
@@ -72,10 +78,6 @@ export default function SignUp() {
                     >
                         Continue
                     </button>
-                    <p className="text-center text-sm">
-                        Already have an account?{' '}
-                        <a href="/login" className="text-pink-500 hover:underline">Log In</a>
-                    </p>
                 </form>
             </div>
         </div>

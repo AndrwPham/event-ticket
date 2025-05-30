@@ -1,19 +1,24 @@
-import { useState } from 'react';
 import './venue-button.css';
 
 interface VenueButtonConfiguration {
-    venueName: string
+    venueName: string,
+    activeVenueName: string | null,
+    setActiveVenue: React.Dispatch<React.SetStateAction<string>>,
 }
 
-const VenueButton = ({ venueName }: VenueButtonConfiguration) => {
-    const [isActive, setIsActive] = useState(false);
-    
-    const handleClick = () => {
-        console.log("Active Venue: " + venueName);
-        setIsActive(true);
+/**
+ * Button to select a venue.
+ * 
+ * This is not meant to be used by itself - please use VenueButtonGroup.
+ * 
+ * @author LunaciaDev
+ */
+const VenueButton = ({ venueName, activeVenueName, setActiveVenue: setSelectedVenue }: VenueButtonConfiguration) => {
+    const handleMouseUp = () => {
+        setSelectedVenue(venueName);
     }
 
-    return <button className={`venue-button ${isActive ? 'selected' : ''}`} onMouseUp={handleClick}>
+    return <button className={`venue-button ${activeVenueName === venueName ? 'selected' : ''}`} onMouseUp={handleMouseUp}>
         <img className='venue-image' src='https://placehold.co/250x150' />
         <div className='venue-name'> {venueName} </div>
     </button>

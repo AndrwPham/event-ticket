@@ -4,6 +4,16 @@ import './seat-map.css';
 interface SeatMapProperties {
     rowCount: number;
     colCount: number;
+
+    /**
+     * These function set the parent's seat coordinate state.
+     * 
+     * Why not share with the children? The user can select from any angle,
+     * so the start/end position might be inverted. We want consistant
+     * start/end coordinate, so it is set separately.
+     */
+    setSelectedSeatStartCoord: React.Dispatch<React.SetStateAction<[number, number] | null>>;
+    setSelectedSeatEndCoord: React.Dispatch<React.SetStateAction<[number, number] | null>>;
 }
 
 /**
@@ -14,7 +24,7 @@ interface SeatMapProperties {
  * @example
  * <SeatMap rowCount={5} colCount={5} />
  */
-const SeatMap = ({ rowCount, colCount }: SeatMapProperties) => {
+const SeatMap = ({ rowCount, colCount, setSelectedSeatStartCoord, setSelectedSeatEndCoord }: SeatMapProperties) => {
     const [isPointerInGrid, setIsPointerInGrid] = useState(false);
     const [isMouseDown, setIsMouseDown] = useState(false);
     const [selectionStartCoordinate, setSelectionStartCoordinate] = useState<[number, number] | null>(null);
@@ -61,6 +71,8 @@ const SeatMap = ({ rowCount, colCount }: SeatMapProperties) => {
         }
 
         setSelectedSeats(newSelected);
+        setSelectedSeatStartCoord([startRow, startCol]);
+        setSelectedSeatEndCoord([endRow, endCol]);
     }
 
     const handleMouseUp = () => {

@@ -1,12 +1,18 @@
-// import React from 'react';
-import SeatMap from "./components/seat-map";
-import VenueButtonGroup from "./components/venue-button-group";
+import VenueConfig from "./components/venue-config";
 
 function App() {
   return (
     <>
-      <VenueButtonGroup venueNames={["Venue A", "Venue B", "Venue C"]} />
-      <SeatMap rowCount={10} colCount={10} />
+      <VenueConfig venues={[{
+        name: "Venue A",
+        size: [5, 10]
+      }, {
+        name: "Venue B",
+        size: [6, 12],
+      }, {
+        name: "Venue C",
+        size: [4, 5],
+      }]} />
     </>
   );
 }

@@ -2,8 +2,14 @@ import './venue-button.css';
 
 interface VenueButtonConfiguration {
     venueName: string,
-    activeVenueName: string | null,
-    setActiveVenue: React.Dispatch<React.SetStateAction<string>>,
+    selectedVenueName: string | null,
+
+    /**
+     * Event handler from parent component.
+     * 
+     * @param venueName The name of the venue represented by the button
+     */
+    setSelectedVenue: (venueName: string) => void,
 }
 
 /**
@@ -13,7 +19,7 @@ interface VenueButtonConfiguration {
  * 
  * @author LunaciaDev
  */
-const VenueButton = ({ venueName, activeVenueName, setActiveVenue: setSelectedVenue }: VenueButtonConfiguration) => {
+const VenueButton = ({ venueName, selectedVenueName: activeVenueName, setSelectedVenue: setSelectedVenue }: VenueButtonConfiguration) => {
     const handleMouseUp = () => {
         setSelectedVenue(venueName);
     }

@@ -1,0 +1,18 @@
+.venue-button {
+    background-color: white;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.venue-image {
+    border-radius: 5px;
+}
+
+.venue-name {
+    margin-top: 5px;
+    color: black;
+}
+
+.venue-button.selected {
+    background-color: lightblue;
+}

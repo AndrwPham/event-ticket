@@ -1,7 +1,11 @@
 import { FC } from "react";
 import { FiSearch } from "react-icons/fi";
 
-const Navbar: FC = () => {
+interface NavbarProps {
+    onLogInClick: () => void;
+}
+
+const Navbar: FC<NavbarProps> = ({ onLogInClick }) => {
     return (
         <nav className="bg-darkBlue text-white px-6 py-4 flex flex-row items-center justify-between">
             {/* Left: Search Bar */}
@@ -30,9 +34,9 @@ const Navbar: FC = () => {
                 <a href="#" className="hover:underline">
                     Tickets
                 </a>
-                <a href="#" className="hover:underline">
+                <button onClick={onLogInClick} className="hover:underline">
                     Log In
-                </a>
+                </button>
                 <a href="#" className="hover:underline">
                     Sign Up
                 </a>

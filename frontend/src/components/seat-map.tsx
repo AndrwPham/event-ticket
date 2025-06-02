@@ -24,7 +24,7 @@ interface SeatMapProperties {
  * @example
  * <SeatMap rowCount={5} colCount={5} />
  */
-const SeatMap = ({ rowCount, colCount, setSelectedSeatStartCoord, setSelectedSeatEndCoord }: SeatMapProperties) => {
+export const SeatMap = ({ rowCount, colCount, setSelectedSeatStartCoord, setSelectedSeatEndCoord }: SeatMapProperties) => {
     const [isPointerInGrid, setIsPointerInGrid] = useState(false);
     const [isMouseDown, setIsMouseDown] = useState(false);
     const [selectionStartCoordinate, setSelectionStartCoordinate] = useState<[number, number] | null>(null);
@@ -109,5 +109,3 @@ const SeatMap = ({ rowCount, colCount, setSelectedSeatStartCoord, setSelectedSea
         </div>
     )
 }
-
-export default SeatMap;

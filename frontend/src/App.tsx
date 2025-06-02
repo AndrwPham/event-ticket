@@ -3,7 +3,7 @@ import VenueConfig from "./components/venue-config";
 function App() {
   return (
     <>
-      <VenueConfig venues={[{
+      <VenueConfig venueList={[{
         name: "Venue A",
         size: [5, 10]
       }, {

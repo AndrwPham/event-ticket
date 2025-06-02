@@ -1,6 +1,6 @@
 import { useState } from "react";
-import SeatMap from "./seat-map";
-import VenueButtonGroup from "./venue-button-group";
+import { SeatMap } from "./seat-map";
+import { VenueButtonGroup } from "./venue-button-group";
 
 interface Venue {
     name: string,
@@ -8,8 +8,8 @@ interface Venue {
 }
 
 // I am gonna have to fix the naming scheme huh
-interface VenueConfigConfiguration {
-    venues: Venue[]
+interface VenueList {
+    venueList: Venue[]
 }
 
 /**
@@ -32,14 +32,14 @@ interface VenueConfigConfiguration {
  * 
  * @author LunaciaDev
  */
-const VenueConfig = ({ venues }: VenueConfigConfiguration) => {
-    const [selectedVenue, setSelectedVenue] = useState(venues[0].name);
-    const [venueSize, setVenueSize] = useState(venues[0].size);
+const VenueConfig = ({ venueList }: VenueList) => {
+    const [selectedVenue, setSelectedVenue] = useState(venueList[0].name);
+    const [venueSize, setVenueSize] = useState(venueList[0].size);
     const [selectedSeatStartCoord, setSelectedSeatStartCoord] = useState<[number, number] | null>(null);
     const [selectedSeatEndCoord, setSelectedSeatEndCoord] = useState<[number, number] | null>(null);
 
     const handleSelectedVenueChange = (venueName: string) => {
-        venues.forEach(venue => {
+        venueList.forEach(venue => {
             if (venue.name === venueName) {
                 setSelectedVenue(venue.name);
                 setVenueSize(venue.size);
@@ -54,7 +54,7 @@ const VenueConfig = ({ venues }: VenueConfigConfiguration) => {
     return <div className="seat-config">
         <h1>Venue Configuration</h1>
         <h2>Select Venue:</h2>
-        <VenueButtonGroup venueNames={Array.from(venues).map((venue) => { return venue.name; })} selectedVenue={selectedVenue} setSelectedVenue={handleSelectedVenueChange} />
+        <VenueButtonGroup venueNames={Array.from(venueList).map((venue) => { return venue.name; })} selectedVenue={selectedVenue} setSelectedVenue={handleSelectedVenueChange} />
         <h2>Configure Venue Seat Map:</h2>
         <SeatMap key={selectedVenue} rowCount={venueSize[0]} colCount={venueSize[1]} setSelectedSeatStartCoord={setSelectedSeatStartCoord} setSelectedSeatEndCoord={setSelectedSeatEndCoord} />
     </div>

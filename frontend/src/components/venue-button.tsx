@@ -19,7 +19,7 @@ interface VenueButtonConfiguration {
  * 
  * @author LunaciaDev
  */
-const VenueButton = ({ venueName, selectedVenueName: activeVenueName, setSelectedVenue: setSelectedVenue }: VenueButtonConfiguration) => {
+export const VenueButton = ({ venueName, selectedVenueName: activeVenueName, setSelectedVenue: setSelectedVenue }: VenueButtonConfiguration) => {
     const handleMouseUp = () => {
         setSelectedVenue(venueName);
     }
@@ -29,5 +29,3 @@ const VenueButton = ({ venueName, selectedVenueName: activeVenueName, setSelecte
         <div className='mt-[5px] text-black'> {venueName} </div>
     </button>
 }
-
-export default VenueButton;

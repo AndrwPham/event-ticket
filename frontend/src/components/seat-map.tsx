@@ -86,20 +86,20 @@ const SeatMap = ({ rowCount, colCount, setSelectedSeatStartCoord, setSelectedSea
 
     return (
         <div
-            className='seat-grid'
+            className='inline-block border border-gray-300 select-none'
             onMouseEnter={handleMouseEnterGrid}
             onMouseLeave={handleMouseLeaveGrid}
             onMouseUp={handleMouseUp}
         >
             {Array.from({ length: rowCount }).map((_, row) => (
-                <div className='seat-row' key={row}>
+                <div className='flex' key={row}>
                     {Array.from({ length: colCount }).map((_, col) => (
                         <div
                             key={row * colCount + col}
                             ref={(el) => {
                                 seatRefs.current[row * colCount + col] = el;
                             }}
-                            className={`seat ${isSeatSelected(row, col) ? 'selected' : ''}`}
+                            className={`w-[30px] h-[30px] m-[2px] border border-gray-300 ${isSeatSelected(row, col) ? 'bg-green-500' : ' bg-gray-200'}`}
                             onMouseDown={() => handleMouseDown(row, col)}
                             onMouseEnter={() => handleMouseEnter(row, col)}
                         />

@@ -24,9 +24,9 @@ const VenueButton = ({ venueName, selectedVenueName: activeVenueName, setSelecte
         setSelectedVenue(venueName);
     }
 
-    return <button className={`venue-button ${activeVenueName === venueName ? 'selected' : ''}`} onMouseUp={handleMouseUp}>
-        <img className='venue-image' src='https://placehold.co/250x150' />
-        <div className='venue-name'> {venueName} </div>
+    return <button className={`p-[5px] rounded ${activeVenueName === venueName ? 'bg-blue-200' : 'bg-white '}`} onMouseUp={handleMouseUp}>
+        <img className='rounded' src='https://placehold.co/250x150' />
+        <div className='mt-[5px] text-black'> {venueName} </div>
     </button>
 }
 

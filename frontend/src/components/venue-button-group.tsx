@@ -1,4 +1,3 @@
-import { useState } from "react";
 import VenueButton from "./venue-button";
 import './venue-button-group.css';
 
@@ -23,7 +22,7 @@ interface VenueButtonGroupConfiguration {
  * @author LunaciaDev
  */
 const VenueButtonGroup = ({ venueNames, selectedVenue, setSelectedVenue }: VenueButtonGroupConfiguration) => {
-    return <div className="venue-button-group">
+    return <div className="flex gap-[10px] m-[10px]">
         {Array.from(venueNames).map((venueName) => {
             return <VenueButton venueName={venueName} selectedVenueName={selectedVenue} setSelectedVenue={setSelectedVenue} />
         })}

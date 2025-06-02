@@ -7,7 +7,6 @@ interface Venue {
     size: [number, number]
 }
 
-// I am gonna have to fix the naming scheme huh
 interface VenueList {
     venueList: Venue[]
 }
@@ -16,7 +15,7 @@ interface VenueList {
  * Venue seat configuration page.
  *
  * @example
- *  <VenueConfig venues={[
+ *  <VenueConfig venueList={[
  *      {
  *          name: "Venue A",
  *          size: [5, 10]

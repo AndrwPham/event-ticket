@@ -19,7 +19,7 @@ interface SeatMapProperties {
 /**
  * SeatMap create a grid of selectable seats.
  * 
- * User can click to select a single seat, or drag to select a rectangular group. By default, all seat start in the deselected state.
+ * User can click to select a single seat, or drag to select a rectangular group. By default, all seats start in the deselected state.
  *
  * @example
  * <SeatMap rowCount={5} colCount={5} />
@@ -40,7 +40,7 @@ export const SeatMap = ({ rowCount, colCount, setSelectedSeatStartCoord, setSele
 
         // this is debatable - one could argue that the UX would be better
         // if the user were to "accidentally" leave the grid could continue
-        // selecting, but I digress.
+        // selecting.
         setIsMouseDown(false);
     }
 

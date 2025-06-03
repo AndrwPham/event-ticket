@@ -3,6 +3,7 @@ import tseslint from "typescript-eslint";
 import reactPlugin from "eslint-plugin-react";
 import reactHooksPlugin from "eslint-plugin-react-hooks";
 import jsxA11yPlugin from "eslint-plugin-jsx-a11y";
+import eslintConfigPrettier from "eslint-config-prettier/flat";
 
 /** @type {import("eslint").Linter.Config[]} */
 const eslintConfig = [
@@ -28,6 +29,7 @@ const eslintConfig = [
             "react-hooks/exhaustive-deps": "warn",
         },
     },
+    eslintConfigPrettier
 ];
 
 export default eslintConfig;

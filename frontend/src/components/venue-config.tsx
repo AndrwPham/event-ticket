@@ -2,7 +2,8 @@ import { useState } from "react";
 import { SeatMap } from "./seat-map";
 import { VenueButtonGroup } from "./venue-button-group";
 
-interface Venue {
+export interface Venue {
+    id: number,
     name: string,
     size: [number, number]
 }
@@ -17,12 +18,15 @@ interface VenueList {
  * @example
  *  <VenueConfig venueList={[
  *      {
+ *          id: 0,
  *          name: "Venue A",
  *          size: [5, 10]
  *      }, {
+ *          id: 1,
  *          name: "Venue B",
  *          size: [6, 12],
  *      }, {
+ *          id: 2,
  *          name: "Venue C",
  *          size: [4, 5],
  *      }
@@ -31,16 +35,16 @@ interface VenueList {
  * 
  * @author LunaciaDev
  */
-const VenueConfig = ({ venueList }: VenueList) => {
-    const [selectedVenue, setSelectedVenue] = useState(venueList[0].name);
+export const VenueConfig = ({ venueList }: VenueList) => {
+    const [selectedVenue, setSelectedVenue] = useState(venueList[0].id);
     const [venueSize, setVenueSize] = useState(venueList[0].size);
     const [selectedSeatStartCoord, setSelectedSeatStartCoord] = useState<[number, number] | null>(null);
     const [selectedSeatEndCoord, setSelectedSeatEndCoord] = useState<[number, number] | null>(null);
 
-    const handleSelectedVenueChange = (venueName: string) => {
+    const handleSelectedVenueChange = (venueID: number) => {
         venueList.forEach(venue => {
-            if (venue.name === venueName) {
-                setSelectedVenue(venue.name);
+            if (venue.id === venueID) {
+                setSelectedVenue(venue.id);
                 setVenueSize(venue.size);
 
                 // reset the selected coordinates.
@@ -53,10 +57,8 @@ const VenueConfig = ({ venueList }: VenueList) => {
     return <div className="seat-config">
         <h1>Venue Configuration</h1>
         <h2>Select Venue:</h2>
-        <VenueButtonGroup venueNames={Array.from(venueList).map((venue) => { return venue.name; })} selectedVenue={selectedVenue} setSelectedVenue={handleSelectedVenueChange} />
+        <VenueButtonGroup venues={ venueList } selectedVenueID={selectedVenue} setSelectedVenue={handleSelectedVenueChange} />
         <h2>Configure Venue Seat Map:</h2>
         <SeatMap key={selectedVenue} rowCount={venueSize[0]} colCount={venueSize[1]} setSelectedSeatStartCoord={setSelectedSeatStartCoord} setSelectedSeatEndCoord={setSelectedSeatEndCoord} />
     </div>
 }
-
-export default VenueConfig;

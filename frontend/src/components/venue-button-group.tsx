@@ -1,16 +1,17 @@
 import { VenueButton } from "./venue-button";
+import { Venue } from "./venue-config";
 import './venue-button-group.css';
 
 interface VenueButtonGroupConfiguration {
-    venueNames: string[],
-    selectedVenue: string,
+    venues: Venue[],
+    selectedVenueID: number,
 
     /**
      * Event handler from parent component.
      * 
      * This is meant to be passed into the child buttons.
      */
-    setSelectedVenue: (venueName: string) => void,
+    setSelectedVenue: (venueID: number) => void,
 }
 
 /**
@@ -21,10 +22,10 @@ interface VenueButtonGroupConfiguration {
  * 
  * @author LunaciaDev
  */
-export const VenueButtonGroup = ({ venueNames, selectedVenue, setSelectedVenue }: VenueButtonGroupConfiguration) => {
+export const VenueButtonGroup = ({ venues, selectedVenueID, setSelectedVenue }: VenueButtonGroupConfiguration) => {
     return <div className="flex gap-[10px] m-[10px]">
-        {Array.from(venueNames).map((venueName) => {
-            return <VenueButton venueName={venueName} selectedVenueName={selectedVenue} setSelectedVenue={setSelectedVenue} />
+        {Array.from(venues).map((venue) => {
+            return <VenueButton venueName={venue.name} venueID={venue.id} selectedVenueID={selectedVenueID} setSelectedVenue={setSelectedVenue} />
         })}
     </div>
 }

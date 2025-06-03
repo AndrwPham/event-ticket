@@ -2,14 +2,15 @@ import './venue-button.css';
 
 interface VenueButtonConfiguration {
     venueName: string,
-    selectedVenueName: string | null,
+    venueID: number,
+    selectedVenueID: number | null,
 
     /**
      * Event handler from parent component.
      * 
-     * @param venueName The name of the venue represented by the button
+     * @param venueID The name of the venue represented by the button
      */
-    setSelectedVenue: (venueName: string) => void,
+    setSelectedVenue: (venueID: number) => void,
 }
 
 /**
@@ -19,12 +20,12 @@ interface VenueButtonConfiguration {
  * 
  * @author LunaciaDev
  */
-export const VenueButton = ({ venueName, selectedVenueName: activeVenueName, setSelectedVenue: setSelectedVenue }: VenueButtonConfiguration) => {
+export const VenueButton = ({ venueName, venueID, selectedVenueID, setSelectedVenue }: VenueButtonConfiguration) => {
     const handleMouseUp = () => {
-        setSelectedVenue(venueName);
+        setSelectedVenue(venueID);
     }
 
-    return <button className={`p-[5px] rounded ${activeVenueName === venueName ? 'bg-blue-200' : 'bg-white '}`} onMouseUp={handleMouseUp}>
+    return <button className={`p-[5px] rounded ${selectedVenueID === venueID ? 'bg-blue-200' : 'bg-white '}`} onMouseUp={handleMouseUp}>
         <img className='rounded' src='https://placehold.co/250x150' />
         <div className='mt-[5px] text-black'> {venueName} </div>
     </button>

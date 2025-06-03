@@ -1,6 +1,5 @@
 import { VenueButton } from "./venue-button";
 import { Venue } from "./venue-config";
-import './venue-button-group.css';
 
 interface VenueButtonGroupConfiguration {
     venues: Venue[],

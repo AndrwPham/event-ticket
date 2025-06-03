@@ -1,5 +1,3 @@
-import './venue-button.css';
-
 interface VenueButtonConfiguration {
     venueName: string,
     venueID: number,

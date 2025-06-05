@@ -18,8 +18,8 @@ jobs:
         run: npm ci
         working-directory: ./frontend
       - name: Check Linting rules
-        run: npm run lint:test
+        run: npm run lint:test-all
         working-directory: ./frontend
       - name: Check Formatting rules
-        run: npm run format:test
+        run: npm run format:test-all
         working-directory: ./frontend

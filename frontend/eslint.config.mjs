@@ -1,35 +1,44 @@
-import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import reactPlugin from "eslint-plugin-react";
 import reactHooksPlugin from "eslint-plugin-react-hooks";
 import jsxA11yPlugin from "eslint-plugin-jsx-a11y";
 import eslintConfigPrettier from "eslint-config-prettier/flat";
+import { defineConfig } from "eslint/config";
 
-/** @type {import("eslint").Linter.Config[]} */
-const eslintConfig = [
-    js.configs.recommended,
-    ...tseslint.configs.strict,
+export default defineConfig([
+    // expand tseslint to use strict type check
+    ...tseslint.configs.strictTypeChecked,
 
+    // react rules
+    reactPlugin.configs.flat.recommended,
+    reactHooksPlugin.configs["recommended-latest"],
+    jsxA11yPlugin.flatConfigs.recommended,
+
+    // config options
     {
-        plugins: {
-            react: reactPlugin,
-            "react-hooks": reactHooksPlugin,
-            "jsx-a11y": jsxA11yPlugin,
+        // enable type inferrence
+        languageOptions: {
+            parserOptions: {
+                projectService: true,
+                tsconfigRootDir: import.meta.dirname,
+            }
         },
-        files: ["**/*.tsx", "**/*.jsx"],
+
+        // react version
         settings: {
             react: {
                 version: "detect",
             },
         },
+    },
+
+    // overriding rules
+    {
         rules: {
             "react/react-in-jsx-scope": "off",
-            "jsx-a11y/anchor-is-valid": "warn",
-            "react-hooks/rules-of-hooks": "error",
-            "react-hooks/exhaustive-deps": "warn",
         },
     },
-    eslintConfigPrettier
-];
 
-export default eslintConfig;
+    // disable all stylistic rules
+    eslintConfigPrettier
+]);

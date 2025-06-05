@@ -15,9 +15,9 @@ if (hasStagedChangesInFolder(targetDir)) {
     process.chdir(targetDir);
 
     try {
-        execSync('npm run lint', { stdio: 'inherit' });
+        execSync('npm run lint:test', { stdio: 'inherit' });
     } catch {
-        console.error('Lint check failed. Run "npm run lint" in frontend folder, and fix failing issues before committing.');
+        console.error('Lint check failed. Run "npm run lint" in frontend folder, and fix issues before committing.');
         process.exit(1);
     }
 

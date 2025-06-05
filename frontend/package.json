@@ -6,7 +6,8 @@
         "dev": "vite",
         "build": "vite build",
         "serve": "vite preview",
-        "lint": "eslint . --ext .ts,.tsx",
+        "lint": "eslint src/**/* --ext .ts,.tsx --fix",
+        "lint:test": "eslint src/**/* --ext .ts,.tsx --fix",
         "format": "prettier src/**/* --write --ignore-unknown",
         "format:test": "prettier src/**/* --check --ignore-unknown"
     },

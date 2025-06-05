@@ -1,7 +1,7 @@
 name: Frontend Code Quality Check
 on:
   pull_request:
-    type: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
   run-quality-check:
@@ -14,12 +14,14 @@ jobs:
         uses: actions/setup-node@v4
         with: 
           node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
       - name: Install Dependencies
         run: npm ci
-        working-directory: ./frontend
+        working-directory: frontend/
       - name: Check Linting rules
         run: npm run lint:test-all
-        working-directory: ./frontend
+        working-directory: frontend/
       - name: Check Formatting rules
         run: npm run format:test-all
-        working-directory: ./frontend
+        working-directory: frontend/

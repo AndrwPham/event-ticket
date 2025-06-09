@@ -35,7 +35,12 @@ export default defineConfig([
     // overriding rules
     {
         rules: {
-            "react/react-in-jsx-scope": "off",
+            "react/react-in-jsx-scope": "off", // no need to import React if not needed
+            "@typescript-eslint/no-unused-vars": [ // warn if an unused variable is prefixed with an underscore
+                "warn", {
+                    "argsIgnorePattern": "^_"
+                }
+            ]
         },
     },
 

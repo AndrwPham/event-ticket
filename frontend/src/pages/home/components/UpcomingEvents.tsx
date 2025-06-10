@@ -1,72 +1,97 @@
-import React from "react";
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { FaTicketAlt } from "react-icons/fa";
 
-const eventTemplate = {
-    title: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque porttitor sem libero, id pretium lorem elementum quis. ",
-    datetime: "Thu, Apr 10, 9:00 AM", // use this format? what if the event in next year?
-    venue: "Template venue",
-    host: "Organization name",
-    payment: "Free",
-    tickets: "120 tickets left!",
-    image: "https://placehold.co/306x170",
-};
-
-// TODO: change this function to an API requests for real-time data
-const getEvents = () => {
-    const events = [];
-
-    for (let i = 0; i < 6; i++) {
-        events.push(
-            <div
-                className="bg-white rounded-lg overflow-hidden hover:shadow-lg transition"
-                key={i}
-            >
-                <div className="aspect-9/5">
-                    <img
-                        src={eventTemplate.image}
-                        alt={eventTemplate.title}
-                        className="w-full h-auto object-cover rounded-lg"
-                    />
-                </div>
-                <div className="p-4 space-y-4">
-                    <h3 className="font-semibold text-base leading-snug line-clamp-2">
-                        {eventTemplate.title}
-                    </h3>
-                    <p className="text-sm text-red-500 font-medium mb-1">
-                        {eventTemplate.datetime}
-                    </p>
-                    <p className="text-sm text-gray-600 mt-1 line-clamp-1">
-                        {eventTemplate.venue}
-                    </p>
-                    <p className="text-xs mt-2 text-gray-500">Free</p>
-                    <p className="text-xs font-semibold text-gray-800 mt-1">
-                        {eventTemplate.host}
-                    </p>
-                    <div className="flex items-center text-sm mt-2 text-gray-600">
-                        <FaTicketAlt className="mr-1" />
-                        <span>{eventTemplate.tickets}</span>
-                    </div>
-                </div>
-            </div>,
-        );
-    }
-
-    return events;
-};
+// 1. We import the event data from our single source of truth.
+import { allEvents } from "../../../data/_mock_db";
 
 const UpcomingEvents: React.FC = () => {
+    // 2. State to manage how many events are currently visible. We start with 3.
+    const [visibleCount, setVisibleCount] = useState(3);
+
+    // 3. This function increases the number of visible events when the button is clicked.
+    const handleLoadMore = () => {
+        setVisibleCount((prevCount) => prevCount + 3);
+    };
+
+    // 4. We "slice" the full array of events to get only the ones we need to display.
+    const visibleEvents = allEvents.slice(0, visibleCount);
+
+    // Helper function to format the ISO date string into a user-friendly format.
+    const formatEventDate = (isoString: string) => {
+        return new Intl.DateTimeFormat("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "numeric",
+            hour12: true,
+        }).format(new Date(isoString));
+    };
+
     return (
-        <section className="py-8 px-4">
-            <h2 className="w-5/6 text-2xl font-bold mx-auto mt-3 lg:mt-8">
-                Upcoming Events
-            </h2>
-            <div className="w-5/6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-14 mx-auto my-6">
-                {getEvents()}
-            </div>
-            <div className="flex justify-center pt-4">
-                <button className="px-6 py-2 border-2 border-[#2D1D53] rounded-full text-[#2D1D53] font-semibold hover:bg-[#2D1D53] hover:text-white transition">
-                    Load More
-                </button>
+        <section className="bg-white py-12">
+            <div className="max-w-7xl mx-auto px-4">
+                <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+                    Upcoming Events
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {/* 5. We map over the `visibleEvents` array to render each card. */}
+                    {visibleEvents.map((event) => (
+                        <Link
+                            to={`/event/${String(event.id)}`}
+                            className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 block"
+                            key={event.id}
+                        >
+                            <div className="aspect-[16/9] overflow-hidden">
+                                <img
+                                    src={event.posterUrl}
+                                    alt={event.title}
+                                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                />
+                            </div>
+                            <div className="p-5">
+                                <h3 className="text-lg font-semibold text-gray-900 leading-snug line-clamp-2 h-14">
+                                    {event.title}
+                                </h3>
+                                <p className="text-sm text-indigo-600 font-semibold mt-2">
+                                    {/* Using the first schedule entry's time for display */}
+                                    {formatEventDate(
+                                        event.schedule[0].datetime,
+                                    )}
+                                </p>
+                                <p className="text-sm text-gray-600 mt-2 line-clamp-1">
+                                    {event.location.name}
+                                </p>
+                                <div className="border-t my-4"></div>
+                                <div className="flex justify-between items-center text-sm text-gray-800">
+                                    <p className="font-bold">
+                                        From{" "}
+                                        {new Intl.NumberFormat("vi-VN").format(
+                                            event.startingPrice,
+                                        )}
+                                        đ
+                                    </p>
+                                    <div className="flex items-center text-gray-600">
+                                        <FaTicketAlt className="mr-2 text-indigo-500" />
+                                        <span>{event.organizer}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </Link>
+                    ))}
+                </div>
+                <div className="flex justify-center mt-12">
+                    {/* 6. The button is only shown if there are more events left to load. */}
+                    {visibleCount < allEvents.length && (
+                        <button
+                            onClick={handleLoadMore}
+                            className="px-8 py-3 bg-[#2D1D53] text-white font-semibold rounded-full hover:bg-opacity-90 transition-colors duration-300 shadow-lg"
+                        >
+                            Load More
+                        </button>
+                    )}
+                </div>
             </div>
         </section>
     );

@@ -17,6 +17,7 @@ interface SeatMapProperties {
     setSelectedSeatEndCoord: React.Dispatch<
         React.SetStateAction<[number, number] | null>
     >;
+    setHasSelectionChanged: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 /**
@@ -32,6 +33,7 @@ export const SeatMap = ({
     colCount,
     setSelectedSeatStartCoord,
     setSelectedSeatEndCoord,
+    setHasSelectionChanged,
 }: SeatMapProperties) => {
     const [isPointerInGrid, setIsPointerInGrid] = useState(false);
     const [isMouseDown, setIsMouseDown] = useState(false);
@@ -91,6 +93,7 @@ export const SeatMap = ({
         setSelectedSeats(newSelected);
         setSelectedSeatStartCoord([startRow, startCol]);
         setSelectedSeatEndCoord([endRow, endCol]);
+        setHasSelectionChanged(true);
     };
 
     const handleMouseUp = () => {

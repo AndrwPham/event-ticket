@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { SeatMap } from "./seat-map";
 import { VenueButtonGroup } from "./venue-button-group";
+import { SendSeatmapButton } from "./send-seatmap-button";
 
 export interface Venue {
     id: number;
@@ -44,12 +45,14 @@ export const VenueConfig = ({ venueList }: VenueList) => {
     const [selectedSeatEndCoord, setSelectedSeatEndCoord] = useState<
         [number, number] | null
     >(null);
+    const [hasSelectionChanged, setHasSelectionChanged] = useState(false);
 
     const handleSelectedVenueChange = (venueID: number) => {
         venueList.forEach((venue) => {
             if (venue.id === venueID) {
                 setSelectedVenue(venue.id);
                 setVenueSize(venue.size);
+                setHasSelectionChanged(true);
 
                 // reset the selected coordinates.
                 setSelectedSeatStartCoord(null);
@@ -74,6 +77,14 @@ export const VenueConfig = ({ venueList }: VenueList) => {
                 colCount={venueSize[1]}
                 setSelectedSeatStartCoord={setSelectedSeatStartCoord}
                 setSelectedSeatEndCoord={setSelectedSeatEndCoord}
+                setHasSelectionChanged={setHasSelectionChanged}
+            />
+            <SendSeatmapButton
+                selectedSeatStartCoord={selectedSeatStartCoord}
+                selectedSeatEndCoord={selectedSeatEndCoord}
+                selectedVenueID={selectedVenue}
+                hasSelectionChanged={hasSelectionChanged}
+                setHasSelectionChanged={setHasSelectionChanged}
             />
         </div>
     );

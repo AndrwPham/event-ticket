@@ -8,31 +8,30 @@ that looks similar to the ticketbox.com page
 export const allEvents = [
     {
         id: 1,
-        title: "Hài Kịch: Náo Loạn Tiếu Lâm Đường",
-        organizer: "Nhà hát Thanh Niên",
-        posterUrl: "", // This image should be in your /public folder
-        description:
-            "Một vở hài kịch đặc sắc với sự tham gia của các nghệ sĩ hàng đầu, hứa hẹn mang lại những tràng cười sảng khoái và những giây phút giải trí khó quên.",
-        artists: [
-            "Hoài Linh",
-            "Trường Giang",
-            "Trấn Thành",
-            "Thu Trang",
-            "Tiến Luật",
-            "Nam Thư",
-        ],
-        startingPrice: 250000,
+        title: "CAREER FAIR & INDUSTRY EXPLORATION DAY 2025",
+        organizer: {
+            name: "Vietnamese - German University",
+            logoUrl: "https://i.imgur.com/T1YAS2q.png",
+        },
+        posterUrl: "/image_d4e69a.jpg", // Assumes this image is in your /public folder
+        description: `VGU Career Fair and Industry Exploration Day 2025 is a flagship event to foster collaboration, innovation, and career exploration within the VGU community. Day 2025 aims to:
+      - Connect VGU students with industry partners for careers and internships.
+      - Provide a platform for companies to showcase their technologies and opportunities.
+      - Build and strengthen VGU-industry partnerships for collaboration and knowledge exchange.
+      - Highlight VGU as a hub for industry-ready graduates with German-Vietnamese expertise.`,
+        artists: [],
+        startingPrice: 100000,
         location: {
-            name: "Nhà hát Thanh Niên",
+            name: "VGU Convention Hall - Ben Cat Campus",
             address:
-                "Số 4 Phạm Ngọc Thạch, Phường Bến Nghé, Quận 1, Thành Phố Hồ Chí Minh",
+                "Ring road 4, Quarter 4, Thoi Hoa Ward, Ben Cat City, Binh Duong Province",
         },
         schedule: [
             {
-                datetime: "2025-06-13T19:00:00",
+                datetime: "2025-05-14T08:30:00",
                 tiers: [
-                    { name: "Hạng VIP", price: 300000 },
-                    { name: "Hạng thường", price: 250000 },
+                    { name: "VIP", price: 250000 },
+                    { name: "Standard", price: 100000 },
                 ],
             },
         ],
@@ -40,8 +39,14 @@ export const allEvents = [
     {
         id: 2,
         title: "Đại Nhạc Kịch Mùa Hè",
-        organizer: "Sân Vận Động Phú Thọ",
-        posterUrl: "",
+        // MODIFIED: 'organizer' is now an object
+        organizer: {
+            name: "Sân Vận Động Phú Thọ",
+            logoUrl: "https://via.placeholder.com/150x50?text=Organizer+Logo",
+        },
+        // MODIFIED: Added a placeholder poster image
+        posterUrl:
+            "https://via.placeholder.com/1200x500?text=Dai+Nhac+Kich+Banner",
         description:
             "Sự kiện âm nhạc lớn nhất mùa hè với sự góp mặt của dàn sao V-Pop đình đám. Một đêm bùng nổ với âm thanh và ánh sáng hiện đại.",
         artists: ["Sơn Tùng M-TP", "Hà Anh Tuấn", "Bích Phương", "Đen Vâu"],
@@ -64,8 +69,13 @@ export const allEvents = [
     {
         id: 3,
         title: "Liveshow Ca Sĩ Nổi Tiếng",
-        organizer: "Trung tâm Hội nghị Quốc gia",
-        posterUrl: "",
+        // MODIFIED: 'organizer' is now an object
+        organizer: {
+            name: "Trung tâm Hội nghị Quốc gia",
+            logoUrl: "https://via.placeholder.com/150x50?text=Organizer+Logo",
+        },
+        // MODIFIED: Added a placeholder poster image
+        posterUrl: "https://via.placeholder.com/1200x500?text=Liveshow+Banner",
         description:
             "Đêm nhạc cá nhân của một giọng ca vàng, mang đến những bản hit bất hủ và những ca khúc mới nhất.",
         artists: ["Ca Sĩ Bí Mật"],

@@ -74,7 +74,7 @@ const UpcomingEvents: React.FC = () => {
                                     </p>
                                     <div className="flex items-center text-gray-600">
                                         <FaTicketAlt className="mr-2 text-indigo-500" />
-                                        <span>{event.organizer}</span>
+                                        <span>{event.organizer.name}</span>
                                     </div>
                                 </div>
                             </div>

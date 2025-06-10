@@ -10,7 +10,7 @@ import SignUp from "./pages/signUp/page";
 import Home from "./pages/home/page";
 import SearchPage from "./pages/search/page";
 import Payment from "./pages/payment/Payment";
-import TicketDetails from "./pages/payment/TicketDetails";
+import TicketDetails from "./pages/ticket/TicketDetails";
 
 function App() {
     return (

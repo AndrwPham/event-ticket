@@ -11,6 +11,7 @@ import Home from "./pages/home/page";
 import SearchPage from "./pages/search/page";
 import Payment from "./pages/payment/Payment";
 import TicketDetails from "./pages/ticket/TicketDetails";
+import CardPaymentPage from "./pages/payment/CardPaymentPage";
 
 function App() {
     return (
@@ -32,6 +33,10 @@ function App() {
                         <Route path="/login" element={<Login />} />
                         <Route path="/sign-up" element={<SignUp />} />
                         <Route path="/search" element={<SearchPage />} />
+                        <Route
+                            path="/payment/card"
+                            element={<CardPaymentPage />}
+                        />
                     </Routes>
                 </main>
                 <Footer />

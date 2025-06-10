@@ -1,42 +1,19 @@
 import { FC, useState } from "react";
-import { useLocation, Link } from "react-router-dom";
+import { useLocation, Link, useNavigate } from "react-router-dom";
 import { FaCreditCard, FaRegCheckCircle } from "react-icons/fa";
 import { IoWallet } from "react-icons/io5";
 
-// Import the components
+import { ILocationState } from "../../types";
+
 import CountdownTimer from "./components/CountdownTimer";
 import BuyerInfoForm from "./components/BuyerInfoForm";
 import OrderSummary from "./components/OrderSummary";
 
-export interface ITier {
-    name: string;
-    price: number;
-}
-export interface ISchedule {
-    datetime: string;
-    tiers: ITier[];
-}
-export interface IEvent {
-    id: number;
-    title: string;
-    location: { name: string };
-    schedule: ISchedule[];
-}
-export interface IOrderTicket {
-    type: string;
-    quantity: number;
-    price: number;
-}
-export interface IOrderDetails {
-    tickets: IOrderTicket[];
-}
-
 const PaymentPage: FC = () => {
+    const navigate = useNavigate();
     const location = useLocation();
-    const state = location.state as {
-        eventDetails: IEvent;
-        orderDetails: IOrderDetails;
-    } | null;
+
+    const state = location.state as ILocationState | null;
     const eventDetails = state?.eventDetails;
     const orderDetails = state?.orderDetails;
 
@@ -76,6 +53,29 @@ const PaymentPage: FC = () => {
         buyerInfo.phone &&
         agreedToTerms;
 
+    const handlePayment = () => {
+        if (!isFormValid) return;
+
+        const finalOrder = {
+            buyerInfo,
+            eventDetails,
+            orderDetails,
+            paymentMethod,
+        };
+        console.log("Submitting Order:", finalOrder);
+
+        if (paymentMethod === "card") {
+            navigate("/payment/card", {
+                state: { eventDetails, orderDetails },
+            });
+        } else {
+            alert(
+                `Simulating payment with ${paymentMethod}... Payment successful!`,
+            );
+            // navigate('/confirmation', { state: { finalOrder } });
+        }
+    };
+
     return (
         <div className="bg-gray-100 py-8">
             <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -86,7 +86,6 @@ const PaymentPage: FC = () => {
                         buyerInfo={buyerInfo}
                         onInfoChange={handleInputChange}
                     />
-
                     <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
                         <h2 className="text-xl font-bold text-gray-800 mb-4">
                             Choose Payment Method
@@ -106,9 +105,7 @@ const PaymentPage: FC = () => {
                                     className="hidden"
                                 />
                                 <IoWallet className="text-2xl text-pink-600 mr-4" />
-                                <span className="font-semibold">
-                                    Mobile Banking
-                                </span>
+                                <span className="font-semibold">E-Wallet</span>
                                 <FaRegCheckCircle
                                     className={`ml-auto text-xl ${paymentMethod === "momo" ? "text-indigo-600" : "text-gray-300"}`}
                                 />
@@ -145,29 +142,28 @@ const PaymentPage: FC = () => {
                         orderDetails={orderDetails}
                     />
                     <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 mt-8">
-                        <div className="">
-                            <label className="flex items-start text-sm text-gray-600">
-                                <input
-                                    type="checkbox"
-                                    checked={agreedToTerms}
-                                    onChange={() => {
-                                        setAgreedToTerms(!agreedToTerms);
-                                    }}
-                                    className="mt-1 mr-2 h-4 w-4 accent-indigo-600"
-                                />
-                                <span>
-                                    I agree to the{" "}
-                                    <a
-                                        href="/terms-and-conditions"
-                                        className="text-indigo-600 hover:underline"
-                                    >
-                                        terms and conditions
-                                    </a>{" "}
-                                    of the organizer.
-                                </span>
-                            </label>
-                        </div>
+                        <label className="flex items-start text-sm text-gray-600">
+                            <input
+                                type="checkbox"
+                                checked={agreedToTerms}
+                                onChange={() => {
+                                    setAgreedToTerms(!agreedToTerms);
+                                }}
+                                className="mt-1 mr-2 h-4 w-4 accent-indigo-600"
+                            />
+                            <span>
+                                I agree to the{" "}
+                                <a
+                                    href="/terms-and-conditions"
+                                    className="text-indigo-600 hover:underline"
+                                >
+                                    terms and conditions
+                                </a>{" "}
+                                of the organizer.
+                            </span>
+                        </label>
                         <button
+                            onClick={handlePayment}
                             disabled={!isFormValid}
                             className={`w-full mt-4 py-3 rounded-lg text-white font-bold text-lg transition ${isFormValid ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-400 cursor-not-allowed"}`}
                         >

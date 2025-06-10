@@ -1,5 +1,3 @@
-// src/pages/ticket/TicketDetails.tsx
-
 import { FC, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { FaCalendarAlt, FaMapMarkerAlt } from "react-icons/fa";

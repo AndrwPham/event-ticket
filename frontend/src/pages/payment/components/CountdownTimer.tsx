@@ -23,7 +23,7 @@ const CountdownTimer: FC<CountdownTimerProps> = ({ initialSeconds }) => {
     return (
         <div className="bg-white p-6 rounded-lg shadow-md text-center border border-gray-200">
             <h2 className="text-lg font-semibold text-gray-700">
-                Thời gian giữ vé
+                Time till complete order
             </h2>
             <p className="text-4xl font-bold text-indigo-600 mt-2">
                 {String(minutes).padStart(2, "0")}:

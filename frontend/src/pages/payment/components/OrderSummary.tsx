@@ -14,13 +14,12 @@ const OrderSummary: FC<OrderSummaryProps> = ({
         (acc, ticket) => acc + ticket.price * ticket.quantity,
         0,
     );
-    const processingFee = 35000;
-    const totalAmount = subtotal + processingFee;
+    const totalAmount = subtotal; // Incase for additional fee
 
     return (
         <div className="bg-white p-6 rounded-lg shadow-md lg:sticky lg:top-8 border border-gray-200">
             <h2 className="text-xl font-bold text-gray-800 border-b border-gray-200 pb-4 mb-4">
-                Tóm tắt đơn hàng
+                Order Summary
             </h2>
             <div className="space-y-2 mb-4">
                 <h3 className="font-semibold">{eventDetails.title}</h3>
@@ -51,28 +50,13 @@ const OrderSummary: FC<OrderSummaryProps> = ({
                             {new Intl.NumberFormat("vi-VN").format(
                                 ticket.price * ticket.quantity,
                             )}
-                            đ
                         </span>
                     </div>
                 ))}
             </div>
-            <div className="border-t border-gray-200 pt-4 mt-4 space-y-2">
-                <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Tổng cộng</span>
-                    <span>
-                        {new Intl.NumberFormat("vi-VN").format(subtotal)}đ
-                    </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Phí xử lý</span>
-                    <span>
-                        {new Intl.NumberFormat("vi-VN").format(processingFee)}đ
-                    </span>
-                </div>
-            </div>
-            <div className="border-t border-gray-200 pt-4 mt-4">
+            <div className="border-t border-gray-200 py-4 space-y-2">
                 <div className="flex justify-between items-center font-bold text-lg">
-                    <span>Thành tiền</span>
+                    <span>Total</span>
                     <span>
                         {new Intl.NumberFormat("vi-VN").format(totalAmount)}đ
                     </span>

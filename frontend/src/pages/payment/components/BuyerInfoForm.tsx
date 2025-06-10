@@ -14,7 +14,7 @@ const BuyerInfoForm: FC<BuyerInfoFormProps> = ({ buyerInfo, onInfoChange }) => {
     return (
         <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
             <h2 className="text-xl font-bold text-gray-800 mb-4">
-                Thông tin người mua
+                Personal Information
             </h2>
             <form className="space-y-4">
                 <div className="relative">
@@ -22,7 +22,7 @@ const BuyerInfoForm: FC<BuyerInfoFormProps> = ({ buyerInfo, onInfoChange }) => {
                     <input
                         type="text"
                         name="fullName"
-                        placeholder="Họ và Tên"
+                        placeholder="Your Full Name"
                         value={buyerInfo.fullName}
                         onChange={onInfoChange}
                         className="w-full pl-10 p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
@@ -44,7 +44,7 @@ const BuyerInfoForm: FC<BuyerInfoFormProps> = ({ buyerInfo, onInfoChange }) => {
                     <input
                         type="tel"
                         name="phone"
-                        placeholder="Số điện thoại"
+                        placeholder="Phone Number"
                         value={buyerInfo.phone}
                         onChange={onInfoChange}
                         className="w-full pl-10 p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"

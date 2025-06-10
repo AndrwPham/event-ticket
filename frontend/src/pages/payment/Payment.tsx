@@ -51,17 +51,15 @@ const PaymentPage: FC = () => {
     if (!eventDetails || !orderDetails || orderDetails.tickets.length === 0) {
         return (
             <div className="text-gray-800 text-center py-20 max-w-2xl mx-auto">
-                <h1 className="text-3xl font-bold">
-                    Giỏ hàng của bạn đang trống
-                </h1>
+                <h1 className="text-3xl font-bold">Your cart is empty</h1>
                 <p className="mt-4 text-gray-600">
-                    Vui lòng chọn vé trước khi tiến hành thanh toán.
+                    Please select your tickets before proceeding to payment.
                 </p>
                 <Link
                     to="/"
                     className="mt-6 inline-block bg-green-500 text-white px-8 py-3 rounded-md font-semibold hover:bg-green-600"
                 >
-                    Khám phá sự kiện
+                    Explore Events
                 </Link>
             </div>
         );
@@ -91,9 +89,8 @@ const PaymentPage: FC = () => {
 
                     <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
                         <h2 className="text-xl font-bold text-gray-800 mb-4">
-                            Chọn phương thức thanh toán
+                            Choose Payment Method
                         </h2>
-                        {/* Payment method selection remains here for now */}
                         <div className="space-y-3">
                             <label
                                 className={`flex items-center p-4 border rounded-lg cursor-pointer ${paymentMethod === "momo" ? "border-indigo-600 ring-2 ring-indigo-600" : "border-gray-200"}`}
@@ -110,7 +107,7 @@ const PaymentPage: FC = () => {
                                 />
                                 <IoWallet className="text-2xl text-pink-600 mr-4" />
                                 <span className="font-semibold">
-                                    Ví điện tử
+                                    Mobile Banking
                                 </span>
                                 <FaRegCheckCircle
                                     className={`ml-auto text-xl ${paymentMethod === "momo" ? "text-indigo-600" : "text-gray-300"}`}
@@ -131,7 +128,7 @@ const PaymentPage: FC = () => {
                                 />
                                 <FaCreditCard className="text-2xl text-gray-500 mr-4" />
                                 <span className="font-semibold">
-                                    Thẻ tín dụng / Ghi nợ
+                                    Credit / Debit Card
                                 </span>
                                 <FaRegCheckCircle
                                     className={`ml-auto text-xl ${paymentMethod === "card" ? "text-indigo-600" : "text-gray-300"}`}
@@ -159,14 +156,14 @@ const PaymentPage: FC = () => {
                                     className="mt-1 mr-2 h-4 w-4 accent-indigo-600"
                                 />
                                 <span>
-                                    Tôi đồng ý với các{" "}
+                                    I agree to the{" "}
                                     <a
                                         href="/terms-and-conditions"
                                         className="text-indigo-600 hover:underline"
                                     >
-                                        điều khoản và điều kiện
+                                        terms and conditions
                                     </a>{" "}
-                                    của nhà tổ chức.
+                                    of the organizer.
                                 </span>
                             </label>
                         </div>
@@ -174,7 +171,7 @@ const PaymentPage: FC = () => {
                             disabled={!isFormValid}
                             className={`w-full mt-4 py-3 rounded-lg text-white font-bold text-lg transition ${isFormValid ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-400 cursor-not-allowed"}`}
                         >
-                            Thanh Toán
+                            Pay Now
                         </button>
                     </div>
                 </div>

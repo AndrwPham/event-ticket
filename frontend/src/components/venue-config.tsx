@@ -3,13 +3,13 @@ import { SeatMap } from "./seat-map";
 import { VenueButtonGroup } from "./venue-button-group";
 
 export interface Venue {
-    id: number,
-    name: string,
-    size: [number, number]
+    id: number;
+    name: string;
+    size: [number, number];
 }
 
 interface VenueList {
-    venueList: Venue[]
+    venueList: Venue[];
 }
 
 /**
@@ -32,17 +32,21 @@ interface VenueList {
  *      }
  *  ]}
  *  />
- * 
+ *
  * @author LunaciaDev
  */
 export const VenueConfig = ({ venueList }: VenueList) => {
     const [selectedVenue, setSelectedVenue] = useState(venueList[0].id);
     const [venueSize, setVenueSize] = useState(venueList[0].size);
-    const [selectedSeatStartCoord, setSelectedSeatStartCoord] = useState<[number, number] | null>(null);
-    const [selectedSeatEndCoord, setSelectedSeatEndCoord] = useState<[number, number] | null>(null);
+    const [selectedSeatStartCoord, setSelectedSeatStartCoord] = useState<
+        [number, number] | null
+    >(null);
+    const [selectedSeatEndCoord, setSelectedSeatEndCoord] = useState<
+        [number, number] | null
+    >(null);
 
     const handleSelectedVenueChange = (venueID: number) => {
-        venueList.forEach(venue => {
+        venueList.forEach((venue) => {
             if (venue.id === venueID) {
                 setSelectedVenue(venue.id);
                 setVenueSize(venue.size);
@@ -52,13 +56,25 @@ export const VenueConfig = ({ venueList }: VenueList) => {
                 setSelectedSeatEndCoord(null);
             }
         });
-    }
+    };
 
-    return <div className="seat-config">
-        <h1>Venue Configuration</h1>
-        <h2>Select Venue:</h2>
-        <VenueButtonGroup venues={ venueList } selectedVenueID={selectedVenue} setSelectedVenue={handleSelectedVenueChange} />
-        <h2>Configure Venue Seat Map:</h2>
-        <SeatMap key={selectedVenue} rowCount={venueSize[0]} colCount={venueSize[1]} setSelectedSeatStartCoord={setSelectedSeatStartCoord} setSelectedSeatEndCoord={setSelectedSeatEndCoord} />
-    </div>
-}
+    return (
+        <div className="seat-config">
+            <h1>Venue Configuration</h1>
+            <h2>Select Venue:</h2>
+            <VenueButtonGroup
+                venues={venueList}
+                selectedVenueID={selectedVenue}
+                setSelectedVenue={handleSelectedVenueChange}
+            />
+            <h2>Configure Venue Seat Map:</h2>
+            <SeatMap
+                key={selectedVenue}
+                rowCount={venueSize[0]}
+                colCount={venueSize[1]}
+                setSelectedSeatStartCoord={setSelectedSeatStartCoord}
+                setSelectedSeatEndCoord={setSelectedSeatEndCoord}
+            />
+        </div>
+    );
+};

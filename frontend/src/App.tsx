@@ -10,13 +10,16 @@ import SignUp from "./pages/signUp/page";
 import Home from "./pages/home/page";
 import SearchPage from "./pages/search/page";
 import Payment from "./pages/payment/Payment";
+import TicketDetails from "./pages/payment/TicketDetails";
 
 function App() {
     return (
         <Router>
             <Navbar />
             <Routes>
-                <Route path="/" element={<Payment />} />
+                <Route path="/" element={<Home />} />
+                <Route path="/event/:id" element={<TicketDetails />} />
+                <Route path="/payment" element={<Payment />} />
                 <Route path="/home" element={<Home />} />
                 <Route path="/contact-sales" element={<ContactSales />} />
                 <Route path="/create-event" element={<CreateEvent />} />

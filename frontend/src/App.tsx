@@ -15,20 +15,27 @@ import TicketDetails from "./pages/payment/TicketDetails";
 function App() {
     return (
         <Router>
-            <Navbar />
-            <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/event/:id" element={<TicketDetails />} />
-                <Route path="/payment" element={<Payment />} />
-                <Route path="/home" element={<Home />} />
-                <Route path="/contact-sales" element={<ContactSales />} />
-                <Route path="/create-event" element={<CreateEvent />} />
-                <Route path="/ticket" element={<Ticket />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/sign-up" element={<SignUp />} />
-                <Route path="/search" element={<SearchPage />} />
-            </Routes>
-            <Footer />
+            <div className="flex flex-col min-h-screen bg-gray-100">
+                <Navbar />
+                <main className="flex-grow">
+                    <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/event/:id" element={<TicketDetails />} />
+                        <Route path="/payment" element={<Payment />} />
+                        <Route path="/home" element={<Home />} />
+                        <Route
+                            path="/contact-sales"
+                            element={<ContactSales />}
+                        />
+                        <Route path="/create-event" element={<CreateEvent />} />
+                        <Route path="/ticket" element={<Ticket />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/sign-up" element={<SignUp />} />
+                        <Route path="/search" element={<SearchPage />} />
+                    </Routes>
+                </main>
+                <Footer />
+            </div>
         </Router>
     );
 }

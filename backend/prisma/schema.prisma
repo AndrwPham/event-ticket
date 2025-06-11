@@ -19,14 +19,6 @@ model AttendeeInfo {
   phone                   String?             @unique
   company                 String?
 
-  accessToken             String?
-  refreshToken            String?
-  confirmed               Boolean             @default(false)
-  confirmToken            String?
-  confirmTokenExpiresAt   DateTime?
-  resetToken              String?
-  resetTokenExpiresAt     DateTime?
-
   avatars                 Image[]             @relation("AttendeeAvatars")
   orders                  Order[]             @relation("AttendeeOrders")
   tickets                 ClaimedTicket[]     @relation("AttendeeClaimedTickets")
@@ -43,6 +35,14 @@ model Attendee {
   password                String
   user                    AttendeeInfo?        @relation("AttendeeInfo")
 
+  accessToken             String?
+  refreshToken            String?
+  confirmed               Boolean             @default(false)
+  confirmToken            String?
+  confirmTokenExpiresAt   DateTime?
+  resetToken              String?
+  resetTokenExpiresAt     DateTime?
+
   createdAt               DateTime            @default(now())
   updatedAt               DateTime            @updatedAt
 
@@ -55,6 +55,14 @@ model Organizer {
   name                    String
   username                String              @unique
   password                String
+
+  accessToken             String?
+  refreshToken            String?
+  confirmed               Boolean             @default(false)
+  confirmToken            String?
+  confirmTokenExpiresAt   DateTime?
+  resetToken              String?
+  resetTokenExpiresAt     DateTime?
 
   events                  Event[]             @relation("OrganizerEvents")
   tickets                 IssuedTicket[]      @relation("OrganizerIssuedTickets")

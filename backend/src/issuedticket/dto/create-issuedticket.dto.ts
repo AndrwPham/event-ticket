@@ -5,4 +5,7 @@ export class CreateIssuedTicketDto {
   class: string;
   status: "available" | "unavailable";
   eventId: string;
+  seat: string;
+  attendeeId?: string;
+  ticketId?: string;
 }

@@ -7,39 +7,12 @@ export class EventService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateEventDto) {
-    const { categoryIds, organizerIds, ...eventData } = dto;
 
     const event = await this.prisma.event.create({
-      data: eventData,
+      data: dto,
     });
 
-    const eventCategoryLinks = await Promise.all(
-      categoryIds.map((categoryId) =>
-        this.prisma.eventCategory.create({
-          data: {
-            eventId: event.id,
-            categoryId,
-          },
-        })
-      )
-    );
-
-    const eventOrganizerLinks = await Promise.all(
-      organizerIds.map((userId) =>
-        this.prisma.eventOrganizer.create({
-          data: {
-            eventId: event.id,
-            userId,
-          },
-        })
-      )
-    );
-
-    return {
-      event,
-      eventCategoryLinks,
-      eventOrganizerLinks,
-    };
+    return event;
   }
 
   findAll() {
@@ -47,11 +20,8 @@ export class EventService {
       include: {
         images: true,
         tickets: true,
-        categories: {
-          include: {
-            category: true,
-          },
-        },
+        tags: true,
+        organizer: true,
       },
     });
   }
@@ -62,32 +32,22 @@ export class EventService {
       include: {
         images: true,
         tickets: true,
-        categories: {
-          include: {
-            category: true,
-          },
-        },
+        tags: true,
+        organizer: true,
       },
     });
   }
 
-  async findByCategory(categoryId: string) {
-    const eventCategories = await this.prisma.eventCategory.findMany({
-      where: { categoryId },
+  async findByTag(tagId: string) {
+    return this.prisma.event.findMany({
+      where: { tagIds: { has: tagId } },
       include: {
-        event: {
-          include: {
-            images: true,
-            tickets: true,
-            categories: {
-              include: { category: true },
-            },
-          },
-        },
+        images: true,
+        tickets: true,
+        tags: true,
+        organizer: true,
       },
     });
-
-    return eventCategories.map((ec) => ec.event);
   }
 
   findByCity(city: string) {
@@ -96,11 +56,8 @@ export class EventService {
       include: {
         images: true,
         tickets: true,
-        categories: {
-          include: {
-            category: true,
-          },
-        },
+        tags: true,
+        organizer: true,
       },
     });
   }
@@ -111,11 +68,8 @@ export class EventService {
       include: {
         images: true,
         tickets: true,
-        categories: {
-          include: {
-            category: true,
-          },
-        },
+        tags: true,
+        organizer: true,
       },
     });
   }
@@ -126,40 +80,20 @@ export class EventService {
       include: {
         images: true,
         tickets: true,
-        categories: {
-          include: {
-            category: true,
-          },
-        },
+        tags: true,
+        organizer: true,
       },
     });
   }
 
   async update(id: string, dto: CreateEventDto) {
-    const { categoryIds, ...eventData } = dto;
 
     const updatedEvent = await this.prisma.event.update({
       where: { id },
-      data: eventData,
+      data: dto,
     });
 
-    await this.prisma.eventCategory.deleteMany({ where: { eventId: id } });
-
-    const newLinks = await Promise.all(
-      categoryIds.map((categoryId) =>
-        this.prisma.eventCategory.create({
-          data: {
-            eventId: id,
-            categoryId,
-          },
-        })
-      )
-    );
-
-    return {
-      updatedEvent,
-      updatedEventCategories: newLinks,
-    };
+    return updatedEvent;
   }
 
   remove(id: string) {

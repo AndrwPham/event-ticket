@@ -10,7 +10,7 @@ export class CreateEventDto {
   ward?: string;
   street?: string;
   type: string;
-  categoryIds: string[];
-  organizerIds: string[];
+  tagIds: string[];
+  organizerId: string;
   imageId: string[];
 }

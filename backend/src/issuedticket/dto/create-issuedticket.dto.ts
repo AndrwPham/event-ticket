@@ -3,9 +3,10 @@ export class CreateIssuedTicketDto {
   price: number;
   quantity: number;
   class: string;
-  status: "available" | "unavailable";
   eventId: string;
   seat: string;
   attendeeId?: string;
   ticketId?: string;
+  organizerId?: string;
+  currencyId?: string;
 }

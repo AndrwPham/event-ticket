@@ -9,12 +9,6 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 export class IssuedTicketController {
   constructor(private readonly ticketService: IssuedTicketService) {}
 
-  @UseGuards(JwtAuthGuard)
-  @Post()
-  create(@Body() dto: CreateIssuedTicketDto) {
-    return this.ticketService.create(dto);
-  }
-
   @Get()
   findAll() {
     return this.ticketService.findAll();

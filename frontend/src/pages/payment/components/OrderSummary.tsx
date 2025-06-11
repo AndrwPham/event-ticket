@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { IEvent, IOrderDetails } from "../Payment";
+import { IEvent, IOrderDetails } from "../../../types";
 
 interface OrderSummaryProps {
     eventDetails: IEvent;

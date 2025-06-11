@@ -26,22 +26,19 @@ export class EventService {
             const { seatMapDesign, price, class: ticketClass, status, currencyId, quantity } = ticket;
             const { StartCoordinate, EndCoordinate, Class } = seatMapDesign;
 
-            // Validate class consistency
             if (Class !== ticketClass) {
               throw new Error(`SeatMapDesign Class (${Class}) must match ticket class (${ticketClass})`);
             }
 
-            // Calculate grid dimensions
             const [startX, startY] = StartCoordinate;
             const [endX, endY] = EndCoordinate;
             const rows = endY - startY + 1;
             const cols = endX - startX + 1;
 
-            // Generate seat IDs (e.g., A-0, A-1, ..., B-0, ...)
             const ticketData: Prisma.IssuedTicketCreateWithoutEventInput[] = [];
             let count = 0;
             for (let y = startY; y <= endY && count < quantity; y++) {
-              const rowLetter = String.fromCharCode(65 + y - startY); // A, B, C, ...
+              const rowLetter = String.fromCharCode(65 + y - startY);
               for (let x = startX; x <= endX && count < quantity; x++) {
                 const seatId = `${rowLetter}-${x}`;
                 ticketData.push({
@@ -143,13 +140,13 @@ export class EventService {
   }
 
   async update(id: string, dto: UpdateEventDto) {
-    const { tagIds, organizerId, imageIds, ...eventData } = dto;
+    const { tagIds, organizerId, imageIds, tickets, ...eventData } = dto;
 
     const updatedEvent = await this.prisma.event.update({
       where: { id },
       data: {
         ...eventData,
-        organizer: { connect: { id: organizerId } },
+        organizer: organizerId ? { connect: { id: organizerId } } : undefined,
         tags: {
           set: [],
           connect: tagIds?.map((id) => ({ id })) || [],
@@ -158,6 +155,50 @@ export class EventService {
           set: [],
           connect: imageIds?.map((id) => ({ id })) || [],
         },
+        tickets: tickets
+          ? {
+              deleteMany: {}, // Clear existing tickets
+              create: tickets.flatMap((ticket): Prisma.IssuedTicketCreateWithoutEventInput[] => {
+                const { seatMapDesign, price, class: ticketClass, status, currencyId, quantity } = ticket;
+                const { StartCoordinate, EndCoordinate, Class } = seatMapDesign;
+
+                if (Class !== ticketClass) {
+                  throw new Error(`SeatMapDesign Class (${Class}) must match ticket class (${ticketClass})`);
+                }
+
+                const [startX, startY] = StartCoordinate;
+                const [endX, endY] = EndCoordinate;
+                const rows = endY - startY + 1;
+                const cols = endX - startX + 1;
+
+                const ticketData: Prisma.IssuedTicketCreateWithoutEventInput[] = [];
+                let count = 0;
+                for (let y = startY; y <= endY && count < quantity; y++) {
+                  const rowLetter = String.fromCharCode(65 + y - startY);
+                  for (let x = startX; x <= endX && count < quantity; x++) {
+                    const seatId = `${rowLetter}-${x}`;
+                    ticketData.push({
+                      price,
+                      class: ticketClass,
+                      seat: seatId,
+                      status,
+                      organizer: { connect: { id: organizerId } },
+                      currency: { connect: { id: currencyId } },
+                    });
+                    count++;
+                  }
+                }
+
+                return ticketData;
+              }),
+            }
+          : undefined,
+      },
+      include: {
+        images: true,
+        tickets: true,
+        tags: true,
+        organizer: true,
       },
     });
 

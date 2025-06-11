@@ -11,10 +11,13 @@ import { CategoryModule } from './category/category.module';
 import { OrderModule } from './order/order.module';
 import { TicketItemModule } from './ticket-item/ticket-item.module';
 import { ReviewModule } from './review/review.module';
+import { AWSModule } from './common/aws/aws.module';
 
 @Module({
   imports: [
-    ConfigModule,
+    ConfigModule.forRoot({
+            isGlobal: true,
+        }),
     PrismaModule,
     AuthModule,
     EventModule,
@@ -24,6 +27,7 @@ import { ReviewModule } from './review/review.module';
     OrderModule,
     TicketItemModule,
     ReviewModule,
+    AWSModule,
   ],
   controllers: [AppController],
   providers: [AppService],

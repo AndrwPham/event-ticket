@@ -11,7 +11,7 @@ import { CategoryModule } from './category/category.module';
 import { OrderModule } from './order/order.module';
 import { TicketItemModule } from './ticket-item/ticket-item.module';
 import { ReviewModule } from './review/review.module';
-import { AWSModule } from './common/aws/aws.module';
+import { SharedModule } from './common/shared.module';
 
 @Module({
   imports: [
@@ -27,7 +27,7 @@ import { AWSModule } from './common/aws/aws.module';
     OrderModule,
     TicketItemModule,
     ReviewModule,
-    AWSModule,
+    SharedModule,
   ],
   controllers: [AppController],
   providers: [AppService],

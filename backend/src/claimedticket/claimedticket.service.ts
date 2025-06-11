@@ -9,61 +9,33 @@ export class ClaimedTicketService {
   async create(dto: CreateClaimedTicketDto) {
     const ticket = await this.prisma.claimedTicket.findUnique({
         where: { id: dto.ticketId },
-    });
-
-    if (!ticket) {
-        throw new Error('Ticket not found');
-    }
-
-    if (ticket.quantity <= 0) {
-        throw new Error('Ticket is sold out');
-    }
-
-    return this.prisma.$transaction([
-        //create ticket item 
-        this.prisma.ticketItem.create({
-          data: {
-            user: { connect: { id: dto.userId } },
-            ticket: { connect: { id: dto.ticketId } },
-            order: { connect: { id: dto.orderId } },
-          },
-        }),
-        //decrement ticket quantity
-        this.prisma.ticket.update({
-        where: { id: dto.ticketId },
-        data: {
-            quantity: { decrement: 1 },
-        },
-        }),
-    ]);
-
-    
+    }); 
   }
 
   async findAll() {
-    return this.prisma.ticketItem.findMany({
-      include: { ticket: true, user: true, order: true },
+    return this.prisma.claimedTicket.findMany({
+      include: { ticket: true, attendee: true, order: true },
     });
   }
 
-  async findByUser(userId: string) {
-    return this.prisma.ticketItem.findMany({
-      where: { userId },
+  async findByUser(attendeeId: string) {
+    return this.prisma.claimedTicket.findMany({
+      where: { attendeeId },
       include: { ticket: true, order: true },
     });
   }
 
   async findByOrder(orderId: string) {
-    return this.prisma.ticketItem.findMany({
+    return this.prisma.claimedTicket.findMany({
       where: { orderId },
-      include: { ticket: true, user: true },
+      include: { ticket: true, attendee: true },
     });
   }
 
   async findByTicket(ticketId: string) {
-    return this.prisma.ticketItem.findMany({
+    return this.prisma.claimedTicket.findMany({
       where: { ticketId },
-      include: { order: true, user: true },
+      include: { order: true, attendee: true },
     });
   }
 }

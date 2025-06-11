@@ -6,10 +6,10 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { EventModule } from './event/event.module';
 import { ImageModule } from './image/image.module';
-import { TicketModule } from './issuedticket/issuedticket.module';
-import { CategoryModule } from './tag/category.module';
+import { IssuedTicketModule } from './issuedticket/issuedticket.module';
+import { TagModule } from './tag/tag.module';
 import { OrderModule } from './order/order.module';
-import { TicketItemModule } from './claimedticket/claimedticket.module';
+import { ClaimedTicketModule } from './claimedticket/claimedticket.module';
 import { ReviewModule } from './review/review.module';
 import { SharedModule } from './common/shared.module';
 
@@ -18,16 +18,16 @@ import { SharedModule } from './common/shared.module';
     ConfigModule.forRoot({
             isGlobal: true,
         }),
-    // PrismaModule,
-    // AuthModule,
-    // EventModule,
-    // ImageModule,
-    // TicketModule,
-    // CategoryModule,
-    // OrderModule,
-    // TicketItemModule,
-    // ReviewModule,
-    // SharedModule,
+    PrismaModule,
+    AuthModule,
+    EventModule,
+    ImageModule,
+    IssuedTicketModule,
+    TagModule,
+    OrderModule,
+    ClaimedTicketModule,
+    ReviewModule,
+    SharedModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -12,7 +12,7 @@ export class ReviewService {
       data: {
         rating: dto.rating,
         content: dto.content,
-        user: { connect: { id: dto.userId } },
+        attendee: { connect: { id: dto.userId } },
         event: { connect: { id: dto.eventId } },
       },
     });
@@ -20,14 +20,14 @@ export class ReviewService {
 
   findAll() {
     return this.prisma.review.findMany({
-      include: { user: true, event: true },
+      include: { attendee: true, event: true },
     });
   }
 
   findByEvent(eventId: string) {
     return this.prisma.review.findMany({
       where: { eventId },
-      include: { user: true },
+      include: { attendee: true },
     });
   }
 

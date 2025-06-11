@@ -1,8 +1,8 @@
 import {
   Controller, Get, Post, Body, Patch, Param, Delete, UseGuards
 } from '@nestjs/common';
-import { TicketService } from './ticket.service';
-import { CreateTicketDto } from './dto/create-ticket.dto';
+import { TicketService } from './issuedticket.service';
+import { CreateTicketDto } from './dto/create-issuedticket.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @Controller('tickets')

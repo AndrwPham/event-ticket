@@ -6,10 +6,10 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { EventModule } from './event/event.module';
 import { ImageModule } from './image/image.module';
-import { TicketModule } from './ticket/ticket.module';
-import { CategoryModule } from './category/category.module';
+import { TicketModule } from './issuedticket/issuedticket.module';
+import { CategoryModule } from './tag/category.module';
 import { OrderModule } from './order/order.module';
-import { TicketItemModule } from './ticket-item/ticket-item.module';
+import { TicketItemModule } from './claimedticket/claimedticket.module';
 import { ReviewModule } from './review/review.module';
 import { SharedModule } from './common/shared.module';
 

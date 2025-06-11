@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateTicketDto } from './dto/create-ticket.dto';
+import { CreateTicketDto } from './dto/create-issuedticket.dto';
 
 @Injectable()
 export class TicketService {

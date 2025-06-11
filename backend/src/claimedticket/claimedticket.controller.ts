@@ -1,6 +1,6 @@
 import { Controller, Post, Get, Param, Body } from '@nestjs/common';
-import { TicketItemService } from './ticket-item.service';
-import { CreateTicketItemDto } from './dto/create-ticket-item..dto';
+import { TicketItemService } from './claimedticket.service';
+import { CreateTicketItemDto } from './dto/create-claimeditem..dto';
 
 @Controller('ticket-items')
 export class TicketItemController {

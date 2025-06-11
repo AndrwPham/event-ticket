@@ -1,15 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateEventDto } from './dto/create-event.dto';
+import { CreateEventDto } from 'src/event/dto/create-event.dto';
 
 @Injectable()
 export class EventService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateEventDto) {
+    const { tagIds, organizerId, ...eventData } = dto;
 
     const event = await this.prisma.event.create({
-      data: dto,
+      data: {
+        ...eventData,
+        organizer: { connect: { id: organizerId } },
+        tags: {
+          connect: tagIds?.map((id) => ({ id })) || [],
+        },
+      },
     });
 
     return event;
@@ -87,10 +94,18 @@ export class EventService {
   }
 
   async update(id: string, dto: CreateEventDto) {
+    const { tagIds, organizerId, ...eventData } = dto;
 
     const updatedEvent = await this.prisma.event.update({
       where: { id },
-      data: dto,
+      data: {
+        ...eventData,
+        organizer: { connect: { id: organizerId } },
+        tags: {
+          set: [], 
+          connect: tagIds?.map((id) => ({ id })) || [],
+        },
+      },
     });
 
     return updatedEvent;

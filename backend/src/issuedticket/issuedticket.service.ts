@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateTicketDto } from './dto/create-issuedticket.dto';
+import { CreateIssuedTicketDto } from './dto/create-issuedticket.dto';
 
 @Injectable()
-export class TicketService {
+export class IssuedTicketService {
   constructor(private prisma: PrismaService) {}
 
-  create(dto: CreateTicketDto) {
+  create(dto: CreateIssuedTicketDto) {
     return this.prisma.ticket.create({
       data: {
         name: dto.name,
@@ -40,7 +40,7 @@ export class TicketService {
     }
 
 
-  update(id: string, dto: CreateTicketDto) {
+  update(id: string, dto: CreateIssuedTicketDto) {
     return this.prisma.ticket.update({
       where: { id },
       data: dto,

@@ -1,4 +1,4 @@
-export class CreateTicketDto {
+export class CreateIssuedTicketDto {
   name: string;
   price: number;
   quantity: number;

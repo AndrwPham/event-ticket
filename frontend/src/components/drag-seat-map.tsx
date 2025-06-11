@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 
-interface SeatMapProperties {
+interface DragSeatMapConfig {
     rowCount: number;
     colCount: number;
 
@@ -28,13 +28,13 @@ interface SeatMapProperties {
  * @example
  * <SeatMap rowCount={5} colCount={5} />
  */
-export const SeatMap = ({
+export const DragSeatMap = ({
     rowCount,
     colCount,
     setSelectedSeatStartCoord,
     setSelectedSeatEndCoord,
     setHasSelectionChanged,
-}: SeatMapProperties) => {
+}: DragSeatMapConfig) => {
     const [isPointerInGrid, setIsPointerInGrid] = useState(false);
     const [isMouseDown, setIsMouseDown] = useState(false);
     const [selectionStartCoordinate, setSelectionStartCoordinate] = useState<

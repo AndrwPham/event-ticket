@@ -68,8 +68,12 @@ export const SendSeatmapButton = ({
                 return;
             }
 
-            const response = await fetch("localhost:5000/api/data", {
+            const headers = new Headers();
+            headers.append("Content-Type", "application/json");
+
+            const response = await fetch("gttps://localhost:5000/api/data", {
                 method: "POST",
+                headers: headers,
                 body: JSON.stringify({
                     SeatmapStartCoordinate: selectedSeatStartCoord,
                     SeatmapEndCoordinate: selectedSeatEndCoord,

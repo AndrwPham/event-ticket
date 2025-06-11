@@ -1,23 +1,41 @@
-import { VenueConfig } from "./components/venue-config";
+import { ClickSeatMap } from "./components/click-seat-map";
 
 function App() {
-  return (
-    <>
-      <VenueConfig venueList={[{
-        id: 0,
-        name: "Venue A",
-        size: [5, 10]
-      }, {
-        id: 1,
-        name: "Venue B",
-        size: [6, 12],
-      }, {
-        id: 2,
-        name: "Venue C",
-        size: [4, 5],
-      }]} />
-    </>
-  );
+    return (
+        <>
+            <ClickSeatMap
+                venueSize={{
+                    rowCount: 9,
+                    colCount: 9,
+                }}
+                seatTypes={[
+                    {
+                        colorCode: "bg-blue-200",
+                        tierID: 1,
+                        startPos: [0, 0],
+                        endPos: [0, 8],
+                    },
+                    {
+                        colorCode: "bg-yellow-200",
+                        tierID: 2,
+                        startPos: [1, 2],
+                        endPos: [1, 6],
+                    },
+                ]}
+                bookedSeats={[
+                    [0, 3],
+                    [0, 4],
+                    [0, 5],
+                    [1, 3],
+                    [2, 5],
+                ]}
+                configuredSeats={{
+                    startPos: [0, 0],
+                    endPos: [8, 8],
+                }}
+            />
+        </>
+    );
 }
 
 export default App;

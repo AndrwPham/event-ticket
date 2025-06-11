@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { SeatMap } from "./seat-map";
+import { DragSeatMap } from "./drag-seat-map";
 import { VenueButtonGroup } from "./venue-button-group";
 import { SendSeatmapButton } from "./send-seatmap-button";
 
@@ -71,7 +71,7 @@ export const VenueConfig = ({ venueList }: VenueList) => {
                 setSelectedVenue={handleSelectedVenueChange}
             />
             <h2>Configure Venue Seat Map:</h2>
-            <SeatMap
+            <DragSeatMap
                 key={selectedVenue}
                 rowCount={venueSize[0]}
                 colCount={venueSize[1]}

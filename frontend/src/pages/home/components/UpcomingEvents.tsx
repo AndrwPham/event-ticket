@@ -7,11 +7,11 @@ import { allEvents } from "../../../data/_mock_db";
 
 const UpcomingEvents: React.FC = () => {
     // 2. State to manage how many events are currently visible. We start with 3.
-    const [visibleCount, setVisibleCount] = useState(3);
+    const [visibleCount, setVisibleCount] = useState(9);
 
     // 3. This function increases the number of visible events when the button is clicked.
     const handleLoadMore = () => {
-        setVisibleCount((prevCount) => prevCount + 3);
+        setVisibleCount((prevCount) => prevCount + 9);
     };
 
     // 4. We "slice" the full array of events to get only the ones we need to display.

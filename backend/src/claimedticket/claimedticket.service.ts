@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateTicketItemDto } from './dto/create-claimeditem..dto';
+import { CreateClaimedTicketDto } from './dto/create-claimedticket.dto';
 
 @Injectable()
 export class ClaimedTicketService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateTicketItemDto) {
+  async create(dto: CreateClaimedTicketDto) {
     const ticket = await this.prisma.claimedTicket.findUnique({
         where: { id: dto.ticketId },
     });

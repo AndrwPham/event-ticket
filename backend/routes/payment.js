@@ -2,6 +2,7 @@ import express from 'express';
 import PayOS from '@payos/node';
 
 const router = express.Router();
+const orderCode = Number(String(Date.now()).slice(-6));
 
 router.post("/create-payment-link", async (req, res) => {
     try {
@@ -23,10 +24,9 @@ router.post("/create-payment-link", async (req, res) => {
         );
 
         const paymentData = {
-            orderCode: Date.now(),
+            orderCode: orderCode,
             amount: 2000, // totalAmount
-            // FIX: Use a short, static description to meet the 25-character limit.
-            description: "Ticket Payment",
+            description: String(orderCode),
             items: orderDetails.tickets.map(ticket => ({
                 name: ticket.name,
                 quantity: ticket.quantity,

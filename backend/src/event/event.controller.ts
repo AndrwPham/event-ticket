@@ -27,9 +27,9 @@ export class EventController {
     return this.eventService.findOne(id);
   }
 
-  @Get('category/:categoryId')
-  findByCategory(@Param('categoryId') categoryId: string) {
-    return this.eventService.findByCategory(categoryId);
+  @Get('tag/:tagId')
+  findByTag(@Param('tagId') tagId: string) {
+    return this.eventService.findByTag(tagId);
   }
 
   @Get('city/:cityId')

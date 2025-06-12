@@ -8,43 +8,17 @@ export class OrderService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateOrderDto) {
-    // Lookup ticketItems and calculate total price
-    const ticketItems = await this.prisma.ticketItem.findMany({
-      where: { id: { in: dto.ticketItems } },
-      include: { ticket: true },
-    });
-
-    if (ticketItems.length === 0) {
-      throw new NotFoundException('No ticket items found');
-    }
-
-    const totalPrice = ticketItems.reduce((sum, item) => {
-      return sum + item.ticket.price;
-    }, 0);
-
-    return this.prisma.order.create({
-      data: {
-        user: { connect: { id: dto.userId } },
-        ticketItems: {
-          connect: dto.ticketItems.map((id) => ({ id })),
-        },
-        totalPrice,
-        status: 'PENDING',
-        method: dto.method,
-      },
-    });
+    
   }
 
   async findAll() {
     return this.prisma.order.findMany({
-      include: { ticketItems: true, user: true },
     });
   }
 
-  async findByUser(userId: string) {
+  async findByUser(attendeeId: string) {
     return this.prisma.order.findMany({
-      where: { userId },
-      include: { ticketItems: true },
+      where: { attendeeId },
     });
   }
 

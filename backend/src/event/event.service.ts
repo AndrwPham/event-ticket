@@ -1,45 +1,71 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateEventDto } from './dto/create-event.dto';
+import { UpdateEventDto } from './dto/update-event.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class EventService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateEventDto) {
-    const { categoryIds, organizerIds, ...eventData } = dto;
+    const { tagIds, organizerId, imageIds, tickets, ...eventData } = dto;
 
     const event = await this.prisma.event.create({
-      data: eventData,
+      data: {
+        ...eventData,
+        organizer: { connect: { id: organizerId } },
+        tags: {
+          connect: tagIds?.map((id) => ({ id })) || [],
+        },
+        images: {
+          connect: imageIds?.map((id) => ({ id })) || [],
+        },
+        tickets: {
+          create: tickets?.flatMap((ticket): Prisma.IssuedTicketCreateWithoutEventInput[] => {
+            const { seatMapDesign, price, class: ticketClass, status, currencyId, quantity } = ticket;
+            const { StartCoordinate, EndCoordinate, Class } = seatMapDesign;
+
+            if (Class !== ticketClass) {
+              throw new Error(`SeatMapDesign Class (${Class}) must match ticket class (${ticketClass})`);
+            }
+
+            const [startX, startY] = StartCoordinate;
+            const [endX, endY] = EndCoordinate;
+            const rows = endY - startY + 1;
+            const cols = endX - startX + 1;
+
+            const ticketData: Prisma.IssuedTicketCreateWithoutEventInput[] = [];
+            let count = 0;
+            for (let y = startY; y <= endY && count < quantity; y++) {
+              const rowLetter = String.fromCharCode(65 + y - startY);
+              for (let x = startX; x <= endX && count < quantity; x++) {
+                const seatId = `${rowLetter}-${x}`;
+                ticketData.push({
+                  price,
+                  class: ticketClass,
+                  seat: seatId,
+                  status,
+                  organizer: { connect: { id: organizerId } },
+                  currency: { connect: { id: currencyId } },
+                });
+                count++;
+              }
+            }
+
+            return ticketData;
+          }) || [],
+        },
+      },
+      include: {
+        images: true,
+        tickets: true,
+        tags: true,
+        organizer: true,
+      },
     });
 
-    const eventCategoryLinks = await Promise.all(
-      categoryIds.map((categoryId) =>
-        this.prisma.eventCategory.create({
-          data: {
-            eventId: event.id,
-            categoryId,
-          },
-        })
-      )
-    );
-
-    const eventOrganizerLinks = await Promise.all(
-      organizerIds.map((userId) =>
-        this.prisma.eventOrganizer.create({
-          data: {
-            eventId: event.id,
-            userId,
-          },
-        })
-      )
-    );
-
-    return {
-      event,
-      eventCategoryLinks,
-      eventOrganizerLinks,
-    };
+    return event;
   }
 
   findAll() {
@@ -47,11 +73,8 @@ export class EventService {
       include: {
         images: true,
         tickets: true,
-        categories: {
-          include: {
-            category: true,
-          },
-        },
+        tags: true,
+        organizer: true,
       },
     });
   }
@@ -62,32 +85,22 @@ export class EventService {
       include: {
         images: true,
         tickets: true,
-        categories: {
-          include: {
-            category: true,
-          },
-        },
+        tags: true,
+        organizer: true,
       },
     });
   }
 
-  async findByCategory(categoryId: string) {
-    const eventCategories = await this.prisma.eventCategory.findMany({
-      where: { categoryId },
+  async findByTag(tagId: string) {
+    return this.prisma.event.findMany({
+      where: { tagIds: { has: tagId } },
       include: {
-        event: {
-          include: {
-            images: true,
-            tickets: true,
-            categories: {
-              include: { category: true },
-            },
-          },
-        },
+        images: true,
+        tickets: true,
+        tags: true,
+        organizer: true,
       },
     });
-
-    return eventCategories.map((ec) => ec.event);
   }
 
   findByCity(city: string) {
@@ -96,11 +109,8 @@ export class EventService {
       include: {
         images: true,
         tickets: true,
-        categories: {
-          include: {
-            category: true,
-          },
-        },
+        tags: true,
+        organizer: true,
       },
     });
   }
@@ -111,11 +121,8 @@ export class EventService {
       include: {
         images: true,
         tickets: true,
-        categories: {
-          include: {
-            category: true,
-          },
-        },
+        tags: true,
+        organizer: true,
       },
     });
   }
@@ -126,40 +133,76 @@ export class EventService {
       include: {
         images: true,
         tickets: true,
-        categories: {
-          include: {
-            category: true,
-          },
-        },
+        tags: true,
+        organizer: true,
       },
     });
   }
 
-  async update(id: string, dto: CreateEventDto) {
-    const { categoryIds, ...eventData } = dto;
+  async update(id: string, dto: UpdateEventDto) {
+    const { tagIds, organizerId, imageIds, tickets, ...eventData } = dto;
 
     const updatedEvent = await this.prisma.event.update({
       where: { id },
-      data: eventData,
+      data: {
+        ...eventData,
+        organizer: organizerId ? { connect: { id: organizerId } } : undefined,
+        tags: {
+          set: [],
+          connect: tagIds?.map((id) => ({ id })) || [],
+        },
+        images: {
+          set: [],
+          connect: imageIds?.map((id) => ({ id })) || [],
+        },
+        tickets: tickets
+          ? {
+              deleteMany: {}, // Clear existing tickets
+              create: tickets.flatMap((ticket): Prisma.IssuedTicketCreateWithoutEventInput[] => {
+                const { seatMapDesign, price, class: ticketClass, status, currencyId, quantity } = ticket;
+                const { StartCoordinate, EndCoordinate, Class } = seatMapDesign;
+
+                if (Class !== ticketClass) {
+                  throw new Error(`SeatMapDesign Class (${Class}) must match ticket class (${ticketClass})`);
+                }
+
+                const [startX, startY] = StartCoordinate;
+                const [endX, endY] = EndCoordinate;
+                const rows = endY - startY + 1;
+                const cols = endX - startX + 1;
+
+                const ticketData: Prisma.IssuedTicketCreateWithoutEventInput[] = [];
+                let count = 0;
+                for (let y = startY; y <= endY && count < quantity; y++) {
+                  const rowLetter = String.fromCharCode(65 + y - startY);
+                  for (let x = startX; x <= endX && count < quantity; x++) {
+                    const seatId = `${rowLetter}-${x}`;
+                    ticketData.push({
+                      price,
+                      class: ticketClass,
+                      seat: seatId,
+                      status,
+                      organizer: { connect: { id: organizerId } },
+                      currency: { connect: { id: currencyId } },
+                    });
+                    count++;
+                  }
+                }
+
+                return ticketData;
+              }),
+            }
+          : undefined,
+      },
+      include: {
+        images: true,
+        tickets: true,
+        tags: true,
+        organizer: true,
+      },
     });
 
-    await this.prisma.eventCategory.deleteMany({ where: { eventId: id } });
-
-    const newLinks = await Promise.all(
-      categoryIds.map((categoryId) =>
-        this.prisma.eventCategory.create({
-          data: {
-            eventId: id,
-            categoryId,
-          },
-        })
-      )
-    );
-
-    return {
-      updatedEvent,
-      updatedEventCategories: newLinks,
-    };
+    return updatedEvent;
   }
 
   remove(id: string) {

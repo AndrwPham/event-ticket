@@ -1,19 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateCategoryDto } from './dto/create-category.dto';
+import { CreateTagDto } from './dto/create-tag.dto';
 
 @Injectable()
-export class CategoryService {
+export class TagService {
   constructor(private prisma: PrismaService) {}
 
-  create(dto: CreateCategoryDto) {
-    return this.prisma.category.create({
+  create(dto: CreateTagDto) {
+    return this.prisma.tag.create({
       data: dto,
     });
   }
 
   findAll() {
-    return this.prisma.category.findMany({
+    return this.prisma.tag.findMany({
       include: {
         events: true, // Include all events of this category
       },
@@ -21,14 +21,14 @@ export class CategoryService {
   }
 
   findOne(id: string) {
-    return this.prisma.category.findUnique({
+    return this.prisma.tag.findUnique({
       where: { id },
       include: { events: true },
     });
   }
 
-    update(id: string, dto: CreateCategoryDto) {
-        return this.prisma.category.update({
+    update(id: string, dto: CreateTagDto) {
+        return this.prisma.tag.update({
         where: { id },
         data: dto,
         });
@@ -36,6 +36,6 @@ export class CategoryService {
 
 
   remove(id: string) {
-    return this.prisma.category.delete({ where: { id } });
+    return this.prisma.tag.delete({ where: { id } });
   }
 }

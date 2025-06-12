@@ -16,26 +16,27 @@ export class AuthController {
   }
 
   @Post('login')
-  login(@Body() dto: LoginDto) {
-    return this.authService.login(dto.username, dto.password);
+  async login(@Body() dto: LoginDto) {
+    const { username, password } = dto;
+    return this.authService.login(username, password);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('logout')
   logout(@Req() req: any) {
-    return this.authService.logout(req.user.userId);
+    return this.authService.logout(req.user.role, req.user.userId);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('user')
   getCurrentUser(@GetUser() user: any) {
-    return user;
+    return this.authService.getCurrentUser(user.role, user.userId);
   }
 
   @UseGuards(JwtRefreshGuard)
   @Post('refresh')
   refresh(@Req() req: any) {
     const token = req.headers.authorization.split(' ')[1];
-    return this.authService.refreshTokens(req.user.userId, token);
+    return this.authService.refreshTokens(req.user.role, req.user.userId, token);
   }
 }

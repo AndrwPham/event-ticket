@@ -1,13 +1,13 @@
 import { Controller, Post, Get, Param, Body } from '@nestjs/common';
-import { TicketItemService } from './ticket-item.service';
-import { CreateTicketItemDto } from './dto/create-ticket-item..dto';
+import { ClaimedTicketService } from './claimedticket.service';
+import { CreateClaimedTicketDto } from './dto/create-claimedticket.dto';
 
-@Controller('ticket-items')
-export class TicketItemController {
-  constructor(private readonly service: TicketItemService) {}
+@Controller('claimedticket')
+export class ClaimedTicketController {
+  constructor(private readonly service: ClaimedTicketService) {}
 
   @Post()
-  create(@Body() dto: CreateTicketItemDto) {
+  create(@Body() dto: CreateClaimedTicketDto) {
     return this.service.create(dto);
   }
 

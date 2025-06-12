@@ -1,4 +1,4 @@
-export class CreateCategoryDto {
+export class CreateTagDto {
   name: string;
   eventId?: string;
 }

@@ -1,19 +1,13 @@
 import {
   Controller, Get, Post, Body, Patch, Param, Delete, UseGuards
 } from '@nestjs/common';
-import { TicketService } from './ticket.service';
-import { CreateTicketDto } from './dto/create-ticket.dto';
+import { IssuedTicketService } from './issuedticket.service';
+import { CreateIssuedTicketDto } from './dto/create-issuedticket.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @Controller('tickets')
-export class TicketController {
-  constructor(private readonly ticketService: TicketService) {}
-
-  @UseGuards(JwtAuthGuard)
-  @Post()
-  create(@Body() dto: CreateTicketDto) {
-    return this.ticketService.create(dto);
-  }
+export class IssuedTicketController {
+  constructor(private readonly ticketService: IssuedTicketService) {}
 
   @Get()
   findAll() {
@@ -32,7 +26,7 @@ export class TicketController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: CreateTicketDto) {
+  update(@Param('id') id: string, @Body() dto: CreateIssuedTicketDto) {
     return this.ticketService.update(id, dto);
   }
 

@@ -1,4 +1,4 @@
-export class CreateTicketItemDto {
+export class CreateClaimedTicketDto {
   userId: string;
   ticketId: string;
   orderId: string;

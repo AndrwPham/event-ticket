@@ -79,7 +79,7 @@ export class AWSService {
         return getSignedUrl(this.s3Client, command, { expiresIn: expiresInSeconds });
     }
 
-    getPublicUrl(key: string): string {
+    async getPublicUrl(key: string): Promise<string> {
         try {
             await this.s3Client.send(
                 new HeadObjectCommand({

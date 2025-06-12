@@ -12,6 +12,9 @@ import SearchPage from "./pages/search/page";
 import Payment from "./pages/payment/Payment";
 import TicketDetails from "./pages/ticket/TicketDetails";
 import CardPaymentPage from "./pages/payment/CardPaymentPage";
+import SuccessPage from "./pages/payment/SuccessPage";
+import CancelPage from "./pages/payment/CancelPage";
+import EmbeddedPayment from "./pages/payment/EmbeddedPayment";
 
 function App() {
     return (
@@ -36,6 +39,18 @@ function App() {
                         <Route
                             path="/payment/card"
                             element={<CardPaymentPage />}
+                        />
+                        <Route
+                            path="/embedded-payment"
+                            element={<EmbeddedPayment />}
+                        />
+                        <Route
+                            path="/payment/success"
+                            element={<SuccessPage />}
+                        />
+                        <Route
+                            path="/payment/cancel"
+                            element={<CancelPage />}
                         />
                     </Routes>
                 </main>

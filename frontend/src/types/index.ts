@@ -39,3 +39,21 @@ export interface ILocationState {
     eventDetails: IEvent;
     orderDetails: IOrderDetails;
 }
+
+export interface IOrderResponse {
+    status: "PAID" | "PENDING" | "CANCELLED" | "EXPIRED" | "PROCESSING";
+    orderCode: number;
+    amount: number;
+    description: string;
+}
+
+export interface IApiResponse {
+    error: number;
+    message: string;
+    data: IOrderResponse | null;
+}
+
+export interface IPayOSEvent {
+    orderCode: number;
+    [key: string]: unknown; // Allow for other properties
+}

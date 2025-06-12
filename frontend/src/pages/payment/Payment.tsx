@@ -1,39 +1,20 @@
-import { FC, useState } from "react";
-import { useLocation, Link, useNavigate } from "react-router-dom";
+import { FC, useState, useEffect, KeyboardEvent, MouseEvent } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { FaCreditCard, FaRegCheckCircle } from "react-icons/fa";
 import { IoWallet } from "react-icons/io5";
-import { QRCodeCanvas } from "qrcode.react"; // <--- 1. Import the new library
+import { usePayOS, PayOSConfig } from "@payos/payos-checkout";
 
-import { ILocationState } from "../../types";
+import { ILocationState, IPayOSEvent } from "../../types";
 
 import CountdownTimer from "./components/CountdownTimer";
 import BuyerInfoForm from "./components/BuyerInfoForm";
 import OrderSummary from "./components/OrderSummary";
 
-interface PaymentResponse {
-    qrCode: string;
-    accountNumber: string;
-    accountName: string;
-    amount: number;
-    description: string;
-    bin: string;
+interface IPaymentLinkResponse {
     error?: string;
+    checkoutUrl: string;
+    [key: string]: unknown;
 }
-
-const bankNameMapping: { [key: string]: string } = {
-    "970415": "VietinBank",
-    "970416": "DongA Bank",
-    "970418": "Vietcombank",
-    "970422": "MB Bank",
-    "970432": "VPBank",
-    "970436": "Vietcombank",
-    "970488": "LienVietPostBank",
-};
-
-const getBankName = (bin: string) => {
-    return bankNameMapping[bin] || `Bank (BIN: ${bin})`;
-};
-
 
 const PaymentPage: FC = () => {
     const navigate = useNavigate();
@@ -48,23 +29,60 @@ const PaymentPage: FC = () => {
         email: "",
         phone: "",
     });
-    const [paymentMethod, setPaymentMethod] = useState("momo");
+
+    const [paymentMethod, setPaymentMethod] = useState<string>(
+        () => sessionStorage.getItem("paymentMethod") || "payos",
+    );
+
     const [agreedToTerms, setAgreedToTerms] = useState(false);
-    const [paymentData, setPaymentData] = useState<PaymentResponse | null>(null);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [isPayOSOpen, setIsPayOSOpen] = useState(false);
+
+    useEffect(() => {
+        sessionStorage.setItem("paymentMethod", paymentMethod);
+    }, [paymentMethod]);
+
+    const [payOSConfig, setPayOSConfig] = useState<PayOSConfig>({
+        CHECKOUT_URL: "",
+        RETURN_URL: `http://localhost:5173/payment/success`,
+        ELEMENT_ID: "payos-container",
+        embedded: true,
+        onSuccess: (event: IPayOSEvent) => {
+            if (event.orderCode) {
+                navigate(
+                    `/payment/success?orderCode=${String(event.orderCode)}`,
+                );
+            } else {
+                navigate(`/payment/success?error=OrderCodeNotFound`);
+            }
+        },
+        onCancel: () => {
+            setIsPayOSOpen(false);
+            alert("Payment has been canceled.");
+        },
+        onExit: () => {
+            setIsPayOSOpen(false);
+        },
+    });
+
+    const { open, exit } = usePayOS(payOSConfig);
+
+    useEffect(() => {
+        if (payOSConfig.CHECKOUT_URL) {
+            open();
+        }
+    }, [payOSConfig.CHECKOUT_URL, open]);
 
     if (!eventDetails || !orderDetails || orderDetails.tickets.length === 0) {
         return (
             <div className="text-gray-800 text-center py-20 max-w-2xl mx-auto">
                 <h1 className="text-3xl font-bold">Your cart is empty</h1>
-                <p className="mt-4 text-gray-600">
-                    Please select your tickets before proceeding to payment.
-                </p>
-                <Link
-                    to="/"
+                <a
+                    href="/"
                     className="mt-6 inline-block bg-green-500 text-white px-8 py-3 rounded-md font-semibold hover:bg-green-600"
                 >
                     Explore Events
-                </Link>
+                </a>
             </div>
         );
     }
@@ -82,70 +100,104 @@ const PaymentPage: FC = () => {
 
     const handlePayment = async () => {
         if (!isFormValid) return;
+        setIsProcessing(true);
 
         if (paymentMethod === "card") {
             navigate("/payment/card", {
                 state: { eventDetails, orderDetails },
             });
         } else {
+            exit();
             try {
-                const response = await fetch("http://localhost:5000/api/payment/create-payment-link", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
+                const response = await fetch(
+                    "http://localhost:5000/api/payment/create-payment-link",
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ orderDetails, eventDetails }),
                     },
-                    body: JSON.stringify({ orderDetails, eventDetails }),
-                });
+                );
 
-                const data = await response.json() as PaymentResponse;
+                const paymentLink =
+                    (await response.json()) as IPaymentLinkResponse;
 
-                if (response.ok && data.qrCode) {
-                    setPaymentData(data);
-                } else {
-                    console.error("Failed to get payment data from backend:", data);
-                    const errorMessage = data.error || "Could not retrieve payment information. Please check the console.";
-                    alert(`Error: ${errorMessage}`);
+                if (!response.ok) {
+                    throw new Error(
+                        paymentLink.error || "Failed to create payment link.",
+                    );
                 }
 
+                setPayOSConfig((prev) => ({
+                    ...prev,
+                    CHECKOUT_URL: paymentLink.checkoutUrl,
+                }));
+                setIsPayOSOpen(true);
             } catch (error) {
                 console.error("Payment fetch error:", error);
-                alert("There was a critical error processing your payment. Please try again.");
+                alert(
+                    `Error: ${error instanceof Error ? error.message : "An unknown error occurred."}`,
+                );
+            } finally {
+                setIsProcessing(false);
             }
         }
     };
 
-    return (
-        <div className="bg-gray-100 py-8">
-            <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 space-y-6">
-                    <CountdownTimer initialSeconds={600} />
+    const handleGoBack = () => {
+        exit();
+        setIsPayOSOpen(false);
+    };
 
-                    {!paymentData ? (
-                        <>
+    const handleOverlayKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+        if (event.key === "Enter" || event.key === " ") {
+            handleGoBack();
+        }
+    };
+
+    // Generic event handler to stop propagation for both mouse and keyboard events
+    const stopPropagation = (
+        e: MouseEvent<HTMLDivElement> | KeyboardEvent<HTMLDivElement>,
+    ) => {
+        e.stopPropagation();
+    };
+
+    return (
+        <>
+            <div className="bg-gray-100 py-8">
+                <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2 space-y-6">
+                        <CountdownTimer initialSeconds={600} />
+                        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
                             <BuyerInfoForm
                                 buyerInfo={buyerInfo}
                                 onInfoChange={handleInputChange}
                             />
-                            <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                            <div className="mt-6">
                                 <h2 className="text-xl font-bold text-gray-800 mb-4">
                                     Choose Payment Method
                                 </h2>
                                 <div className="space-y-3">
                                     <label
-                                        className={`flex items-center p-4 border rounded-lg cursor-pointer ${paymentMethod === "momo" ? "border-indigo-600 ring-2 ring-indigo-600" : "border-gray-200"}`}
+                                        className={`flex items-center p-4 border rounded-lg cursor-pointer ${paymentMethod === "payos" ? "border-indigo-600 ring-2 ring-indigo-600" : "border-gray-200"}`}
                                     >
                                         <input
                                             type="radio"
                                             name="payment"
-                                            value="momo"
-                                            checked={paymentMethod === "momo"}
-                                            onChange={(e) => { setPaymentMethod(e.target.value); }}
+                                            value="payos"
+                                            checked={paymentMethod === "payos"}
+                                            onChange={(e) => {
+                                                setPaymentMethod(
+                                                    e.target.value,
+                                                );
+                                            }}
                                             className="hidden"
                                         />
                                         <IoWallet className="text-2xl text-pink-600 mr-4" />
-                                        <span className="font-semibold">PayOS (E-Wallet, QR Code)</span>
+                                        <span className="font-semibold">
+                                            National Banking
+                                        </span>
                                         <FaRegCheckCircle
-                                            className={`ml-auto text-xl ${paymentMethod === "momo" ? "text-indigo-600" : "text-gray-300"}`}
+                                            className={`ml-auto text-xl ${paymentMethod === "payos" ? "text-indigo-600" : "text-gray-300"}`}
                                         />
                                     </label>
                                     <label
@@ -156,12 +208,16 @@ const PaymentPage: FC = () => {
                                             name="payment"
                                             value="card"
                                             checked={paymentMethod === "card"}
-                                            onChange={(e) => { setPaymentMethod(e.target.value); }}
+                                            onChange={(e) => {
+                                                setPaymentMethod(
+                                                    e.target.value,
+                                                );
+                                            }}
                                             className="hidden"
                                         />
                                         <FaCreditCard className="text-2xl text-gray-500 mr-4" />
                                         <span className="font-semibold">
-                                            Credit / Debit Card (Not PayOS)
+                                            Credit / Debit Card{" "}
                                         </span>
                                         <FaRegCheckCircle
                                             className={`ml-auto text-xl ${paymentMethod === "card" ? "text-indigo-600" : "text-gray-300"}`}
@@ -169,59 +225,22 @@ const PaymentPage: FC = () => {
                                     </label>
                                 </div>
                             </div>
-                        </>
-                    ) : (
-                        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 text-center">
-                            <h2 className="text-xl font-bold text-gray-800 mb-4">
-                                Scan QR Code to Pay
-                            </h2>
-
-                            {/* --- 2. THIS IS THE FIX --- */}
-                            <div className="mx-auto bg-white inline-block p-4 rounded-lg">
-                                <QRCodeCanvas
-                                    value={paymentData.qrCode}
-                                    size={256}
-                                    bgColor={"#ffffff"}
-                                    fgColor={"#000000"}
-                                    level={"L"}
-                                />
-                            </div>
-
-                            <p className="my-4 font-semibold text-gray-600 text-sm">
-                                Please make sure to transfer the exact amount and content.
-                            </p>
-                            <div className="border-t border-b border-gray-200 py-4">
-                                <h3 className="text-lg font-bold text-gray-800 mb-2">
-                                    Or Transfer Manually
-                                </h3>
-                                <div className="text-left space-y-3 bg-gray-50 p-4 rounded-md">
-                                    <p><strong>Bank:</strong> {getBankName(paymentData.bin)}</p>
-                                    <p><strong>Account Number:</strong> {paymentData.accountNumber}</p>
-                                    <p><strong>Account Name:</strong> {paymentData.accountName}</p>
-                                    <p><strong>Amount:</strong> <span className="font-bold text-red-600">{new Intl.NumberFormat("vi-VN").format(paymentData.amount)}đ</span></p>
-                                    <p><strong>Description:</strong> <span className="font-semibold text-blue-600">{paymentData.description}</span></p>
-                                </div>
-                            </div>
-                            <button onClick={() => { setPaymentData(null); }} className="mt-4 text-sm text-indigo-600 hover:underline">
-                                &larr; Go back and change payment method
-                            </button>
                         </div>
-                    )}
-                </div>
+                    </div>
 
-                <div className="lg:col-span-1">
-                    <OrderSummary
-                        eventDetails={eventDetails}
-                        orderDetails={orderDetails}
-                    />
-
-                    {!paymentData && (
+                    <div className="lg:col-span-1">
+                        <OrderSummary
+                            eventDetails={eventDetails}
+                            orderDetails={orderDetails}
+                        />
                         <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 mt-8">
                             <label className="flex items-start text-sm text-gray-600">
                                 <input
                                     type="checkbox"
                                     checked={agreedToTerms}
-                                    onChange={() => { setAgreedToTerms(!agreedToTerms); }}
+                                    onChange={() => {
+                                        setAgreedToTerms(!agreedToTerms);
+                                    }}
                                     className="mt-1 mr-2 h-4 w-4 accent-indigo-600"
                                 />
                                 <span>
@@ -236,17 +255,68 @@ const PaymentPage: FC = () => {
                                 </span>
                             </label>
                             <button
-                                onClick={() => { void handlePayment(); }}
-                                disabled={!isFormValid}
-                                className={`w-full mt-4 py-3 rounded-lg text-white font-bold text-lg transition ${isFormValid ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-400 cursor-not-allowed"}`}
+                                onClick={() => {
+                                    void handlePayment();
+                                }}
+                                disabled={!isFormValid || isProcessing}
+                                className={`w-full mt-4 py-3 rounded-lg text-white font-bold text-lg transition ${!isFormValid || isProcessing ? "bg-gray-400 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700"}`}
                             >
-                                Pay Now
+                                {isProcessing ? "Processing..." : "Pay Now"}
                             </button>
                         </div>
-                    )}
+                    </div>
                 </div>
             </div>
-        </div>
+
+            {isPayOSOpen && (
+                <>
+                    <style>{`
+                        .payment-overlay {
+                            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                            background-color: rgba(0, 0, 0, 0.7);
+                            display: flex; align-items: center; justify-content: center; z-index: 9999;
+                        }
+                        .payment-modal {
+                            background: white; padding: 1.5rem; border-radius: 8px;
+                            width: 95%; max-width: 450px; height: 95%; max-height: 800px;
+                            display: flex; flex-direction: column;
+                        }
+                        .payment-modal-body { flex-grow: 1; overflow: hidden; }
+                        #payos-container, #payos-container iframe { width: 100%; height: 100%; border: none; }
+                    `}</style>
+                    <div
+                        className="payment-overlay"
+                        onClick={handleGoBack}
+                        onKeyDown={handleOverlayKeyDown}
+                        role="button"
+                        tabIndex={0}
+                        aria-label="Close payment modal"
+                    >
+                        <div
+                            className="payment-modal"
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby="payment-modal-title"
+                        >
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-xl font-bold text-gray-800">
+                                    Complete Your Payment
+                                </h2>
+                                <button
+                                    onClick={handleGoBack}
+                                    className="text-sm font-medium text-indigo-600 hover:underline"
+                                >
+                                    &larr; Go Back
+                                </button>
+                            </div>
+                            <div className="payment-modal-body">
+                                <div id="payos-container"></div>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
+        </>
     );
 };
 

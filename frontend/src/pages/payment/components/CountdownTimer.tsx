@@ -2,9 +2,13 @@ import { FC, useState, useEffect } from "react";
 
 interface CountdownTimerProps {
     initialSeconds: number;
+    onTimerEnd: () => void;
 }
 
-const CountdownTimer: FC<CountdownTimerProps> = ({ initialSeconds }) => {
+const CountdownTimer: FC<CountdownTimerProps> = ({
+    initialSeconds,
+    onTimerEnd,
+}) => {
     const [timeLeft, setTimeLeft] = useState(initialSeconds);
 
     useEffect(() => {
@@ -16,6 +20,12 @@ const CountdownTimer: FC<CountdownTimerProps> = ({ initialSeconds }) => {
             clearInterval(intervalId);
         };
     }, [timeLeft]);
+
+    useEffect(() => {
+        if (timeLeft === 0) {
+            onTimerEnd();
+        }
+    }, [timeLeft, onTimerEnd]);
 
     const minutes = Math.floor(timeLeft / 60);
     const seconds = timeLeft % 60;

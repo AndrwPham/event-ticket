@@ -161,12 +161,23 @@ const PaymentPage: FC = () => {
         e.stopPropagation();
     };
 
+    const handleTimeout = () => {
+        alert("Time has run out, the payment process has been canceled.");
+        if (isPayOSOpen) {
+            exit();
+        }
+        navigate(`/event/${String(eventDetails.id)}`);
+    };
+
     return (
         <>
             <div className="bg-gray-100 py-8">
                 <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2 space-y-6">
-                        <CountdownTimer initialSeconds={600} />
+                        <CountdownTimer
+                            initialSeconds={10}
+                            onTimerEnd={handleTimeout}
+                        />
                         <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
                             <BuyerInfoForm
                                 buyerInfo={buyerInfo}

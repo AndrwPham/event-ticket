@@ -16,15 +16,16 @@
         "format:fix-all": "prettier src/**/* --write --ignore-unknown"
     },
     "dependencies": {
+        "@payos/payos-checkout": "^1.0.6",
         "axios": "^1.6.8",
         "clsx": "^1.2.1",
         "lucide-react": "^0.511.0",
+        "qrcode.react": "^4.2.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
         "react-icons": "^4.12.0",
         "react-router-dom": "^6.22.3",
-        "swiper": "^11.2.6",
-        "@payos/payos-checkout": "^1.0.6"
+        "swiper": "^11.2.6"
     },
     "devDependencies": {
         "@types/react": "^19.1.2",

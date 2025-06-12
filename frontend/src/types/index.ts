@@ -25,7 +25,7 @@ export interface IEvent {
 }
 
 export interface IOrderTicket {
-    type: string;
+    name: string;
     quantity: number;
     price: number;
 }

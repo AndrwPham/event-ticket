@@ -40,11 +40,11 @@ const OrderSummary: FC<OrderSummaryProps> = ({
             <div className="border-t border-b border-gray-200 py-4 space-y-2">
                 {orderDetails.tickets.map((ticket) => (
                     <div
-                        key={ticket.type}
+                        key={ticket.name}
                         className="flex justify-between text-sm"
                     >
                         <span>
-                            {ticket.quantity}x {ticket.type}
+                            {ticket.quantity}x {ticket.name}
                         </span>
                         <span className="font-semibold">
                             {new Intl.NumberFormat("vi-VN").format(

@@ -24,7 +24,7 @@ router.post("/create-payment-link", async (req, res) => {
 
         const paymentData = {
             orderCode: Date.now(),
-            amount: totalAmount,
+            amount: 2000, // totalAmount
             // FIX: Use a short, static description to meet the 25-character limit.
             description: "Ticket Payment",
             items: orderDetails.tickets.map(ticket => ({
@@ -39,9 +39,7 @@ router.post("/create-payment-link", async (req, res) => {
         console.log("Creating payment link with data:", paymentData)
         const paymentLink = await payOS.createPaymentLink(paymentData);
         console.log("payment: ", paymentLink)
-        res.json({
-            checkoutUrl: paymentLink.checkoutUrl
-        });
+        res.json(paymentLink);
 
     } catch (error) {
         console.error("Error creating payment link:", error);

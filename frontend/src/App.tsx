@@ -25,7 +25,10 @@ function App() {
                     <Routes>
                         <Route path="/" element={<Home />} />
                         <Route path="/event/:id" element={<TicketDetails />} />
-                        <Route path="/payment" element={<Payment />} />
+                        <Route
+                            path="/event/:id/payment"
+                            element={<Payment />}
+                        />
                         <Route path="/home" element={<Home />} />
                         <Route
                             path="/contact-sales"
@@ -37,19 +40,19 @@ function App() {
                         <Route path="/sign-up" element={<SignUp />} />
                         <Route path="/search" element={<SearchPage />} />
                         <Route
-                            path="/payment/card"
+                            path="/event/:id/payment/card"
                             element={<CardPaymentPage />}
                         />
                         <Route
-                            path="/embedded-payment"
+                            path="/event/:id/embedded-payment"
                             element={<EmbeddedPayment />}
                         />
                         <Route
-                            path="/payment/success"
+                            path="/event/:id/payment/success"
                             element={<SuccessPage />}
                         />
                         <Route
-                            path="/payment/cancel"
+                            path="/event/:id/payment/cancel"
                             element={<CancelPage />}
                         />
                     </Routes>

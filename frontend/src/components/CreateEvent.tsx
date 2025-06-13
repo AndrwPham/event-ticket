@@ -4,6 +4,15 @@ import React from 'react';
 export default function CreateEvent() {
     const [step, setStep] = React.useState(1);
 
+    const [eventLogo, setEventLogo] = React.useState<File | null>(null);
+    const [eventLogoPreview, setEventLogoPreview] = React.useState<string | null>(null);
+
+    const [eventCover, setEventCover] = React.useState<File | null>(null);
+    const [eventCoverPreview, setEventCoverPreview] = React.useState<string | null>(null);
+
+    const [organLogo, setOrganLogo] = React.useState<File | null>(null);
+    const [organLogoPreview, setOrganLogoPreview] = React.useState<string | null>(null);
+
     const [eventName, setEventName] = React.useState('');
     const [venueName, setVenueName] = React.useState('');
     const [city, setCity] = React.useState('');
@@ -45,6 +54,29 @@ export default function CreateEvent() {
         console.log(formData);
     };
 
+    const handleEventLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setEventLogo(file);
+            setEventLogoPreview(URL.createObjectURL(file)); // preview image
+        }
+    };
+
+    const handleEventCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setEventCover(file);
+            setEventCoverPreview(URL.createObjectURL(file)); // preview image
+        }
+    };
+
+    const handleOrganLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setOrganLogo(file);
+            setOrganLogoPreview(URL.createObjectURL(file)); // preview image
+        }
+    };
 
     return (
         <div className="min-h-screen bg-white text-black flex">
@@ -131,21 +163,60 @@ export default function CreateEvent() {
                         {/* Upload Section */}
                         <div className="grid grid-cols-10 gap-4 mb-10">
                             {/* Event Logo - 3/10 of the width */}
-                            <div className="col-span-3 border border-dashed border-gray-300 rounded-lg h-56 flex items-center justify-center text-gray-400 flex-col text-center text-sm">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a4 4 0 004 4h10a4 4 0 004-4V7a4 4 0 00-4-4H7a4 4 0 00-4 4z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11l4 4 4-4" />
-                                </svg>
-                                <p>Add event logo<br />(720×958)</p>
+                            <div className="col-span-3 relative">
+                                <label
+                                    htmlFor="event-logo-upload"
+                                    className="border border-dashed border-gray-300 rounded-lg h-56 flex items-center justify-center text-gray-400 flex-col text-center text-sm cursor-pointer hover:bg-gray-50"
+                                >
+                                    {eventLogoPreview ? (
+                                    <img src={eventLogoPreview} alt="Logo preview" className="object-contain h-full rounded" />
+                                    ) : (
+                                    <>
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a4 4 0 004 4h10a4 4 0 004-4V7a4 4 0 00-4-4H7a4 4 0 00-4 4z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11l4 4 4-4" />
+                                        </svg>
+                                        <p>Add event logo<br />(720×958)</p>
+                                    </>
+                                    )}
+                                </label>
+
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    id="event-logo-upload"
+                                    onChange={handleEventLogoChange}
+                                    className="hidden"
+                                />
                             </div>
 
+
                             {/* Event Cover - 7/10 of the width */}
-                            <div className="col-span-7 border border-dashed border-gray-300 rounded-lg h-72 flex items-center justify-center text-gray-400 flex-col text-center text-sm">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a4 4 0 004 4h10a4 4 0 004-4V7a4 4 0 00-4-4H7a4 4 0 00-4 4z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11l4 4 4-4" />
-                                </svg>
-                                <p>Add event cover image<br />(1280×720)</p>
+                            <div className="col-span-7 relative">
+                                <label
+                                    htmlFor="event-cover-upload"
+                                    className="border border-dashed border-gray-300 rounded-lg h-56 flex items-center justify-center text-gray-400 flex-col text-center text-sm cursor-pointer hover:bg-gray-50"
+                                >
+                                    {eventCoverPreview ? (
+                                    <img src={eventCoverPreview} alt="Cover preview" className="object-contain h-full rounded" />
+                                    ) : (
+                                    <>
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a4 4 0 004 4h10a4 4 0 004-4V7a4 4 0 00-4-4H7a4 4 0 00-4 4z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11l4 4 4-4" />
+                                        </svg>
+                                        <p>Add event cover<br />(720×958)</p>
+                                    </>
+                                    )}
+                                </label>
+
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    id="event-cover-upload"
+                                    onChange={handleEventCoverChange}
+                                    className="hidden"
+                                />
                             </div>
                         </div>
 
@@ -176,7 +247,7 @@ export default function CreateEvent() {
 
                             {/* Category */}
                             <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full border px-4 py-2 rounded">
-                                <option disabled>Select event category</option>
+                                <option disabled autoFocus>Select event category</option>
                                 <option>Music</option>
                                 <option>Conference</option>
                                 <option>Workshop</option>
@@ -194,12 +265,31 @@ export default function CreateEvent() {
                             {/* Organizer Info Section */}
                             <div className="grid grid-cols-12 gap-4 mt-8">
                             {/* Organizer Logo (left side - smaller) */}
-                            <div className="col-span-3 border border-dashed border-gray-300 rounded-lg h-56 flex items-center justify-center text-gray-400 flex-col text-center text-sm">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a4 4 0 004 4h10a4 4 0 004-4V7a4 4 0 00-4-4H7a4 4 0 00-4 4z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11l4 4 4-4" />
-                                </svg>
-                                <p>Add organizer logo<br />(720×958)</p>
+                            <div className="col-span-3 relative">
+                                <label
+                                    htmlFor="event-logo-upload"
+                                    className="border border-dashed border-gray-300 rounded-lg h-56 flex items-center justify-center text-gray-400 flex-col text-center text-sm cursor-pointer hover:bg-gray-50"
+                                >
+                                    {organLogoPreview ? (
+                                    <img src={organLogoPreview} alt="Logo preview" className="object-contain h-full rounded" />
+                                    ) : (
+                                    <>
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a4 4 0 004 4h10a4 4 0 004-4V7a4 4 0 00-4-4H7a4 4 0 00-4 4z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11l4 4 4-4" />
+                                        </svg>
+                                        <p>Add event logo<br />(720×958)</p>
+                                    </>
+                                    )}
+                                </label>
+
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    id="event-logo-upload"
+                                    onChange={handleOrganLogoChange}
+                                    className="hidden"
+                                />
                             </div>
 
                             {/* Organizer Name + Info (right side - wider) */}

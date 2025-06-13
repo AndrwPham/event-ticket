@@ -247,10 +247,10 @@ export default function CreateEvent() {
 
                             {/* Category */}
                             <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full border px-4 py-2 rounded">
-                                <option disabled autoFocus>Select event category</option>
-                                <option>Music</option>
-                                <option>Conference</option>
-                                <option>Workshop</option>
+                                <option value="" disabled>Select event category</option>
+                                <option value="Music">Music</option>
+                                <option value="Conference">Conference</option>
+                                <option value="Workshop">Workshop</option>
                             </select>
 
                             {/* Description */}

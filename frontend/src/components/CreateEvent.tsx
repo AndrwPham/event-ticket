@@ -31,8 +31,6 @@ export default function CreateEvent() {
                 ? startTime && endTime
                 : accountOwner && accountNumber && bank && branch;
 
-
-
     return (
         <div className="min-h-screen bg-white text-black flex">
             {/* Sidebar */}
@@ -84,6 +82,22 @@ export default function CreateEvent() {
                             }`}
                             >
                             {step < 3 ? 'Continue' : 'Finish'}
+                        </button>
+                        <button
+                            type="button"
+                            disabled={step === 1}
+                            onClick={() => {
+                                if (step > 1) {
+                                    setStep(step - 1);
+                                }
+                            }}
+                            className={`px-4 py-1 rounded text-sm transition ${
+                                !(step === 1)
+                                ? 'bg-[#1D0E3C] text-white hover:bg-[#311f5a] cursor-pointer'
+                                : 'bg-gray-300 text-white opacity-50 cursor-not-allowed'
+                            }`}
+                            >
+                            Back
                         </button>
 
 

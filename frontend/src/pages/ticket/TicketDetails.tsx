@@ -1,5 +1,5 @@
 import { FC, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom"; // Import useNavigate
 import { FaCalendarAlt, FaMapMarkerAlt } from "react-icons/fa";
 import { IoChevronDown } from "react-icons/io5";
 import { allEvents } from "../../data/_mock_db";
@@ -16,12 +16,26 @@ const formatEventDate = (
 
 const TicketDetails: FC = () => {
     const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
     const eventData = allEvents.find(
         (event) => event.id === parseInt(id || ""),
     );
 
     // State to manage the collapsible "About" section
     const [isAboutExpanded, setIsAboutExpanded] = useState(false);
+
+    const handleBooking = () => {
+        // Check if the event has a seat map configured
+
+        if (!eventData) {
+            console.error("Booking failed: Event data is not available.");
+            return;
+        }
+
+        if (eventData.venueId) {
+            navigate(`/event/${String(eventData.id)}/select-seats`);
+        }
+    };
 
     if (!eventData) {
         return (
@@ -70,12 +84,12 @@ const TicketDetails: FC = () => {
                                     </span>
                                 </div>
                             </div>
-                            <a
-                                href="#ticket-info"
+                            <button
+                                onClick={handleBooking}
                                 className="mt-6 inline-block w-full text-center bg-indigo-600 text-white px-6 py-3 rounded-md text-lg font-bold hover:bg-indigo-700 transition"
                             >
                                 Book now
-                            </a>
+                            </button>
                         </div>
                         <div className="w-full md:w-2/3">
                             <div className="bg-gray-200 h-64 rounded-lg flex items-center justify-center">
@@ -140,23 +154,12 @@ const TicketDetails: FC = () => {
                                             year: "numeric",
                                         })}
                                     </h3>
-                                    <Link
-                                        to="/payment"
-                                        state={{
-                                            eventDetails: eventData,
-                                            orderDetails: {
-                                                tickets: item.tiers.map(
-                                                    (t) => ({
-                                                        ...t,
-                                                        quantity: 1,
-                                                    }),
-                                                ),
-                                            },
-                                        }}
+                                    <button
+                                        onClick={handleBooking}
                                         className="bg-indigo-500 text-white px-6 py-2 rounded-md font-bold hover:bg-indigo-600 transition text-sm"
                                     >
                                         Book now
-                                    </Link>
+                                    </button>
                                 </div>
                                 <div className="mt-4 space-y-3">
                                     {item.tiers.map((tier) => (

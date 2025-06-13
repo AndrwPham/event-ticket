@@ -12,6 +12,7 @@ import SearchPage from "./pages/search/page";
 import Payment from "./pages/payment/Payment";
 import TicketDetails from "./pages/ticket/TicketDetails";
 import CardPaymentPage from "./pages/payment/CardPaymentPage";
+import SeatMap from "./pages/seatMap/SeatMap";
 
 function App() {
     return (
@@ -36,6 +37,10 @@ function App() {
                         <Route
                             path="/payment/card"
                             element={<CardPaymentPage />}
+                        />
+                        <Route
+                            path="/event/:id/select-seats"
+                            element={<SeatMap />}
                         />
                     </Routes>
                 </main>

@@ -31,6 +31,19 @@ export default function CreateEvent() {
                 ? startTime && endTime
                 : accountOwner && accountNumber && bank && branch;
 
+    const handleSave = () => {
+        const formData = {
+            eventName, venueName, city, district, ward, street, category, description, organizerName, organizerInfo,
+            startTime, endTime,
+            accountOwner, accountNumber, bank, branch
+        };
+
+        // Save to localStorage or send to API
+        localStorage.setItem('draftEvent', JSON.stringify(formData));
+        console.log(formData);
+    };
+
+
     return (
         <div className="min-h-screen bg-white text-black flex">
             {/* Sidebar */}
@@ -66,7 +79,11 @@ export default function CreateEvent() {
 
                     {/* Save + Continue buttons */}
                     <div className="space-x-3">
-                        <button className="px-4 py-1 border border-gray-400 rounded text-sm text-gray-800 hover:bg-gray-100">Save</button>
+                        <button 
+                            className="px-4 py-1 border border-gray-400 rounded text-sm text-gray-800 hover:bg-gray-100"
+                            onClick={handleSave}
+                            >
+                            Save</button>
                         <button
                             type="button"
                             disabled={!isFormValid}
@@ -157,7 +174,7 @@ export default function CreateEvent() {
 
                             {/* Category */}
                             <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full border px-4 py-2 rounded">
-                                <option>Select event category</option>
+                                <option disabled>Select event category</option>
                                 <option>Music</option>
                                 <option>Conference</option>
                                 <option>Workshop</option>

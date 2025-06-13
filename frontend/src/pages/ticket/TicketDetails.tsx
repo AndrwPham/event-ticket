@@ -141,7 +141,7 @@ const TicketDetails: FC = () => {
                                         })}
                                     </h3>
                                     <Link
-                                        to="/payment"
+                                        to="/event/:id/payment"
                                         state={{
                                             eventDetails: eventData,
                                             orderDetails: {

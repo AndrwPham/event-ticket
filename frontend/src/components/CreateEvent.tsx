@@ -24,12 +24,14 @@ export default function CreateEvent() {
     const [branch, setBranch] = React.useState('');
 
 
-    const isFormValid =
-        step === 1
-            ? eventName && venueName && city && district && ward && street && category && description && organizerName && organizerInfo
-            : step === 2
-                ? startTime && endTime
-                : accountOwner && accountNumber && bank && branch;
+    let isFormValid = false;
+    if (step === 1) {
+        isFormValid = Boolean(eventName && venueName && city && district && ward && street && category && description && organizerName && organizerInfo);
+    } else if (step === 2) {
+        isFormValid = Boolean(startTime && endTime);
+    } else {
+        isFormValid = Boolean(accountOwner && accountNumber && bank && branch);
+    }
 
     const handleSave = () => {
         const formData = {
@@ -109,7 +111,7 @@ export default function CreateEvent() {
                                 }
                             }}
                             className={`px-4 py-1 rounded text-sm transition ${
-                                !(step === 1)
+                                (step !== 1)
                                 ? 'bg-[#1D0E3C] text-white hover:bg-[#311f5a] cursor-pointer'
                                 : 'bg-gray-300 text-white opacity-50 cursor-not-allowed'
                             }`}

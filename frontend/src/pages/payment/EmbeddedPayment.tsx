@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePayOS, PayOSConfig } from "@payos/payos-checkout";
-
-interface IPayOSEvent {
-    orderCode: number;
-    [key: string]: unknown;
-}
+import { IPayOSEvent } from "../../types";
 
 const EmbeddedPayment = () => {
     const navigate = useNavigate();
@@ -18,7 +14,6 @@ const EmbeddedPayment = () => {
         embedded: true,
         onSuccess: (event: IPayOSEvent) => {
             if (event.orderCode) {
-                // FIX: Explicitly convert the number to a string
                 navigate(
                     `/payment/success?orderCode=${String(event.orderCode)}`,
                 );

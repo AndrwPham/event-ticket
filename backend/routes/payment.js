@@ -4,7 +4,7 @@ import PayOS from '@payos/node';
 const router = express.Router();
 
 router.post("/create-payment-link", async (req, res) => {
-    const orderCode = Number(String(Date.now()).slice(-6));
+    const orderCode = Date.now();
 
     try {
         const payOS = new PayOS(
@@ -30,7 +30,7 @@ router.post("/create-payment-link", async (req, res) => {
 
         const paymentData = {
             orderCode: orderCode,
-            amount: totalAmount,
+            amount: 2000, // totalAmount
             description: String(orderCode),
             items: orderDetails.tickets,
             returnUrl: `http://localhost:5173/payment/success`,
@@ -38,12 +38,44 @@ router.post("/create-payment-link", async (req, res) => {
         };
 
         const paymentLink = await payOS.createPaymentLink(paymentData);
-
+        console.log("Payment data:", paymentData)
+        console.log("Payment link:",  paymentLink)
         res.json(paymentLink);
 
     } catch (error) {
         console.error("Error creating payment link:", error);
         res.status(500).json({ error: error.message || "Failed to create payment link" });
+    }
+});
+
+router.post("/cancel", async (req, res) => {
+    const { orderCode } = req.body;
+    if (!orderCode) {
+        return res.status(400).json({ error: "orderCode is required" });
+    }
+    try {
+        const payOS = new PayOS(process.env.PAYOS_CLIENT_ID, process.env.PAYOS_API_KEY, process.env.PAYOS_CHECKSUM_KEY);
+        const canceledOrder = await payOS.cancelPaymentLink(orderCode, "User timed out");
+        res.json({ error: 0, message: "Canceled successfully", data: canceledOrder });
+    } catch (error) {
+        console.error("Error canceling payment link:", error);
+        res.status(500).json({ error: -1, message: error.message || "Failed to cancel payment link" });
+    }
+});
+
+router.post("/webhook", express.json(), (req, res) => {
+    try {
+        const payOS = new PayOS(process.env.PAYOS_CLIENT_ID, process.env.PAYOS_API_KEY, process.env.PAYOS_CHECKSUM_KEY);
+        const webhookData = payOS.verifyPaymentWebhookData(req.body);
+        console.log("Webhook received and verified:", webhookData);
+
+        //  update your database here
+        // if (webhookData.code === "00") { /* Handle PAID status */ }
+
+        res.status(200).json({ error: 0, message: "Webhook received" });
+    } catch (error) {
+        console.error("Webhook verification failed:", error);
+        res.status(400).json({ error: -1, message: "Webhook verification failed" });
     }
 });
 

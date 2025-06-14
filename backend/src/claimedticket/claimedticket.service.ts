@@ -7,8 +7,12 @@ export class ClaimedTicketService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateClaimedTicketDto) {
-    const ticket = await this.prisma.claimedTicket.findUnique({
-        where: { id: dto.ticketId },
+    const claimedTicket = await this.prisma.claimedTicket.create({
+        data: {
+          attendee: { connect: { id: dto.attendeeId } },
+          ticket: { connect: { id: dto.ticketId } },
+          order: { connect: { id: dto.orderId } },
+        }
     }); 
   }
 

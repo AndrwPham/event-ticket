@@ -1,5 +1,5 @@
 export class CreateClaimedTicketDto {
-  userId: string;
+  attendeeId: string;
   ticketId: string;
   orderId: string;
 }

@@ -1,6 +1,12 @@
 import { FC } from "react";
 import { IEvent, IOrderDetails } from "../../../types";
 
+interface GroupedTicket {
+    name: string;
+    quantity: number;
+    price: number;
+}
+
 interface OrderSummaryProps {
     eventDetails: IEvent;
     orderDetails: IOrderDetails;
@@ -10,11 +16,23 @@ const OrderSummary: FC<OrderSummaryProps> = ({
     eventDetails,
     orderDetails,
 }) => {
-    const subtotal = orderDetails.tickets.reduce(
+    const groupedTickets = orderDetails.tickets.reduce<{
+        [key: string]: GroupedTicket;
+    }>((acc, ticket) => {
+        const key = `${ticket.name}-${String(ticket.price)}`;
+
+        if (!(key in acc)) {
+            acc[key] = { ...ticket, quantity: 0 };
+        }
+
+        acc[key].quantity += ticket.quantity;
+        return acc;
+    }, {});
+
+    const totalAmount = orderDetails.tickets.reduce(
         (acc, ticket) => acc + ticket.price * ticket.quantity,
         0,
     );
-    const totalAmount = subtotal; // Incase for additional fee
 
     return (
         <div className="bg-white p-6 rounded-lg shadow-md lg:sticky lg:top-8 border border-gray-200">
@@ -38,7 +56,7 @@ const OrderSummary: FC<OrderSummaryProps> = ({
                 </p>
             </div>
             <div className="border-t border-b border-gray-200 py-4 space-y-2">
-                {orderDetails.tickets.map((ticket) => (
+                {Object.values(groupedTickets).map((ticket) => (
                     <div
                         key={ticket.name}
                         className="flex justify-between text-sm"
@@ -50,6 +68,7 @@ const OrderSummary: FC<OrderSummaryProps> = ({
                             {new Intl.NumberFormat("vi-VN").format(
                                 ticket.price * ticket.quantity,
                             )}
+                            đ
                         </span>
                     </div>
                 ))}

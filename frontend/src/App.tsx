@@ -13,6 +13,8 @@ import Payment from "./pages/payment/Payment";
 import TicketDetails from "./pages/ticket/TicketDetails";
 import CardPaymentPage from "./pages/payment/CardPaymentPage";
 import SeatMap from "./pages/seatMap/SeatMap";
+import SuccessPage from "./pages/payment/SuccessPage";
+import CancelPage from "./pages/payment/CancelPage";
 
 function App() {
     return (
@@ -23,7 +25,10 @@ function App() {
                     <Routes>
                         <Route path="/" element={<Home />} />
                         <Route path="/event/:id" element={<TicketDetails />} />
-                        <Route path="/payment" element={<Payment />} />
+                        <Route
+                            path="/event/:id/payment"
+                            element={<Payment />}
+                        />
                         <Route path="/home" element={<Home />} />
                         <Route
                             path="/contact-sales"
@@ -35,8 +40,16 @@ function App() {
                         <Route path="/sign-up" element={<SignUp />} />
                         <Route path="/search" element={<SearchPage />} />
                         <Route
-                            path="/payment/card"
+                            path="/event/:id/payment/card"
                             element={<CardPaymentPage />}
+                        />
+                        <Route
+                            path="/event/:id/payment/success"
+                            element={<SuccessPage />}
+                        />
+                        <Route
+                            path="/event/:id/payment/cancel"
+                            element={<CancelPage />}
                         />
                         <Route
                             path="/event/:id/select-seats"

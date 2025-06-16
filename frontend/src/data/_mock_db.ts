@@ -4,8 +4,8 @@ I can modify this so it can match with our database if possible
 The current attributes are wat I think we should have to render the ticket details
 that looks similar to the ticketbox.com page
  */
-
-export const allEvents = [
+import { IEvent } from "../types";
+export const allEvents: IEvent[] = [
     {
         id: 1,
         title: "CAREER FAIR & INDUSTRY EXPLORATION DAY 2025",
@@ -17,7 +17,7 @@ export const allEvents = [
             "https://images.careerbuilder.vn/employer_folders/2022/08/10/1629532_1660124800_VGU_Career Fair 2022_FB Event Page Cover.png",
         description:
             "VGU Career Fair and Industry Exploration Day 2025 is a flagship event to foster collaboration, innovation, and career exploration within the VGU community. This event aims to connect VGU students with industry partners for careers and internships, provide a platform for companies to showcase their technologies and opportunities, build and strengthen VGU-industry partnerships for collaboration and knowledge exchange, and highlight VGU as a hub for industry-ready graduates with German-Vietnamese expertise.",
-        artists: [],
+
         startingPrice: 0,
         location: {
             name: "VGU Convention Hall - Ben Cat Campus",
@@ -41,13 +41,6 @@ export const allEvents = [
         posterUrl: "https://i.ytimg.com/vi/2g92h_nK4rM/maxresdefault.jpg",
         description:
             "Sự kiện âm nhạc lớn nhất mùa hè với sự góp mặt của dàn sao V-Pop đình đám. Một đêm bùng nổ với âm thanh và ánh sáng hiện đại, hứa hẹn mang đến những trải nghiệm không thể nào quên.",
-        artists: [
-            "Sơn Tùng M-TP",
-            "Hà Anh Tuấn",
-            "Bích Phương",
-            "Đen Vâu",
-            "Hoàng Thùy Linh",
-        ],
         startingPrice: 400000,
         location: {
             name: "Sân vận động Phú Thọ",

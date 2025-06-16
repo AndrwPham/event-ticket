@@ -24,6 +24,7 @@ export interface IEvent {
     schedule: ISchedule[];
     posterUrl: string;
     description: string;
+    startingPrice: number;
 
     venueId?: number;
     seats?: { [seatId: string]: ISeat };

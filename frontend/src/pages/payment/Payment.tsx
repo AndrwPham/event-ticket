@@ -146,7 +146,7 @@ const PaymentPage: FC = () => {
         setIsProcessing(true);
 
         if (paymentMethod === "card") {
-            navigate("/payment/card", {
+            navigate("/event/${String(eventDetails.id)}/payment/card", {
                 state: { eventDetails, orderDetails },
             });
         } else {

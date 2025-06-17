@@ -1,6 +1,5 @@
 // src/pages/CreateEvent.tsx
 import React from 'react';
-import LexicalEditor from './LexicalEditor'; // Adjust the import path as necessary
 
 export default function CreateEvent() {
     const [step, setStep] = React.useState(1);
@@ -32,6 +31,7 @@ export default function CreateEvent() {
     const [accountNumber, setAccountNumber] = React.useState('');
     const [bank, setBank] = React.useState('');
     const [branch, setBranch] = React.useState('');
+
 
     let isFormValid = false;
     if (step === 1) {
@@ -110,6 +110,7 @@ export default function CreateEvent() {
                         })}
                     </div>
 
+
                     {/* Save + Continue buttons */}
                     <div className="space-x-3">
                         <button 
@@ -149,6 +150,8 @@ export default function CreateEvent() {
                             >
                             Back
                         </button>
+
+
                     </div>
                 </div>
 
@@ -186,6 +189,7 @@ export default function CreateEvent() {
                                     className="hidden"
                                 />
                             </div>
+
 
                             {/* Event Cover - 7/10 of the width */}
                             <div className="col-span-7 relative">
@@ -250,12 +254,13 @@ export default function CreateEvent() {
                             </select>
 
                             {/* Description */}
-                            <div className="border border-gray-300 rounded-md p-4 min-h-[200px] w-full bg-white">
-                                <LexicalEditor
-                                    value={description} 
-                                    onChange={setDescription}
-                                />
-                            </div> 
+                            <textarea
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                                rows={8}
+                                placeholder="Event Description (intro, details, terms & conditions)"
+                                className="w-full border px-4 py-2 rounded"
+                            />
 
                             {/* Organizer Info Section */}
                             <div className="grid grid-cols-12 gap-4 mt-8">
@@ -344,6 +349,7 @@ export default function CreateEvent() {
                                 </div>
                             </div>
                         </div>
+
 
                         <h3 className="text-lg font-medium mb-2">Ticket Type</h3>
                         <div className="bg-gray-600 text-white rounded flex items-center justify-between px-6 py-3">

@@ -16,9 +16,6 @@
         "format:fix-all": "prettier src/**/* --write --ignore-unknown"
     },
     "dependencies": {
-        "@lexical/html": "^0.32.1",
-        "@lexical/react": "^0.32.1",
-        "@lexical/rich-text": "^0.32.1",
         "axios": "^1.6.8",
         "clsx": "^1.2.1",
         "react": "^19.0.0",

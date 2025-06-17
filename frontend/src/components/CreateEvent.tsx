@@ -21,6 +21,11 @@ import "@syncfusion/ej2-popups/styles/material.css";
 import "@syncfusion/ej2-splitbuttons/styles/material.css";
 import "@syncfusion/ej2-react-richtexteditor/styles/material.css";
 
+import { registerLicense } from '@syncfusion/ej2-base';
+
+// Registering Syncfusion license key
+registerLicense('YOUR_LICENSE');
+
 export default function CreateEvent() {
     const [step, setStep] = React.useState(1);
 
@@ -39,6 +44,7 @@ export default function CreateEvent() {
         string | null
     >(null);
 
+    const [eventType, setEventType] = React.useState<'online' | 'onsite'>('online');
     const [eventName, setEventName] = React.useState("");
     const [venueName, setVenueName] = React.useState("");
     const [city, setCity] = React.useState("");
@@ -60,15 +66,16 @@ export default function CreateEvent() {
     const [bank, setBank] = React.useState("");
     const [branch, setBranch] = React.useState("");
 
+    const isAddressValid = eventType === 'online' || (
+        venueName && city && district && ward && street
+    );
+
+    
     let isFormValid = false;
     if (step === 1) {
         isFormValid = Boolean(
             eventName &&
-                venueName &&
-                city &&
-                district &&
-                ward &&
-                street &&
+                isAddressValid &&
                 category &&
                 organizerName &&
                 organizerInfo,
@@ -82,6 +89,7 @@ export default function CreateEvent() {
     const handleSave = () => {
         const formData = {
             eventName,
+            eventType,
             venueName,
             city,
             district,
@@ -375,6 +383,8 @@ export default function CreateEvent() {
                                             id="location-online"
                                             type="radio"
                                             name="locationType"
+                                            checked={eventType === 'online'}
+                                            onChange={() => setEventType('online')}
                                         />{" "}
                                         Online Event
                                     </label>
@@ -386,59 +396,65 @@ export default function CreateEvent() {
                                             id="location-onsite"
                                             type="radio"
                                             name="locationType"
+                                            checked={eventType === 'onsite'}
+                                            onChange={() => setEventType('onsite')}
                                         />{" "}
                                         Onsite Event
                                     </label>
                                 </div>
-                                <input
-                                    value={venueName}
-                                    onChange={(e) => {
-                                        setVenueName(e.target.value);
-                                    }}
-                                    type="text"
-                                    placeholder="Venue Name"
-                                    className="w-full border px-4 py-2 rounded"
-                                />
-                                <div className="grid grid-cols-2 gap-4">
-                                    <input
-                                        value={city}
-                                        onChange={(e) => {
-                                            setCity(e.target.value);
-                                        }}
-                                        type="text"
-                                        placeholder="City/Province"
-                                        className="border px-4 py-2 rounded"
-                                    />
-                                    <input
-                                        value={district}
-                                        onChange={(e) => {
-                                            setDistrict(e.target.value);
-                                        }}
-                                        type="text"
-                                        placeholder="District"
-                                        className="border px-4 py-2 rounded"
-                                    />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <input
-                                        value={ward}
-                                        onChange={(e) => {
-                                            setWard(e.target.value);
-                                        }}
-                                        type="text"
-                                        placeholder="Ward"
-                                        className="border px-4 py-2 rounded"
-                                    />
-                                    <input
-                                        value={street}
-                                        onChange={(e) => {
-                                            setStreet(e.target.value);
-                                        }}
-                                        type="text"
-                                        placeholder="Street"
-                                        className="border px-4 py-2 rounded"
-                                    />
-                                </div>
+                                {eventType === 'onsite' && (
+                                    <div>
+                                        <input
+                                            value={venueName}
+                                            onChange={(e) => {
+                                                setVenueName(e.target.value);
+                                            }}
+                                            type="text"
+                                            placeholder="Venue Name"
+                                            className="w-full border px-4 py-2 rounded"
+                                        />
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <input
+                                                value={city}
+                                                onChange={(e) => {
+                                                    setCity(e.target.value);
+                                                }}
+                                                type="text"
+                                                placeholder="City/Province"
+                                                className="border px-4 py-2 rounded"
+                                            />
+                                            <input
+                                                value={district}
+                                                onChange={(e) => {
+                                                    setDistrict(e.target.value);
+                                                }}
+                                                type="text"
+                                                placeholder="District"
+                                                className="border px-4 py-2 rounded"
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <input
+                                                value={ward}
+                                                onChange={(e) => {
+                                                    setWard(e.target.value);
+                                                }}
+                                                type="text"
+                                                placeholder="Ward"
+                                                className="border px-4 py-2 rounded"
+                                            />
+                                            <input
+                                                value={street}
+                                                onChange={(e) => {
+                                                    setStreet(e.target.value);
+                                                }}
+                                                type="text"
+                                                placeholder="Street"
+                                                className="border px-4 py-2 rounded"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
                             </fieldset>
 
                             <select

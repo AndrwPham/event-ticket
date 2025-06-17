@@ -1,0 +1,215 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model AttendeeInfo {
+
+  id                      String              @id @default(auto()) @map("_id") @db.ObjectId
+  userId                  String              @unique @db.ObjectId
+  user                    Attendee           @relation("AttendeeInfo", fields: [userId], references: [id], onDelete: Cascade)
+  email                   String              @unique
+
+  last_name               String?
+  first_name              String?
+  phone                   String?             @unique
+  company                 String?
+
+  avatars                 Image[]             @relation("AttendeeAvatars")
+  orders                  Order[]             @relation("AttendeeOrders")
+  tickets                 ClaimedTicket[]     @relation("AttendeeClaimedTickets")
+  reviews                 Review[]            @relation("AttendeeReviews")
+
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+}
+
+model Attendee {
+
+  id                      String              @id @default(auto()) @map("_id") @db.ObjectId
+  username                String              @unique  
+  password                String
+  user                    AttendeeInfo?        @relation("AttendeeInfo")
+
+  accessToken             String?
+  refreshToken            String?
+  confirmed               Boolean             @default(false)
+  confirmToken            String?
+  confirmTokenExpiresAt   DateTime?
+  resetToken              String?
+  resetTokenExpiresAt     DateTime?
+
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+
+
+}
+
+model Organizer {
+
+  id                      String              @id @default(auto()) @map("_id") @db.ObjectId
+  name                    String
+  username                String              @unique
+  password                String
+
+  accessToken             String?
+  refreshToken            String?
+  confirmed               Boolean             @default(false)
+  confirmToken            String?
+  confirmTokenExpiresAt   DateTime?
+  resetToken              String?
+  resetTokenExpiresAt     DateTime?
+
+  events                  Event[]             @relation("OrganizerEvents")
+  tickets                 IssuedTicket[]      @relation("OrganizerIssuedTickets")
+
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+}
+
+model Event {
+
+  id                      String              @id @default(auto()) @map("_id") @db.ObjectId
+  title                   String
+  description             String
+  active_start_date       DateTime
+  active_end_date         DateTime
+  sale_start_date         DateTime
+  sale_end_date           DateTime
+  city                    String?
+  district                String?
+  ward                    String?
+  street                  String?
+  type                    String // e.g., "online", "offline", "hybrid"
+
+  organizerId             String              @db.ObjectId
+  organizer               Organizer           @relation("OrganizerEvents", fields: [organizerId], references: [id], onDelete: Cascade)
+  tagIds                  String[]            @db.ObjectId
+  tags                    Tag[]               @relation("EventsTags", fields: [tagIds], references: [id])
+
+  images                  Image[]             @relation("EventImages")
+  tickets                 IssuedTicket[]      @relation("EventIssuedTickets")
+  reviews                 Review[]            @relation("EventReviews")
+
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+
+  @@index([organizerId])
+}
+
+model IssuedTicket {
+
+  id                      String              @id @default(auto()) @map("_id") @db.ObjectId
+  price                   Float
+  class                   String
+  seat                    String
+  status                  String
+
+  eventId                 String              @db.ObjectId
+  event                   Event               @relation("EventIssuedTickets", fields: [eventId], references: [id], onDelete: Cascade)
+  organizerId             String              @db.ObjectId
+  organizer               Organizer           @relation("OrganizerIssuedTickets", fields: [organizerId], references: [id], onDelete: Cascade)
+  currencyId              String              @db.ObjectId
+  currency                Currency            @relation("TicketCurrency", fields: [currencyId], references: [id], onDelete: Restrict)
+
+  claim                   ClaimedTicket?      @relation("IssuedTicketClaims")
+  images                  Image[]             @relation("TicketImages")
+
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+
+  @@index([eventId])
+  @@index([organizerId])
+  @@index([currencyId])
+}
+
+model ClaimedTicket {
+
+  id                      String              @id @default(auto()) @map("_id") @db.ObjectId
+  ticketId                String              @db.ObjectId @unique
+  ticket                  IssuedTicket        @relation("IssuedTicketClaims", fields: [ticketId], references: [id], onDelete: Cascade)
+  attendeeId              String              @db.ObjectId
+  attendee                AttendeeInfo        @relation("AttendeeClaimedTickets", fields: [attendeeId], references: [id], onDelete: Cascade)
+  orderId                 String              @db.ObjectId
+  order                   Order               @relation("OrderClaimedTickets", fields: [orderId], references: [id], onDelete: Cascade)
+
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+
+  @@unique([ticketId, orderId, attendeeId])
+  @@index([orderId])
+  @@index([attendeeId])
+}
+
+model Order {
+
+  id                      String              @id @default(auto()) @map("_id") @db.ObjectId
+  totalPrice              Float
+  status                  String
+  method                  String
+  attendeeId              String              @db.ObjectId
+  attendee                AttendeeInfo        @relation("AttendeeOrders", fields: [attendeeId], references: [id], onDelete: Cascade)
+  tickets                 ClaimedTicket[]     @relation("OrderClaimedTickets")
+
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+
+  @@index([attendeeId])
+}
+
+model Currency {
+
+  id                      String              @id @default(auto()) @map("_id") @db.ObjectId
+  name                    String
+  symbol                  String
+
+  tickets                 IssuedTicket[]      @relation("TicketCurrency")
+}
+
+model Review {
+
+  id                      String              @id @default(auto()) @map("_id") @db.ObjectId
+  content                 String
+  rating                  Int
+  attendeeId              String              @db.ObjectId
+  attendee                AttendeeInfo        @relation("AttendeeReviews", fields: [attendeeId], references: [id], onDelete: Cascade)
+  eventId                 String              @db.ObjectId
+  event                   Event               @relation("EventReviews", fields: [eventId], references: [id], onDelete: Cascade)
+
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+
+  @@index([attendeeId])
+  @@index([eventId])
+}
+
+model Tag {
+
+  id                      String              @id @default(auto()) @map("_id") @db.ObjectId
+  name                    String              @unique
+
+  eventIds               String[]            @db.ObjectId
+  events                  Event[]          @relation("EventsTags", fields: [eventIds], references: [id])
+}
+
+
+model Image {
+  
+  id                      String              @id @default(auto()) @map("_id") @db.ObjectId
+  type                    String // "logo" | "banner" | "avatar" | "ticket"
+  url                     String
+
+  eventId                 String?             @db.ObjectId
+  event                   Event?              @relation("EventImages", fields: [eventId], references: [id], onDelete: Cascade)
+  ticketId                String?             @db.ObjectId
+  ticket                  IssuedTicket?       @relation("TicketImages", fields: [ticketId], references: [id], onDelete: Cascade)
+  attendeeId              String?             @db.ObjectId
+  attendee                AttendeeInfo?       @relation("AttendeeAvatars", fields: [attendeeId], references: [id], onDelete: Cascade)
+
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+}

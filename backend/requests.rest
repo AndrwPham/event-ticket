@@ -1,0 +1,65 @@
+POST http://localhost:5000/auth/register
+Content-Type: application/json
+
+{
+    "email":"nhakhoa02@gmail.com",
+    "username": "nhakhoa02",
+    "password": "123456"
+}
+
+###
+
+POST http://localhost:5000/auth/login
+Content-Type: application/json
+
+{
+    "username": "nhakhoa01",
+    "password": "123456"
+}
+
+###
+GET http://localhost:5000/auth/user
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ODIzODExNzgwYjYzMzU4YTc0NTQ4MGQiLCJpYXQiOjE3NDcyMTgwNDgsImV4cCI6MTc0NzIxODk0OH0.b5hX6StvokhBj3bhHL_0g67SHoOVaVNLEo8yChXoPyA
+
+{
+    "id": "6823811780b63358a745480d"
+}
+
+###
+POST http://localhost:5000/events/68246ee613ad085a0f8a7e74
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ODIzODExNzgwYjYzMzU4YTc0NTQ4MGQiLCJpYXQiOjE3NDcyMTgwNDgsImV4cCI6MTc0NzIxODk0OH0.b5hX6StvokhBj3bhHL_0g67SHoOVaVNLEo8yChXoPyA
+Content-Type: application/json
+
+{
+    "title": "event 5",
+    "description": "event 1 description",
+    "date": "2023-10-01T00:00:00Z",
+    "categoryId": "1"
+}
+
+###
+POST http://localhost:5000/images
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ODIzODExNzgwYjYzMzU4YTc0NTQ4MGQiLCJpYXQiOjE3NDcyMjUzMDUsImV4cCI6MTc0NzIyNjIwNX0.61yCyQYyZszmXPC4p0B7KZ6P_yvs13aq8gC0QMbnwds
+Content-Type: application/json
+
+{
+    "url": "www.example.com",
+    "type": "avatar"
+}
+
+###
+POST http://localhost:5000/tickets
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ODIzODExNzgwYjYzMzU4YTc0NTQ4MGQiLCJpYXQiOjE3NDcyNTc3MTUsImV4cCI6MTc0NzI1ODYxNX0.mR3L6I8Qq4DuAJPWd5uZkdNPC4Lrto4B0gOmvrwr_ZY
+Content-Type: application/json
+
+{
+    "name": "ticket 1",
+    "description": "ticket of event 1",
+    "price": 10.0,
+    "quantity": 10,
+    "type": "VIP",
+    "status": "AVAILABLE",
+    "eventId": "6823be639c3cc10bcdb3834e",
+    "quantity": 10000,
+    "price": 100000
+}

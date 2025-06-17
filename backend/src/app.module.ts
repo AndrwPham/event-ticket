@@ -13,6 +13,7 @@ import { ClaimedTicketModule } from './claimedticket/claimedticket.module';
 import { ReviewModule } from './review/review.module';
 import { SharedModule } from './common/shared.module';
 import { RedisModule, RedisModuleOptions } from '@nestjs-modules/ioredis';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { RedisModule, RedisModuleOptions } from '@nestjs-modules/ioredis';
       },
       inject: [ConfigService],
     }),
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

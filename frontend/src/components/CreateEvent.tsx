@@ -61,6 +61,22 @@ export default function CreateEvent() {
     const [startTime, setStartTime] = React.useState("");
     const [endTime, setEndTime] = React.useState("");
 
+    const [showTicketModal, setShowTicketModal] = React.useState(false);
+
+    type TicketType = {
+        name: string;
+        price: number;
+        total: number;
+        min: number;
+        max: number;
+    };
+    const [ticketTypes, setTicketTypes] = React.useState<TicketType[]>([]);
+    const [ticketName, setTicketName] = React.useState('');
+    const [price, setPrice] = React.useState(0);
+    const [total, setTotal] = React.useState(0);
+    const [min, setMin] = React.useState(0);
+    const [max, setMax] = React.useState(0);
+
     const [accountOwner, setAccountOwner] = React.useState("");
     const [accountNumber, setAccountNumber] = React.useState("");
     const [bank, setBank] = React.useState("");
@@ -645,15 +661,100 @@ export default function CreateEvent() {
                         <h3 className="text-lg font-medium mb-2">
                             Ticket Type
                         </h3>
-                        <div className="bg-gray-600 text-white rounded flex items-center justify-between px-6 py-3">
-                            <span className="font-medium">Standard</span>
-                            <button className="text-white hover:text-red-300">
-                                🗑 Delete
-                            </button>
+                        <div className="space-y-2 mt-4">
+                            {ticketTypes.map((ticket, index) => (
+                                <div
+                                    key={index}
+                                    className="flex justify-between items-center bg-gray-700 text-white px-4 py-3 rounded"
+                                >
+                                    <span className="font-semibold">{ticket.name}</span>
+                                    <button
+                                        onClick={() => {
+                                            const updated = [...ticketTypes];
+                                            updated.splice(index, 1);
+                                            setTicketTypes(updated);
+                                        }}
+                                        className="text-white hover:text-red-400 flex items-center"
+                                    >
+                                        🗑 Delete
+                                    </button>
+                                </div>
+                            ))}
                         </div>
-                        <p className="mt-4 text-sm text-[#1D0E3C] hover:underline cursor-pointer">
-                            ➕ Add another ticket type
-                        </p>
+                        <button
+                            onClick={() => setShowTicketModal(true)}
+                            className="flex items-center text-purple-600 hover:underline mt-4"
+                        >
+                            <span className="mr-1 text-xl">＋</span> Add another ticket type
+                        </button>
+
+                        {showTicketModal && (
+                            <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+                                <div className="bg-white p-6 rounded-md shadow-md max-w-3xl w-full relative">
+                                    <button
+                                        className="absolute top-3 right-4 text-xl text-gray-500 hover:text-black"
+                                        onClick={() => setShowTicketModal(false)}
+                                    >
+                                        &times;
+                                    </button>
+
+                                    <h3 className="text-center text-lg font-semibold text-[#1D0E3C] mb-4">
+                                        Add another ticket type
+                                    </h3>
+
+                                    <div className="space-y-4">
+                                        <input
+                                            type="text"
+                                            placeholder="Ticket name"
+                                            className="w-full border rounded px-4 py-2"
+                                            value={ticketName}
+                                            onChange={(e) => setTicketName(e.target.value)}
+                                        />
+
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            <input value={price} onChange={(e) => setPrice(Number(e.target.value))} type="number" placeholder="Price" className="border px-3 py-2 rounded" />
+                                            <input value={total} onChange={(e) => setTotal(Number(e.target.value))} type="number" placeholder="Total number of ticket" className="border px-3 py-2 rounded" />
+                                            <input value={min} onChange={(e) => setMin(Number(e.target.value))} type="number" placeholder="Minimum per purchase" className="border px-3 py-2 rounded" />
+                                            <input value={max} onChange={(e) => setMax(Number(e.target.value))} type="number" placeholder="Maximum per purchase" className="border px-3 py-2 rounded" />
+                                        </div>
+
+                                        <button
+                                            className="w-full mt-4 bg-[#1D0E3C] text-white py-2 rounded hover:bg-[#311f5a]"
+                                            onClick={() => {
+                                                if (!ticketName.trim()) return alert("Please enter ticket name");
+                                                if (min > max) return alert("Min tickets cannot exceed max tickets");
+                                                if (min < 1) return alert("Min tickets must be at least 1");
+                                                if (max < 1) return alert("Max tickets must be at least 1");
+                                                if (total < 1) return alert("Total tickets must be at least 1");
+                                                if (price < 0) return alert("Price cannot be negative");
+                                                if (total < min) return alert("Total tickets must be at least equal to minimum tickets"); 
+                                                if (total < max) return alert("Total tickets must be at least equal to maximum tickets");
+
+                                                const newTicket = {
+                                                    name: ticketName.trim(),
+                                                    price,
+                                                    total,
+                                                    min,
+                                                    max,
+                                                };
+
+                                                setTicketTypes([...ticketTypes, newTicket]);
+
+                                                // Reset modal and inputs
+                                                setTicketName('');
+                                                setPrice(0);
+                                                setTotal(10);
+                                                setMin(1);
+                                                setMax(10);
+                                                setShowTicketModal(false);
+                                            }}
+                                        >
+                                            Save
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </>
                 )}
 

@@ -1,4 +1,7 @@
 import { Injectable, ConflictException, InternalServerErrorException, BadRequestException } from '@nestjs/common';
+import { OrderStatus } from './order-status.enum';
+import { TicketStatus } from '../issuedticket/ticket-status.enum';
+import { ClaimedTicketStatus } from '../claimedticket/claimedticket-status.enum';
 import { PrismaService } from '../prisma/prisma.service';
 import { HoldService } from './hold.service';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -32,33 +35,25 @@ export class OrderService {
 
     let createdOrder;
     try {
-      createdOrder = await this.prisma.$transaction(async (tx) => {
+      createdOrder = await this.prisma.$transaction(async (tx: import('@prisma/client').PrismaClient) => {
         const order = await tx.order.create({
           data: {
             totalPrice,
-            status: 'PENDING',
+            status: OrderStatus.PENDING,
             method,
             attendee: { connect: { id: userId } },
           },
         });
-
-        const claimPromises = ticketItems.map(async (ticketId) => {
-          tx.claimedTicket.create({
-            data: {
-              attendee: { connect: { id: userId } },
-              ticket: { connect: { id: ticketId } },
-              order: { connect: { id: order.id } },
-            },
-          });
-        });
-
-        await Promise.all(claimPromises);
-
-        await tx.issuedTicket.updateMany({
-          where: { id: { in: ticketItems } },
-          data: { status: 'RESERVED' },
-        });
-
+        await this.claimedTicketService.createClaimedTickets(
+          order.id,
+          userId,
+          ticketItems,
+          ClaimedTicketStatus.READY,
+          tx
+        );
+        await Promise.all(ticketItems.map(ticketId =>
+          this.issuedTicketService.update(ticketId, { status: TicketStatus.HELD }, tx)
+        ));
         return order;
       });
 
@@ -104,20 +99,17 @@ export class OrderService {
       };
     } catch (error) {
       await this.holdService.releaseTickets(ticketItems);
-      await this.prisma.$transaction(async (tx) => {
+      await this.prisma.$transaction(async (tx: import('@prisma/client').PrismaClient) => {
         await tx.order.update({
           where: { id: createdOrder.id },
-          data: { status: 'FAILED' },
+          data: { status: OrderStatus.FAILED },
         });
-
         // delete claimed tickets
         await tx.claimedTicket.deleteMany({ where: { orderId: createdOrder.id } });
-
         // reset issued ticket status
-        await tx.issuedTicket.updateMany({
-          where: { id: { in: ticketItems } },
-          data: { status: 'AVAILABLE' },
-        });
+        await Promise.all(ticketItems.map(ticketId =>
+          this.issuedTicketService.update(ticketId, { status: TicketStatus.AVAILABLE }, tx)
+        ));
         throw new InternalServerErrorException('Failed to initiate payment', error.message);
       });
     }
@@ -126,14 +118,14 @@ export class OrderService {
   async cancel(id: string) {
     return this.prisma.order.update({
       where: { id },
-      data: { status: 'CANCELLED' },
+      data: { status: OrderStatus.CANCELLED },
     });
   }
 
   async confirmPayment(id: string) {
     return this.prisma.order.update({
       where: { id },
-      data: { status: 'PAID' },
+      data: { status: OrderStatus.PAID },
     });
   }
 

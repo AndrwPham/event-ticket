@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException, ConflictException, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaClient } from '@prisma/client';
 import { CreateIssuedTicketDto } from './dto/create-issuedticket.dto';
 import { UpdateIssuedTicketDto } from './dto/update-issuedticket.dto';
 import { TicketStatus } from './ticket-status.enum';
@@ -74,7 +75,8 @@ export class IssuedTicketService {
     }
   }
 
-  async update(id: string, dto: UpdateIssuedTicketDto) {
+  async update(id: string, dto: UpdateIssuedTicketDto, prismaClient?: PrismaClient) {
+    const prisma: PrismaClient = (prismaClient as PrismaClient) || this.prisma;
     const allowedFields = ['price', 'class', 'seat', 'status'];
     const data: any = {};
     for (const field of allowedFields) {
@@ -83,7 +85,7 @@ export class IssuedTicketService {
       }
     }
     try {
-      const updated = await this.prisma.issuedTicket.update({
+      const updated = await prisma.issuedTicket.update({
         where: { id },
         data,
       });

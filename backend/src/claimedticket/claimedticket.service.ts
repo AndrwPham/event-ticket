@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, ConflictException, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaClient } from '@prisma/client';
 import { CreateClaimedTicketDto } from './dto/create-claimedticket.dto';
 import { ClaimedTicketStatus } from './claimedticket-status.enum';
 
@@ -7,9 +8,10 @@ import { ClaimedTicketStatus } from './claimedticket-status.enum';
 export class ClaimedTicketService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateClaimedTicketDto) {
+  async create(dto: CreateClaimedTicketDto, prismaClient?: PrismaClient) {
+    const prisma: PrismaClient = (prismaClient as PrismaClient) || this.prisma;
     try {
-      return await this.prisma.claimedTicket.create({
+      return await prisma.claimedTicket.create({
         data: {
           attendee: { connect: { id: dto.attendeeId } },
           issuedTicket: { connect: { id: dto.ticketId } },
@@ -83,9 +85,9 @@ export class ClaimedTicketService {
     attendeeId: string,
     ticketIds: string[],
     status: ClaimedTicketStatus = ClaimedTicketStatus.READY,
-    prismaTx?: PrismaService
+    prismaClient?: PrismaClient
   ) {
-    const prisma = prismaTx || this.prisma;
+    const prisma: PrismaClient = (prismaClient as PrismaClient) || this.prisma;
     const data = ticketIds.map(id => ({
       id, // id is the same as IssuedTicket.id
       orderId,

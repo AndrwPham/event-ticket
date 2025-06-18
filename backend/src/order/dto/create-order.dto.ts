@@ -1,10 +1,7 @@
 import { OrderStatus } from '../order-status.enum';
-import { IsEnum, IsNumber, IsString, IsArray, IsOptional } from 'class-validator';
+import { IsEnum, IsString, IsArray, IsOptional } from 'class-validator';
 
 export class CreateOrderDto {
-  @IsNumber()
-  totalPrice: number;
-
   @IsOptional()
   @IsEnum(OrderStatus)
   status?: OrderStatus;

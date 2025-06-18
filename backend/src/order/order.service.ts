@@ -24,10 +24,25 @@ export class OrderService {
   ) { }
 
   async create(dto: CreateOrderDto) {
-    const { userId, ticketItems, totalPrice, method } = dto;
+    const { userId, ticketItems, method } = dto;
 
     if (!ticketItems || ticketItems.length === 0) {
       throw new BadRequestException('No ticket items provided');
+    }
+
+    // Calculate total price from ticket items (fraud prevention)
+    const ticketDetails = await Promise.all(
+      ticketItems.map((ticketId) => this.issuedTicketService.findOne(ticketId))
+    );
+    const totalPrice = ticketDetails.reduce((sum, ticket) => {
+      if (!ticket) throw new BadRequestException('Invalid ticket in order');
+      if (ticket.status !== TicketStatus.AVAILABLE) {
+        throw new ConflictException(`Ticket ${ticket.id} is not available for sale`);
+      }
+      return sum + ticket.price;
+    }, 0);
+    if (totalPrice <= 0) {
+      throw new BadRequestException('Order total must be greater than zero');
     }
 
     // put on hold, if conflict, return ConflictException
@@ -99,19 +114,21 @@ export class OrderService {
       };
     } catch (error) {
       await this.holdService.releaseTickets(ticketItems);
-      await this.prisma.$transaction(async (tx: import('@prisma/client').PrismaClient) => {
-        await tx.order.update({
-          where: { id: createdOrder.id },
-          data: { status: OrderStatus.FAILED },
+      if (createdOrder && createdOrder.id) {
+        await this.prisma.$transaction(async (tx: import('@prisma/client').PrismaClient) => {
+          await tx.order.update({
+            where: { id: createdOrder.id },
+            data: { status: OrderStatus.FAILED },
+          });
+          // delete claimed tickets
+          await tx.claimedTicket.deleteMany({ where: { orderId: createdOrder.id } });
+          // reset issued ticket status
+          await Promise.all(ticketItems.map(ticketId =>
+            this.issuedTicketService.update(ticketId, { status: TicketStatus.AVAILABLE }, tx)
+          ));
         });
-        // delete claimed tickets
-        await tx.claimedTicket.deleteMany({ where: { orderId: createdOrder.id } });
-        // reset issued ticket status
-        await Promise.all(ticketItems.map(ticketId =>
-          this.issuedTicketService.update(ticketId, { status: TicketStatus.AVAILABLE }, tx)
-        ));
-        throw new InternalServerErrorException('Failed to initiate payment', error.message);
-      });
+      }
+      throw new InternalServerErrorException('Failed to initiate payment', error.message);
     }
   }
 
@@ -176,7 +193,28 @@ export class OrderService {
   }
 
   async update(id: string, dto: UpdateOrderDto) {
-    const { totalPrice, method } = dto;
+    const { method, ticketItems } = dto;
+
+    if (!ticketItems || ticketItems.length === 0) {
+      throw new BadRequestException('No ticket items provided for update');
+    }
+
+    // Recalculate totalPrice from ticketItems
+    const ticketDetails = await Promise.all(
+      ticketItems.map((ticketId) => this.issuedTicketService.findOne(ticketId))
+    );
+    const totalPrice = ticketDetails.reduce((sum, ticket) => {
+      if (!ticket) throw new BadRequestException('Invalid ticket in order');
+      if (ticket.status !== TicketStatus.AVAILABLE) {
+        throw new ConflictException(`Ticket ${ticket.id} is not available for sale`);
+      }
+      return sum + ticket.price;
+    }, 0);
+    if (totalPrice <= 0) {
+      throw new BadRequestException('Order total must be greater than zero');
+    }
+
+    // Optionally: update claimed tickets, hold logic, etc. here
 
     return this.prisma.order.update({
       where: { id },

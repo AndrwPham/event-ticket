@@ -7,6 +7,8 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { PrismaModule } from 'src/prisma/prisma.module';
+import { APP_GUARD } from '@nestjs/core';
+import { RolesGuard } from './guards/roles.guard';
 
 @Module({
   imports: [JwtModule.registerAsync({
@@ -23,6 +25,10 @@ import { PrismaModule } from 'src/prisma/prisma.module';
     JwtStrategy,
     JwtRefreshStrategy,
     JwtAuthGuard,
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
   ],
   exports: [
     JwtModule,

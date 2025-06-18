@@ -124,6 +124,8 @@ model IssuedTicket {
   seat   String
   status TicketStatus
 
+  holdExpiresAt DateTime?
+
   eventId String @db.ObjectId
   event   Event  @relation("EventIssuedTickets", fields: [eventId], references: [id], onDelete: Cascade)
 

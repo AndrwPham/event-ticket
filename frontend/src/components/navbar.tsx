@@ -11,6 +11,7 @@ const Navbar: FC = () => {
     { href: "/ticket", label: "Ticket", active: pathname === "/ticket" },
     { href: "/login", label: "Log In", active: pathname === "/login" },
     { href: "/sign-up", label: "Sign Up", active: pathname === "/sign-up" },
+    { href: "/profile", label: "My Account", active: pathname === "/profile" },
   ];
 
   return (

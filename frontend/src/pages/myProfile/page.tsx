@@ -1,0 +1,111 @@
+import { Link } from "react-router-dom";
+
+const MyProfile = () => {
+  return (
+    <div className="bg-white">
+      {/* This container is restored to its original size */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-12 gap-12">
+          {/* Sidebar: Unchanged */}
+          <aside className="col-span-12 lg:col-span-3">
+            <div className="space-y-6">
+              <div>
+                <h3 className="font-semibold text-gray-500">Account of</h3>
+                <p className="font-bold text-lg">Nguyen Van A</p>
+              </div>
+              <nav className="space-y-2 text-gray-600">
+                <h4 className="font-bold text-black px-4 pt-2">
+                  Account Settings
+                </h4>
+                <div className="pl-4">
+                  <Link
+                    to="/profile"
+                    className="block py-2 px-4 rounded-md bg-gray-100 font-bold text-black"
+                  >
+                    My Profile
+                  </Link>
+                  <Link
+                    to="/ticket"
+                    className="block py-2 px-4 rounded-md hover:bg-gray-100"
+                  >
+                    My Tickets
+                  </Link>
+                </div>
+              </nav>
+            </div>
+          </aside>
+
+          {/* Main Content: I've adjusted the column span to make this part smaller */}
+          <main className="col-span-12 lg:col-span-5">
+            <h1 className="text-3xl font-bold mb-2">My Profile</h1>
+            <p className="text-gray-600 mb-8">
+              Providing accurate info will support you in ticket booking or
+              verification
+            </p>
+
+            <form className="space-y-6">
+              <div>
+                <label
+                  htmlFor="fullName"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  id="fullName"
+                  name="fullName"
+                  defaultValue="Nguyen Van A"
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="phone"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Phone
+                </label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  defaultValue="0123456789"
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  defaultValue="nguyenvana1234@gmail.com"
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                />
+              </div>
+
+              <div className="flex justify-start">
+                <button
+                  type="submit"
+                  className="bg-[#1A0B49] text-white font-semibold py-2 px-6 rounded-md hover:bg-opacity-90"
+                >
+                  Complete
+                </button>
+              </div>
+            </form>
+          </main>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default MyProfile;

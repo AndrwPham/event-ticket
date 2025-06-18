@@ -8,7 +8,7 @@ const Footer: FC = () => {
             <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                 {/* Social Links */}
                 <div>
-                    <h4 className="font-semibold mb-4">Let’s connect</h4>
+                    <h4 className="font-semibold mb-4">Let's connect</h4>
                     <div className="flex space-x-4 text-white text-xl">
                         <FaFacebookF />
                         <FaLinkedinIn />

@@ -76,7 +76,7 @@ const Ticket = () => {
                 </h4>
                 <div className="pl-4">
                   <Link
-                    to="#"
+                    to="/profile"
                     className="block py-2 px-4 rounded-md hover:bg-gray-100"
                   >
                     My Profile

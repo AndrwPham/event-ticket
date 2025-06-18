@@ -136,4 +136,40 @@ export class OrderService {
       data: { status: 'PAID' },
     });
   }
+
+  async findAll() {
+    return this.prisma.order.findMany({ include: { tickets: true } });
+  }
+
+  async findByUser(userId: string) {
+    return this.prisma.order.findMany({
+      where: { attendeeId: userId },
+      include: { tickets: true },
+    });
+  }
+
+  async findOne(id: string) {
+    return this.prisma.order.findUnique({
+      where: { id },
+      include: { tickets: true },
+    });
+  }
+
+  async update(id: string, dto: UpdateOrderDto) {
+    const { totalPrice, method } = dto;
+
+    return this.prisma.order.update({
+      where: { id },
+      data: {
+        totalPrice,
+        method,
+      },
+    });
+  }
+
+  async delete(id: string) {
+    return this.prisma.order.delete({
+      where: { id },
+    });
+  }
 }

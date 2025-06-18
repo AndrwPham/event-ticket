@@ -29,6 +29,13 @@ enum ClaimedTicketStatus {
   CANCELLED
 }
 
+enum OrderStatus {
+  PENDING
+  PAID
+  CANCELLED
+  FAILED
+}
+
 model User {
   id             String        @id @default(auto()) @map("_id") @db.ObjectId
   username       String        @unique
@@ -159,7 +166,7 @@ model ClaimedTicket {
 model Order {
   id         String @id @default(auto()) @map("_id") @db.ObjectId
   totalPrice Float
-  status     String
+  status     OrderStatus
   method     String
 
   attendeeId String       @db.ObjectId

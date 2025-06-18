@@ -1,5 +1,7 @@
-// src/auth/types/jwt-payload.type.ts
+import { Role } from './role.enum';
+
 export type JwtPayload = {
-  sub: string; // Usually the user ID
-  role: 'Attendee' | 'Organizer'; // User role
+  sub: string;
+  roles: Role[];
+  activeRole: Role;
 };

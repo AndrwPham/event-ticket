@@ -4,6 +4,8 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtPayload } from '../types/jwt-payload.type';
 import { PrismaService } from '../../prisma/prisma.service';
+import { Role } from '../types/role.enum';
+
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -20,26 +22,32 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
+  // payload = { sub, roles, activeRole }
   async validate(payload: JwtPayload) {
-    const { sub, role } = payload;
+    const { sub: userId, roles, activeRole } = payload;
 
-    let user;
-    if (role === 'Attendee') {
-      user = await this.prisma.attendee.findUnique({ where: { id: sub } });
-    } else if (role === 'Organizer') {
-      user = await this.prisma.organizer.findUnique({ where: { id: sub } });
-    } else {
-      throw new UnauthorizedException('Invalid role');
-    }
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        roles: true,
+      }
+    });
 
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
 
+    if (!user.roles.includes(activeRole as Role)) {
+      throw new UnauthorizedException(`You do not have the ${activeRole} role`);
+    }
+
     return {
       userId: user.id,
       username: user.username,
-      role,
+      roles: user.roles,
+      activeRole: activeRole as Role,
     };
-  } 
+  }
 }

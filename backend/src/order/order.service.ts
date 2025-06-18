@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, InternalServerErrorException, BadRequestException } from '@nestjs/common';
+import { Injectable, ConflictException, InternalServerErrorException, BadRequestException, NotFoundException } from '@nestjs/common';
 import { OrderStatus } from './order-status.enum';
 import { TicketStatus } from '../issuedticket/ticket-status.enum';
 import { ClaimedTicketStatus } from '../claimedticket/claimedticket-status.enum';
@@ -116,17 +116,45 @@ export class OrderService {
   }
 
   async cancel(id: string) {
-    return this.prisma.order.update({
-      where: { id },
-      data: { status: OrderStatus.CANCELLED },
-    });
+    try {
+      const order = await this.prisma.order.findUnique({ where: { id } });
+      if (!order) {
+        throw new NotFoundException(`Order with id ${id} not found`);
+      }
+      if (order.status !== OrderStatus.PENDING && order.status !== OrderStatus.FAILED) {
+        throw new BadRequestException('Only pending or failed orders can be cancelled');
+      }
+      return await this.prisma.order.update({
+        where: { id },
+        data: { status: OrderStatus.CANCELLED },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        throw new ConflictException('Database error during order cancellation');
+      }
+      throw error;
+    }
   }
 
   async confirmPayment(id: string) {
-    return this.prisma.order.update({
-      where: { id },
-      data: { status: OrderStatus.PAID },
-    });
+    try {
+      const order = await this.prisma.order.findUnique({ where: { id } });
+      if (!order) {
+        throw new NotFoundException(`Order with id ${id} not found`);
+      }
+      if (order.status !== OrderStatus.PENDING) {
+        throw new BadRequestException('Only pending orders can be confirmed as paid');
+      }
+      return await this.prisma.order.update({
+        where: { id },
+        data: { status: OrderStatus.PAID },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        throw new ConflictException('Database error during payment confirmation');
+      }
+      throw error;
+    }
   }
 
   async findAll() {

@@ -3,9 +3,11 @@ import { PrismaService } from '../prisma/prisma.service';
 import { HoldService } from './hold.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { CreatePaymentDto } from '../payment/dto/create-payment.dto';
 import { IssuedTicketService } from '../issuedticket/issuedticket.service';
 import { ClaimedTicketService } from '../claimedticket/claimedticket.service';
 import { Prisma } from '@prisma/client';
+import { PaymentService } from '../payment/payment.service';
 
 @Injectable()
 export class OrderService {
@@ -13,7 +15,8 @@ export class OrderService {
     private readonly prisma: PrismaService,
     private readonly holdService: HoldService,
     private readonly issuedTicketService: IssuedTicketService,
-    private readonly claimedTicketService: ClaimedTicketService
+    private readonly claimedTicketService: ClaimedTicketService,
+    private readonly paymentService: PaymentService,
   ) { }
 
   async create(dto: CreateOrderDto) {
@@ -26,9 +29,10 @@ export class OrderService {
     // put on hold, if conflict, return ConflictException
     await this.holdService.holdTickets(ticketItems, userId);
 
+    let createdOrder;
     try {
-      const order = await this.prisma.$transaction(async (tx) => {
-        const createdOrder = await tx.order.create({
+      createdOrder = await this.prisma.$transaction(async (tx) => {
+        const order = await tx.order.create({
           data: {
             totalPrice,
             status: 'PENDING',
@@ -42,14 +46,19 @@ export class OrderService {
             data: {
               attendee: { connect: { id: userId } },
               ticket: { connect: { id: ticketId } },
-              order: { connect: { id: createdOrder.id } },
+              order: { connect: { id: order.id } },
             },
           });
         });
 
         await Promise.all(claimPromises);
 
-        return createdOrder;
+        await tx.issuedTicket.updateMany({
+          where: { id: { in: ticketItems } },
+          data: { status: 'RESERVED' },
+        });
+
+        return order;
       });
 
     } catch (error) {
@@ -61,27 +70,56 @@ export class OrderService {
 
       throw new InternalServerErrorException('Failed to create order');
     }
-  }
 
-  async findAll() {
-    return this.prisma.order.findMany({
-    });
-  }
+    // payment
+    try {
+      const ticketDetails = await Promise.all(
+        ticketItems.map((ticketId) => this.issuedTicketService.findOne(ticketId))
+      );
+      const paymentItems = ticketDetails
+        .filter((ticket) => ticket !== null)
+        .map((ticket) => ({
+          id: ticket!.id,
+          price: ticket!.price,
+          quantity: 1,
+        }));
 
-  async findByUser(attendeeId: string) {
-    return this.prisma.order.findMany({
-      where: { attendeeId },
-    });
-  }
+      const orderCode = Date.now().toString() + userId;
 
-  async update(id: string, dto: UpdateOrderDto) {
-    return this.prisma.order.update({
-      where: { id },
-      data: {
-        status: dto.status,
-        method: dto.method,
-      },
-    });
+      const paymentDto: CreatePaymentDto = {
+        orderCode,
+        description: `${orderCode}`,
+        amount: totalPrice,
+        items: paymentItems,
+        returnUrl: `https://localhost:5173/payment/success?orderCode=${orderCode}`,
+        cancelUrl: `https://localhost:5173/payment/cancel?orderCode=${orderCode}`,
+      };
+
+      const paymentLink = await this.paymentService.createPaymentLink(paymentDto);
+
+      return {
+        order: createdOrder,
+        paymentLink,
+      };
+    } catch (error) {
+      await this.holdService.releaseTickets(ticketItems);
+      await this.prisma.$transaction(async (tx) => {
+        await tx.order.update({
+          where: { id: createdOrder.id },
+          data: { status: 'FAILED' },
+        });
+
+        // delete claimed tickets
+        await tx.claimedTicket.deleteMany({ where: { orderId: createdOrder.id } });
+
+        // reset issued ticket status
+        await tx.issuedTicket.updateMany({
+          where: { id: { in: ticketItems } },
+          data: { status: 'AVAILABLE' },
+        });
+        throw new InternalServerErrorException('Failed to initiate payment', error.message);
+      });
+    }
   }
 
   async cancel(id: string) {

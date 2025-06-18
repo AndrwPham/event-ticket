@@ -1,0 +1,8 @@
+export enum TicketStatus {
+  UNAVAILABLE = 'UNAVAILABLE',
+  AVAILABLE = 'AVAILABLE',
+  HELD = 'HELD',
+  PAID = 'PAID',
+  CLAIMED = 'CLAIMED',
+  CANCELLED = 'CANCELLED',
+}

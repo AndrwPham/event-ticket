@@ -8,6 +8,7 @@ import { IssuedTicketService } from '../issuedticket/issuedticket.service';
 import { ClaimedTicketService } from '../claimedticket/claimedticket.service';
 import { Prisma } from '@prisma/client';
 import { PaymentService } from '../payment/payment.service';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class OrderService {
@@ -84,7 +85,7 @@ export class OrderService {
           quantity: 1,
         }));
 
-      const orderCode = Date.now().toString() + userId;
+      const orderCode = uuidv4();
 
       const paymentDto: CreatePaymentDto = {
         orderCode,

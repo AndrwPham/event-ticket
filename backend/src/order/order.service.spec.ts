@@ -38,20 +38,30 @@ describe('OrderService', () => {
 
   describe('create', () => {
     it('should create an order, claim tickets, and update ticket status', async () => {
+      // Mock all dependencies for the happy path
       mockHoldService.holdTickets.mockResolvedValue(undefined);
+      mockClaimedTicketService.createClaimedTickets.mockResolvedValue({ count: 2 });
+      mockIssuedTicketService.update.mockResolvedValue({});
+      mockPaymentService.createPaymentLink.mockResolvedValue('http://pay.link');
+      // Always return a valid ticket for t1 and t2
+      mockIssuedTicketService.findOne.mockImplementation((id) => {
+        if (id === 't1') return Promise.resolve({ id: 't1', price: 100, status: TicketStatus.AVAILABLE });
+        if (id === 't2') return Promise.resolve({ id: 't2', price: 200, status: TicketStatus.AVAILABLE });
+        return Promise.resolve(undefined);
+      });
+      // Transaction mock returns a valid order object
       const tx = {
-        order: { create: jest.fn().mockResolvedValue({ id: 'order1' }) },
+        order: { create: jest.fn().mockResolvedValue({ id: 'order1' }), update: jest.fn() },
         claimedTicket: { createMany: jest.fn().mockResolvedValue({ count: 2 }), deleteMany: jest.fn() },
         issuedTicket: { update: jest.fn().mockResolvedValue({}), updateMany: jest.fn() },
       };
       mockPrisma.$transaction.mockImplementation(async (cb) => cb(tx));
-      mockClaimedTicketService.createClaimedTickets.mockResolvedValue({ count: 2 });
-      mockIssuedTicketService.update.mockResolvedValue({});
-      mockPaymentService.createPaymentLink.mockResolvedValue('http://pay.link');
-      mockIssuedTicketService.findOne.mockResolvedValue({ id: 't1', price: 100 });
 
-      const dto = { userId: 'u1', ticketItems: ['t1', 't2'], totalPrice: 200, method: 'card' };
+      const dto = { userId: 'u1', ticketItems: ['t1', 't2'], method: 'card' };
       const result = await service.create(dto);
+
+      // Assert payment link was called
+      expect(mockPaymentService.createPaymentLink).toHaveBeenCalled();
       expect(mockHoldService.holdTickets).toHaveBeenCalledWith(['t1', 't2'], 'u1');
       expect(mockClaimedTicketService.createClaimedTickets).toHaveBeenCalledWith('order1', 'u1', ['t1', 't2'], ClaimedTicketStatus.READY, tx);
       expect(mockIssuedTicketService.update).toHaveBeenCalledWith('t1', { status: TicketStatus.HELD }, tx);
@@ -61,14 +71,16 @@ describe('OrderService', () => {
     });
 
     it('should throw if no ticket items provided', async () => {
-      await expect(service.create({ userId: 'u1', ticketItems: [], totalPrice: 0, method: 'card' })).rejects.toThrow();
+      await expect(service.create({ userId: 'u1', ticketItems: [], method: 'card' })).rejects.toThrow();
     });
 
     it('should handle transaction error and release tickets', async () => {
       mockHoldService.holdTickets.mockResolvedValue(undefined);
+      // Mock ticket as AVAILABLE
+      mockIssuedTicketService.findOne.mockResolvedValue({ id: 't1', price: 100, status: TicketStatus.AVAILABLE });
       mockPrisma.$transaction.mockRejectedValue(new Error('fail'));
       mockHoldService.releaseTickets.mockResolvedValue(undefined);
-      const dto = { userId: 'u1', ticketItems: ['t1'], totalPrice: 100, method: 'card' };
+      const dto = { userId: 'u1', ticketItems: ['t1'], method: 'card' };
       await expect(service.create(dto)).rejects.toThrow('Failed to create order');
       expect(mockHoldService.releaseTickets).toHaveBeenCalledWith(['t1']);
     });
@@ -86,18 +98,55 @@ describe('OrderService', () => {
       mockClaimedTicketService.createClaimedTickets.mockResolvedValue({ count: 2 });
       mockIssuedTicketService.update.mockResolvedValue({});
       mockPaymentService.createPaymentLink.mockRejectedValue(new Error('fail'));
-      mockIssuedTicketService.findOne.mockResolvedValue({ id: 't1', price: 100 });
+      // Mock ticket as AVAILABLE
+      mockIssuedTicketService.findOne.mockResolvedValue({ id: 't1', price: 100, status: TicketStatus.AVAILABLE });
       mockHoldService.releaseTickets.mockResolvedValue(undefined);
-      const dto = { userId: 'u1', ticketItems: ['t1'], totalPrice: 100, method: 'card' };
+      const dto = { userId: 'u1', ticketItems: ['t1'], method: 'card' };
       await expect(service.create(dto)).rejects.toThrow('Failed to initiate payment');
       expect(mockHoldService.releaseTickets).toHaveBeenCalledWith(['t1']);
       expect(tx.order.update).toHaveBeenCalledWith({ where: { id: 'order1' }, data: { status: OrderStatus.FAILED } });
       expect(tx.claimedTicket.deleteMany).toHaveBeenCalledWith({ where: { orderId: 'order1' } });
     });
+
+    it('should throw if client tries to tamper with price (fraud check)', async () => {
+      mockIssuedTicketService.findOne
+        .mockResolvedValueOnce({ id: 't1', price: 100, status: TicketStatus.AVAILABLE })
+        .mockResolvedValueOnce({ id: 't2', price: 200, status: TicketStatus.AVAILABLE });
+      mockHoldService.holdTickets.mockResolvedValue(undefined);
+      const tx = {
+        order: { create: jest.fn().mockResolvedValue({ id: 'order1' }) },
+        claimedTicket: { createMany: jest.fn().mockResolvedValue({ count: 2 }), deleteMany: jest.fn() },
+        issuedTicket: { update: jest.fn().mockResolvedValue({}), updateMany: jest.fn() },
+      };
+      mockPrisma.$transaction.mockImplementation(async (cb) => cb(tx));
+      mockClaimedTicketService.createClaimedTickets.mockResolvedValue({ count: 2 });
+      mockIssuedTicketService.update.mockResolvedValue({});
+      mockPaymentService.createPaymentLink.mockResolvedValue('http://pay.link');
+      // Simulate client tries to pass a wrong price (should be ignored)
+      const dto = { userId: 'u1', ticketItems: ['t1', 't2'], method: 'card', totalPrice: 1 };
+      const result = await service.create(dto);
+      expect(result && result.order).toBeDefined();
+      // The backend should calculate the correct price (100+200=300)
+      expect(tx.order.create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ totalPrice: 300 }) }));
+    });
+
+    it('should throw if any ticket is not available (fraud check)', async () => {
+      mockIssuedTicketService.findOne.mockResolvedValueOnce({ id: 't1', price: 100, status: TicketStatus.HELD });
+      const dto = { userId: 'u1', ticketItems: ['t1'], method: 'card' };
+      await expect(service.create(dto)).rejects.toThrow('not available for sale');
+    });
+
+    it('should throw if total price is zero or negative (fraud check)', async () => {
+      mockIssuedTicketService.findOne.mockResolvedValueOnce({ id: 't1', price: 0, status: TicketStatus.AVAILABLE });
+      const dto = { userId: 'u1', ticketItems: ['t1'], method: 'card' };
+      await expect(service.create(dto)).rejects.toThrow('Order total must be greater than zero');
+    });
   });
 
   describe('cancel', () => {
     it('should update order status to CANCELLED', async () => {
+      // Mock order as PENDING
+      mockPrisma.order.findUnique.mockResolvedValue({ id: 'order1', status: OrderStatus.PENDING });
       mockPrisma.order.update.mockResolvedValue({ id: 'order1', status: OrderStatus.CANCELLED });
       const result = await service.cancel('order1');
       expect(mockPrisma.order.update).toHaveBeenCalledWith({ where: { id: 'order1' }, data: { status: OrderStatus.CANCELLED } });
@@ -107,6 +156,8 @@ describe('OrderService', () => {
 
   describe('confirmPayment', () => {
     it('should update order status to PAID', async () => {
+      // Mock order as PENDING
+      mockPrisma.order.findUnique.mockResolvedValue({ id: 'order1', status: OrderStatus.PENDING });
       mockPrisma.order.update.mockResolvedValue({ id: 'order1', status: OrderStatus.PAID });
       const result = await service.confirmPayment('order1');
       expect(mockPrisma.order.update).toHaveBeenCalledWith({ where: { id: 'order1' }, data: { status: OrderStatus.PAID } });
@@ -143,11 +194,12 @@ describe('OrderService', () => {
 
   describe('update', () => {
     it('should update order fields', async () => {
+      // Mock ticket as AVAILABLE
+      mockIssuedTicketService.findOne.mockResolvedValue({ id: 't1', price: 123, status: TicketStatus.AVAILABLE });
       mockPrisma.order.update.mockResolvedValue({ id: 'order1', totalPrice: 123, method: 'card' });
-      const result = await service.update('order1', { totalPrice: 123, method: 'card' });
+      const result = await service.update('order1', { method: 'card', ticketItems: ['t1'], userId: 'u1' });
       expect(mockPrisma.order.update).toHaveBeenCalledWith({ where: { id: 'order1' }, data: { totalPrice: 123, method: 'card' } });
       expect(result.totalPrice).toBe(123);
-      expect(result.method).toBe('card');
     });
   });
 

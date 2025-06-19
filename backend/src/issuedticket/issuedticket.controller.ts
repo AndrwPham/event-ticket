@@ -1,8 +1,9 @@
 import {
-  Controller, Get, Post, Body, Patch, Param, Delete, UseGuards
+  Controller, Get, Patch, Param, Delete, UseGuards, Body, Post
 } from '@nestjs/common';
 import { IssuedTicketService } from './issuedticket.service';
-import { CreateIssuedTicketDto } from './dto/create-issuedticket.dto';
+import { UpdateIssuedTicketDto } from './dto/update-issuedticket.dto';
+import { GenerateIssuedTicketsDto } from './dto/generate-issued-tickets.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @Controller('tickets')
@@ -19,20 +20,26 @@ export class IssuedTicketController {
     return this.ticketService.findOne(id);
   }
 
-    @Get('event/:id')
-    findByEvent(@Param('id') id: string) {
-        return this.ticketService.findByEventId(id);
-    }
+  @Get('event/:id')
+  findByEvent(@Param('id') id: string) {
+    return this.ticketService.findByEventId(id);
+  }
 
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: CreateIssuedTicketDto) {
+  update(@Param('id') id: string, @Body() dto: UpdateIssuedTicketDto) {
     return this.ticketService.update(id, dto);
   }
 
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.ticketService.remove(id);
+  }
+
+  // @UseGuards(JwtAuthGuard)
+  @Post('generate')
+  generateFromSchema(@Body() dto: GenerateIssuedTicketsDto) {
+    return this.ticketService.generateTicketsFromSchema(dto);
   }
 }

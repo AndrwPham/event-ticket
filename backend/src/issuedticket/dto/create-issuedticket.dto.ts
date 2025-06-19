@@ -1,12 +1,11 @@
+import { TicketStatus } from '../ticket-status.enum';
+
 export class CreateIssuedTicketDto {
-  name: string;
   price: number;
-  quantity: number;
   class: string;
-  eventId: string;
   seat: string;
-  attendeeId?: string;
-  ticketId?: string;
-  organizerId?: string;
-  currencyId?: string;
+  status?: TicketStatus;
+  eventId: string;
+  organizationId: string;
+  currencyId: string;
 }

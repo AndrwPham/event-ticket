@@ -1,48 +1,268 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { Injectable, ConflictException, InternalServerErrorException, BadRequestException, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { OrderStatus } from './order-status.enum';
+import { TicketStatus } from '../issuedticket/ticket-status.enum';
+import { PrismaService } from '../prisma/prisma.service';
+import { HoldService } from './hold.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { CreatePaymentDto } from '../payment/dto/create-payment.dto';
+import { IssuedTicketService } from '../issuedticket/issuedticket.service';
+import { PaymentService } from '../payment/payment.service';
+import { v4 as uuidv4 } from 'uuid';
+import { ClaimedTicketService } from '../claimedticket/claimedticket.service';
+import { ClaimedTicketStatus } from '../claimedticket/claimedticket-status.enum';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class OrderService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly holdService: HoldService,
+    private readonly issuedTicketService: IssuedTicketService,
+    private readonly paymentService: PaymentService,
+    private readonly claimedTicketService: ClaimedTicketService,
+    private readonly configService: ConfigService,
+  ) { }
 
   async create(dto: CreateOrderDto) {
-    
+    const { userId, ticketItems, method } = dto;
+
+    if (!ticketItems || ticketItems.length === 0) {
+      throw new BadRequestException('No ticket items provided');
+    }
+
+    // check duplicate ticket IDs
+    const uniqueTickets = new Set(ticketItems);
+    if (uniqueTickets.size !== ticketItems.length) {
+      throw new BadRequestException('Duplicate ticket IDs');
+    }
+
+    // Calculate total price from ticket items (fraud prevention)
+    const ticketDetails = await Promise.all(
+      ticketItems.map((ticketId) => this.issuedTicketService.findOne(ticketId))
+    );
+    const totalPrice = ticketDetails.reduce((sum, ticket) => {
+      if (!ticket) throw new BadRequestException('Invalid ticket in order');
+      if (ticket.status !== TicketStatus.AVAILABLE) {
+        throw new ConflictException(`Ticket ${ticket.id} is not available for sale`);
+      }
+      return sum + ticket.price;
+    }, 0);
+    if (totalPrice <= 0) {
+      throw new BadRequestException('Order total must be greater than zero');
+    }
+
+    let attendeeId = userId;
+    // create AttendeeInfo if userId is not provided (guest checkout)
+    if (!userId) {
+      if (!dto.guestEmail) {
+        throw new BadRequestException('Guest email is required for guest checkout');
+      }
+      let guestAttendee = await this.prisma.attendeeInfo.findUnique({ where: { email: dto.guestEmail } });
+      if (!guestAttendee) {
+        guestAttendee = await this.prisma.attendeeInfo.create({
+          data: {
+            email: dto.guestEmail,
+            phone: dto.guestPhone,
+            first_name: dto.guestName,
+          },
+        });
+      }
+      attendeeId = guestAttendee.id;
+    }
+
+    // put on hold, if conflict, return ConflictException
+    if (!attendeeId) throw new BadRequestException('No attendeeId resolved for order');
+    await this.holdService.holdTickets(ticketItems, attendeeId);
+
+    let createdOrder;
+    try {
+      createdOrder = await this.prisma.$transaction(async (tx: PrismaClient) => {
+        const order = await tx.order.create({
+          data: {
+            totalPrice,
+            status: OrderStatus.PENDING,
+            method,
+            attendee: { connect: { id: attendeeId } },
+            ticketItems
+          },
+        });
+        await Promise.all(ticketItems.map(ticketId =>
+          this.issuedTicketService.update(ticketId, { status: TicketStatus.HELD }, tx)
+        ));
+        return order;
+      });
+    } catch (error) {
+      await this.holdService.releaseTickets(ticketItems);
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new ConflictException('One or more tickets are not available or already claimed');
+      }
+      throw new InternalServerErrorException('Failed to create order');
+    }
+
+    // payment
+    try {
+      // DB order id = orderCode for PayOS
+      const orderCode = createdOrder.id;
+      const paymentItems = ticketDetails
+        .filter((ticket) => ticket !== null)
+        .map((ticket) => ({
+          name: ticket!.id, // Use ticket id as name, or use actual name if available
+          price: ticket!.price,
+          quantity: 1,
+        }));
+
+      // Use frontend base URL from environment variable for flexibility
+      const frontendBaseUrl = this.configService.get<string>('FRONTEND_BASE_URL') || 'https://localhost:5173';
+      const paymentReturnPath = '/payment/return';
+      const paymentDto: CreatePaymentDto = {
+        orderCode,
+        description: `Order #${orderCode}`,
+        amount: totalPrice,
+        items: paymentItems,
+        returnUrl: `${frontendBaseUrl}${paymentReturnPath}`,
+        cancelUrl: `${frontendBaseUrl}${paymentReturnPath}`,
+      };
+      const paymentLink = await this.paymentService.createPaymentLink(paymentDto);
+      return {
+        order: createdOrder,
+        paymentLink,
+      };
+    } catch (error) {
+      await this.holdService.releaseTickets(ticketItems);
+      if (createdOrder && createdOrder.id) {
+        await this.prisma.$transaction(async (tx: PrismaClient) => {
+          await tx.order.update({
+            where: { id: createdOrder.id },
+            data: { status: OrderStatus.FAILED },
+          });
+          await Promise.all(ticketItems.map(ticketId =>
+            this.issuedTicketService.update(ticketId, { status: TicketStatus.AVAILABLE }, tx)
+          ));
+        });
+      }
+      throw new InternalServerErrorException('Failed to initiate payment', error.message);
+    }
+  }
+
+  async cancel(id: string) {
+    try {
+      const order = await this.prisma.order.findUnique({ where: { id } });
+      if (!order) {
+        throw new NotFoundException(`Order with id ${id} not found`);
+      }
+      if (order.status !== OrderStatus.PENDING && order.status !== OrderStatus.FAILED) {
+        throw new BadRequestException('Only pending or failed orders can be cancelled');
+      }
+      return await this.prisma.order.update({
+        where: { id },
+        data: { status: OrderStatus.CANCELLED },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        throw new ConflictException('Database error during order cancellation');
+      }
+      throw error;
+    }
+  }
+
+  async confirmPayment(id: string) {
+    try {
+      const order = await this.prisma.order.findUnique({ where: { id } });
+      if (!order) {
+        throw new NotFoundException('Order not found');
+      }
+      if (order.status !== OrderStatus.PENDING) {
+        throw new BadRequestException('Order is not pending');
+      }
+      const ticketItems = order.ticketItems;
+      if (!ticketItems || ticketItems.length === 0) {
+        throw new BadRequestException('No ticket items found for this order');
+      }
+      let transactionError;
+      await this.prisma.$transaction(async (tx: PrismaClient) => {
+        try {
+          await this.claimedTicketService.createClaimedTickets(
+            order.id, order.attendeeId, ticketItems, ClaimedTicketStatus.READY, tx
+          );
+        } catch (err) {
+          transactionError = new InternalServerErrorException('Failed to claim tickets');
+          throw transactionError;
+        }
+        await Promise.all(ticketItems.map(ticketId =>
+          this.issuedTicketService.update(ticketId, { status: TicketStatus.CLAIMED }, tx)
+        ));
+        await tx.order.update({
+          where: { id },
+          data: { status: OrderStatus.PAID },
+        });
+        await this.holdService.releaseTickets(ticketItems);
+      });
+      if (transactionError) throw transactionError;
+      return await this.prisma.order.findUnique({ where: { id } });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        throw new ConflictException('Database error during payment confirmation');
+      }
+      throw error;
+    }
   }
 
   async findAll() {
+    return this.prisma.order.findMany({ include: { tickets: true } });
+  }
+
+  async findByUser(userId: string) {
     return this.prisma.order.findMany({
+      where: { attendeeId: userId },
+      include: { tickets: true },
     });
   }
 
-  async findByUser(attendeeId: string) {
-    return this.prisma.order.findMany({
-      where: { attendeeId },
+  async findOne(id: string) {
+    return this.prisma.order.findUnique({
+      where: { id },
+      include: { tickets: true },
     });
   }
 
   async update(id: string, dto: UpdateOrderDto) {
+    const { method, ticketItems } = dto;
+
+    if (!ticketItems || ticketItems.length === 0) {
+      throw new BadRequestException('No ticket items provided for update');
+    }
+
+    // Recalculate totalPrice from ticketItems
+    const ticketDetails = await Promise.all(
+      ticketItems.map((ticketId) => this.issuedTicketService.findOne(ticketId))
+    );
+    const totalPrice = ticketDetails.reduce((sum, ticket) => {
+      if (!ticket) throw new BadRequestException('Invalid ticket in order');
+      if (ticket.status !== TicketStatus.AVAILABLE) {
+        throw new ConflictException(`Ticket ${ticket.id} is not available for sale`);
+      }
+      return sum + ticket.price;
+    }, 0);
+    if (totalPrice <= 0) {
+      throw new BadRequestException('Order total must be greater than zero');
+    }
+
+    // Optionally: update claimed tickets, hold logic, etc. here
+
     return this.prisma.order.update({
       where: { id },
       data: {
-        status: dto.status,
-        method: dto.method,
+        totalPrice,
+        method,
       },
     });
   }
 
-  async cancel(id: string) {
-    return this.prisma.order.update({
+  async delete(id: string) {
+    return this.prisma.order.delete({
       where: { id },
-      data: { status: 'CANCELLED' },
-    });
-  }
-
-  async confirmPayment(id: string) {
-    return this.prisma.order.update({
-      where: { id },
-      data: { status: 'PAID' },
     });
   }
 }

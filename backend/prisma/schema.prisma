@@ -13,6 +13,29 @@ enum Role {
   Admin
 }
 
+enum TicketStatus {
+  UNAVAILABLE
+  AVAILABLE
+  HELD
+  PAID
+  CLAIMED
+  CANCELLED
+}
+
+enum ClaimedTicketStatus {
+  READY
+  USED
+  EXPIRED
+  CANCELLED
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  CANCELLED
+  FAILED
+}
+
 model User {
   id             String        @id @default(auto()) @map("_id") @db.ObjectId
   username       String        @unique
@@ -99,7 +122,9 @@ model IssuedTicket {
   price  Float
   class  String
   seat   String
-  status String
+  status TicketStatus
+
+  holdExpiresAt DateTime?
 
   eventId String @db.ObjectId
   event   Event  @relation("EventIssuedTickets", fields: [eventId], references: [id], onDelete: Cascade)
@@ -110,7 +135,7 @@ model IssuedTicket {
   currencyId String   @db.ObjectId
   currency   Currency @relation("TicketCurrency", fields: [currencyId], references: [id], onDelete: Restrict)
 
-  claim  ClaimedTicket? @relation("IssuedTicketClaims")
+  claimedTicket ClaimedTicket?
   images Image[]        @relation("TicketImages")
 
   createdAt DateTime @default(now())
@@ -122,20 +147,20 @@ model IssuedTicket {
 }
 
 model ClaimedTicket {
-  id       String       @id @default(auto()) @map("_id") @db.ObjectId
-  ticketId String       @unique @db.ObjectId
-  ticket   IssuedTicket @relation("IssuedTicketClaims", fields: [ticketId], references: [id], onDelete: Cascade)
+  id     String       @id @map("_id") @db.ObjectId
+  issuedTicket IssuedTicket @relation(fields: [id], references: [id])
 
   attendeeId String       @db.ObjectId
   attendee   AttendeeInfo @relation("AttendeeClaimedTickets", fields: [attendeeId], references: [id], onDelete: Cascade)
 
-  orderId String @db.ObjectId
-  order   Order  @relation("OrderClaimedTickets", fields: [orderId], references: [id], onDelete: Cascade)
+  orderId    String       @db.ObjectId
+  order      Order        @relation("OrderClaimedTickets", fields: [orderId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  status    ClaimedTicketStatus
 
-  @@unique([ticketId, orderId, attendeeId])
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
   @@index([orderId])
   @@index([attendeeId])
 }
@@ -143,13 +168,15 @@ model ClaimedTicket {
 model Order {
   id         String @id @default(auto()) @map("_id") @db.ObjectId
   totalPrice Float
-  status     String
+  status     OrderStatus
   method     String
 
   attendeeId String       @db.ObjectId
   attendee   AttendeeInfo @relation("AttendeeOrders", fields: [attendeeId], references: [id], onDelete: Cascade)
 
   tickets ClaimedTicket[] @relation("OrderClaimedTickets")
+
+  ticketItems String[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

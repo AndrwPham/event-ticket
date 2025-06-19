@@ -1,4 +1,5 @@
 import { Injectable, ConflictException, InternalServerErrorException, BadRequestException, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { OrderStatus } from './order-status.enum';
 import { TicketStatus } from '../issuedticket/ticket-status.enum';
 import { PrismaService } from '../prisma/prisma.service';
@@ -21,6 +22,7 @@ export class OrderService {
     private readonly issuedTicketService: IssuedTicketService,
     private readonly paymentService: PaymentService,
     private readonly claimedTicketService: ClaimedTicketService,
+    private readonly configService: ConfigService,
   ) { }
 
   async create(dto: CreateOrderDto) {
@@ -85,14 +87,16 @@ export class OrderService {
           quantity: 1,
         }));
 
-      // TODO: add buyer details
+      // Use frontend base URL from environment variable for flexibility
+      const frontendBaseUrl = this.configService.get<string>('FRONTEND_BASE_URL') || 'https://localhost:5173';
+      const paymentReturnPath = '/payment/return';
       const paymentDto: CreatePaymentDto = {
         orderCode,
         description: `Order #${orderCode}`,
         amount: totalPrice,
         items: paymentItems,
-        returnUrl: `https://localhost:5173/payment/success?orderCode=${orderCode}`,
-        cancelUrl: `https://localhost:5173/payment/cancel?orderCode=${orderCode}`,
+        returnUrl: `${frontendBaseUrl}${paymentReturnPath}`,
+        cancelUrl: `${frontendBaseUrl}${paymentReturnPath}`,
       };
       const paymentLink = await this.paymentService.createPaymentLink(paymentDto);
       return {

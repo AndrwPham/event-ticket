@@ -27,14 +27,13 @@ export class PaymentService {
                 amount: createPaymentDto.amount,
                 description: createPaymentDto.description,
                 items: createPaymentDto.items.map(item => ({
-                    id: item.id,
+                    name: item.id, // TODO: use ticket description
                     price: item.price,
                     quantity: item.quantity
                 })),
                 returnUrl: createPaymentDto.returnUrl,
                 cancelUrl: createPaymentDto.cancelUrl,
-                metadata: {
-                }
+                // metadata removed (not used by PayOS)
             };
             const paymentLink = await this.payOS.createPaymentLink(paymentData);
             return paymentLink;

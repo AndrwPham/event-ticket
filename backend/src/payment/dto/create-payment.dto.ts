@@ -1,9 +1,9 @@
-import { IsString, IsNumber, IsArray, ArrayNotEmpty, IsUrl, ValidateNested } from 'class-validator';
+import { IsString, IsNumber, IsArray, ArrayNotEmpty, IsUrl, ValidateNested, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class PaymentItemDto {
     @IsString()
-    id: string;
+    name: string;
 
     @IsNumber()
     price: number;
@@ -13,8 +13,8 @@ class PaymentItemDto {
 }
 
 export class CreatePaymentDto {
-    @IsString()
-    orderCode: string;
+    @IsNumber()
+    orderCode: number;
 
     @IsString()
     description: string;
@@ -33,4 +33,24 @@ export class CreatePaymentDto {
 
     @IsUrl()
     cancelUrl: string;
+
+    @IsOptional()
+    @IsString()
+    buyerName?: string;
+
+    @IsOptional()
+    @IsString()
+    buyerEmail?: string;
+
+    @IsOptional()
+    @IsString()
+    buyerPhone?: string;
+
+    @IsOptional()
+    @IsString()
+    buyerAddress?: string;
+
+    @IsOptional()
+    @IsNumber()
+    expiredAt?: number;
 }

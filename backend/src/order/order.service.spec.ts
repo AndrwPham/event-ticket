@@ -13,6 +13,7 @@ import { ConfigService } from '@nestjs/config';
 const mockPrisma = {
   $transaction: jest.fn(),
   order: { update: jest.fn(), findMany: jest.fn(), findUnique: jest.fn(), delete: jest.fn() },
+  attendeeInfo: { findUnique: jest.fn(), create: jest.fn() },
 };
 const mockHoldService = { holdTickets: jest.fn(), releaseTickets: jest.fn() };
 const mockIssuedTicketService = { update: jest.fn(), findOne: jest.fn() };
@@ -96,6 +97,61 @@ describe('OrderService', () => {
       expect(mockHoldService.releaseTickets).toHaveBeenCalledWith(['t1']);
       expect(tx.order.update).toHaveBeenCalledWith({ where: { id: 'order1' }, data: { status: OrderStatus.FAILED } });
       // No claimedTicket.deleteMany call expected
+    });
+
+    it('should throw if client tries to tamper with price (fraud check)', async () => {
+      mockIssuedTicketService.findOne
+        .mockResolvedValueOnce({ id: 't1', price: 100, status: TicketStatus.AVAILABLE })
+        .mockResolvedValueOnce({ id: 't2', price: 200, status: TicketStatus.AVAILABLE });
+      mockHoldService.holdTickets.mockResolvedValue(undefined);
+      const tx = {
+        order: { create: jest.fn().mockResolvedValue({ id: 'order1' }) },
+        claimedTicket: { createMany: jest.fn().mockResolvedValue({ count: 2 }), deleteMany: jest.fn() },
+        issuedTicket: { update: jest.fn().mockResolvedValue({}), updateMany: jest.fn() },
+      };
+      mockPrisma.$transaction.mockImplementation(async (cb) => cb(tx));
+      mockClaimedTicketService.createClaimedTickets.mockResolvedValue({ count: 2 });
+      mockIssuedTicketService.update.mockResolvedValue({});
+      mockPaymentService.createPaymentLink.mockResolvedValue('http://pay.link');
+      // Simulate client tries to pass a wrong price (should be ignored)
+      const dto = { userId: 'u1', ticketItems: ['t1', 't2'], method: 'card', totalPrice: 1 };
+      const result = await service.create(dto);
+      expect(result && result.order).toBeDefined();
+      // The backend should calculate the correct price (100+200=300)
+      expect(tx.order.create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ totalPrice: 300 }) }));
+    });
+
+    it('should throw if any ticket is not available (fraud check)', async () => {
+      mockIssuedTicketService.findOne.mockResolvedValueOnce({ id: 't1', price: 100, status: TicketStatus.HELD });
+      const dto = { userId: 'u1', ticketItems: ['t1'], method: 'card' };
+      await expect(service.create(dto)).rejects.toThrow('not available for sale');
+    });
+
+    it('should throw if total price is zero or negative (fraud check)', async () => {
+      mockIssuedTicketService.findOne.mockResolvedValueOnce({ id: 't1', price: 0, status: TicketStatus.AVAILABLE });
+      const dto = { userId: 'u1', ticketItems: ['t1'], method: 'card' };
+      await expect(service.create(dto)).rejects.toThrow('Order total must be greater than zero');
+    });
+
+    it('should create an order for guest checkout (no userId, with guestEmail)', async () => {
+      mockIssuedTicketService.findOne.mockResolvedValue({ id: 't1', price: 100, status: TicketStatus.AVAILABLE });
+      mockHoldService.holdTickets.mockResolvedValue(undefined);
+      mockPrisma.attendeeInfo.findUnique.mockResolvedValue(null);
+      mockPrisma.attendeeInfo.create.mockResolvedValue({ id: 'guest1', email: 'guest@example.com' });
+      const tx = {
+        order: { create: jest.fn().mockResolvedValue({ id: 'order1', ticketItems: ['t1'], attendeeId: 'guest1' }), update: jest.fn() },
+        issuedTicket: { update: jest.fn().mockResolvedValue({}), updateMany: jest.fn() },
+      };
+      mockPrisma.$transaction.mockImplementation(async (cb) => cb(tx));
+      mockPaymentService.createPaymentLink.mockResolvedValue('http://pay.link');
+      const dto = { ticketItems: ['t1'], method: 'card', guestEmail: 'guest@example.com', guestName: 'Guest User' };
+      const result = await service.create(dto);
+      expect(mockPrisma.attendeeInfo.findUnique).toHaveBeenCalledWith({ where: { email: 'guest@example.com' } });
+      expect(mockPrisma.attendeeInfo.create).toHaveBeenCalledWith({ data: { email: 'guest@example.com', phone: undefined, first_name: 'Guest User' } });
+      expect(mockHoldService.holdTickets).toHaveBeenCalledWith(['t1'], 'guest1');
+      expect(tx.order.create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ attendee: { connect: { id: 'guest1' } } }) }));
+      expect(result && result.order).toEqual({ id: 'order1', ticketItems: ['t1'], attendeeId: 'guest1' });
+      expect(result && result.paymentLink).toBe('http://pay.link');
     });
 
     it('should throw if client tries to tamper with price (fraud check)', async () => {

@@ -22,19 +22,25 @@ export class PaymentService {
         createPaymentDto
     ): Promise<any> {
         try {
-            const paymentData = {
+            const paymentData: any = {
                 orderCode: createPaymentDto.orderCode,
                 amount: createPaymentDto.amount,
                 description: createPaymentDto.description,
                 items: createPaymentDto.items.map(item => ({
-                    name: item.id, // TODO: use ticket description
+                    name: item.name, // Use correct property for name
                     price: item.price,
                     quantity: item.quantity
                 })),
                 returnUrl: createPaymentDto.returnUrl,
                 cancelUrl: createPaymentDto.cancelUrl,
-                // metadata removed (not used by PayOS)
             };
+
+            if (createPaymentDto.buyerName) paymentData.buyerName = createPaymentDto.buyerName;
+            if (createPaymentDto.buyerEmail) paymentData.buyerEmail = createPaymentDto.buyerEmail;
+            if (createPaymentDto.buyerPhone) paymentData.buyerPhone = createPaymentDto.buyerPhone;
+            if (createPaymentDto.buyerAddress) paymentData.buyerAddress = createPaymentDto.buyerAddress;
+            if (createPaymentDto.expiredAt) paymentData.expiredAt = createPaymentDto.expiredAt;
+
             const paymentLink = await this.payOS.createPaymentLink(paymentData);
             return paymentLink;
         } catch (error) {

@@ -55,7 +55,7 @@ const SeatMapPage: FC = () => {
         }
 
         // Navigate to the payment page with the selected seats
-        navigate("/payment", {
+        navigate(`/event/${String(eventId)}/payment`, {
             state: {
                 eventDetails: event,
                 orderDetails: {

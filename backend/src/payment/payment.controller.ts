@@ -29,11 +29,33 @@ export class PaymentsController {
   // TODO: read webhook code
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
-  async webhook(
-    @Headers('x-payos-signature') signature: string,
-    @Body() body: any,
-  ) {
-    return this.paymentService.verifyWebhook(body);
+  async webhook(@Body() body: any) {
+    try {
+      // parse webhook data
+      const webhookData = await this.paymentService.verifyWebhook(body);
+      if (!webhookData || webhookData.code !== '00') {
+        this.logger.warn(`Payment failed or not successful for order: ${webhookData?.orderCode}`);
+        return { received: true };
+      }
+
+      // idempotency check
+      const orderId = String(webhookData.orderCode);
+      const order = await this.orderService.findOne(orderId);
+      if (order && order.status === 'PAID') {
+        this.logger.log(`Order ${orderId} already processed.`);
+        return { received: true };
+      }
+
+      // confirm payment and claim tickets
+      await this.orderService.confirmPayment(orderId);
+      this.logger.log(`Order ${orderId} marked as PAID and tickets claimed.`);
+      return { received: true };
+    } catch (error) {
+      this.logger.error('Webhook processing failed', error);
+
+      // achknowledge receipt of the webhook
+      return { received: true, error: error.message };
+    }
   }
 
   @Get('order/:orderCode')

@@ -58,8 +58,8 @@ export class PaymentService {
 
     async verifyWebhook(body: any) {
         try {
-            const isValid = await this.payOS.verifyPaymentWebhookData(body);
-            return isValid;
+            const webhookData = await this.payOS.verifyPaymentWebhookData(body);
+            return webhookData;
         } catch (error) {
             throw new InternalServerErrorException(
                 'Failed to verify webhook',

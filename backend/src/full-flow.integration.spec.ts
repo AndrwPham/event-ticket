@@ -142,4 +142,84 @@ describe('Full Buy Flow Integration', () => {
       ],
     });
   });
+
+  it('should fail if a ticket is not available', async () => {
+    const ticket1 = { id: 't1', price: 100, status: TicketStatus.HELD };
+    mockPrisma.issuedTicket.findUnique.mockImplementation(({ where }) => {
+      if (where.id === 't1') return Promise.resolve(ticket1);
+      return Promise.resolve(undefined);
+    });
+    const createDto = { userId: 'u1', ticketItems: ['t1'], method: 'card' };
+    await expect(orderService.create(createDto)).rejects.toThrow('Ticket t1 is not available for sale');
+  });
+
+  it('should fail if duplicate ticket IDs are provided', async () => {
+    const ticket1 = { id: 't1', price: 100, status: TicketStatus.AVAILABLE };
+    mockPrisma.issuedTicket.findUnique.mockImplementation(({ where }) => {
+      if (where.id === 't1') return Promise.resolve(ticket1);
+      return Promise.resolve(undefined);
+    });
+    const createDto = { userId: 'u1', ticketItems: ['t1', 't1'], method: 'card' };
+    await expect(orderService.create(createDto)).rejects.toThrow('Duplicate ticket IDs');
+  });
+
+  it('should fail if payment fails', async () => {
+    const ticket1 = { id: 't1', price: 100, status: TicketStatus.AVAILABLE };
+    mockPrisma.issuedTicket.findUnique.mockImplementation(({ where }) => {
+      if (where.id === 't1') return Promise.resolve(ticket1);
+      return Promise.resolve(undefined);
+    });
+    mockHoldService.holdTickets.mockResolvedValue(undefined);
+    mockPrisma.$transaction.mockImplementation(async (cb) => {
+      const tx = {
+        order: {
+          create: jest.fn().mockResolvedValue({ id: 'order1', ticketItems: ['t1'], status: OrderStatus.PENDING, attendeeId: 'u1' }),
+          update: jest.fn(),
+        },
+        issuedTicket: {
+          update: jest.fn().mockResolvedValue({}),
+          updateMany: jest.fn(),
+        },
+        claimedTicket: {
+          createMany: jest.fn().mockResolvedValue({ count: 1 }),
+        },
+      };
+      return cb(tx);
+    });
+    mockPayOS.createPaymentLink.mockRejectedValue(new Error('fail'));
+    const createDto = { userId: 'u1', ticketItems: ['t1'], method: 'card' };
+    await expect(orderService.create(createDto)).rejects.toThrow('Failed to initiate payment');
+  });
+
+  it('should fail if claimed ticket creation fails', async () => {
+    const ticket1 = { id: 't1', price: 100, status: TicketStatus.AVAILABLE };
+    mockPrisma.issuedTicket.findUnique.mockImplementation(({ where }) => {
+      if (where.id === 't1') return Promise.resolve(ticket1);
+      return Promise.resolve(undefined);
+    });
+    mockHoldService.holdTickets.mockResolvedValue(undefined);
+    mockPrisma.$transaction.mockImplementation(async (cb) => {
+      const tx = {
+        order: {
+          create: jest.fn().mockResolvedValue({ id: 'order1', ticketItems: ['t1'], status: OrderStatus.PENDING, attendeeId: 'u1' }),
+          update: jest.fn(),
+        },
+        issuedTicket: {
+          update: jest.fn().mockResolvedValue({}),
+          updateMany: jest.fn(),
+        },
+        claimedTicket: {
+          createMany: jest.fn().mockRejectedValue(new Error('fail')),
+        },
+      };
+      return cb(tx);
+    });
+    mockPrisma.order.findUnique.mockResolvedValue({ id: 'order1', status: OrderStatus.PENDING, attendeeId: 'u1', ticketItems: ['t1'] });
+    await expect(orderService.confirmPayment('order1')).rejects.toThrow('Failed to claim tickets');
+  });
+
+  it('should not claim tickets twice if payment is confirmed twice', async () => {
+    mockPrisma.order.findUnique.mockResolvedValue({ id: 'order1', status: OrderStatus.PAID, attendeeId: 'u1', ticketItems: ['t1'] });
+    await expect(orderService.confirmPayment('order1')).rejects.toThrow('Order is not pending');
+  });
 });

@@ -13,20 +13,29 @@ export class PaymentsController {
 
   @Post('create-payment-link')
   async createLink(@Body() dto: CreatePaymentDto) {
-    this.logger.log(`Creating payment link for order code: ${dto.orderCode}`);
-    const paymentLink = await this.paymentService.createPaymentLink(dto);
-    return paymentLink;
+    try {
+      this.logger.log(`Creating payment link for order code: ${dto.orderCode}`);
+      const paymentLink = await this.paymentService.createPaymentLink(dto);
+      return paymentLink;
+    } catch (error) {
+      this.logger.error(`Failed to create payment link for order code: ${dto.orderCode}`, error);
+      return { error: 'Failed to create payment link', details: error.message };
+    }
   }
 
   @Post('cancel')
-  async cancel(@Body('orderCode') orderCode: string) {
-    await this.logger.warn(`Cancelling payment link for order code: ${orderCode}`);
-    const cancelResult = await this.paymentService.cancelPaymentLink(orderCode, 'User cancelled the payment');
-    await this.orderService.cancel(orderCode);
-    return {cancelled: true, data: cancelResult};
+  async cancel(@Body('orderCode') orderCode: string, @Body('reason') reason?: string) {
+    try {
+      await this.logger.warn(`Cancelling payment link for order code: ${orderCode}`);
+      const cancelResult = await this.paymentService.cancelPaymentLink(orderCode, reason || 'User cancelled the payment');
+      await this.orderService.cancel(orderCode);
+      return { cancelled: true, data: cancelResult };
+    } catch (error) {
+      this.logger.error(`Failed to cancel payment link for order code: ${orderCode}`, error);
+      return { error: 'Failed to cancel payment link', details: error.message };
+    }
   }
 
-  // TODO: read webhook code
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
   async webhook(@Body() body: any) {
@@ -60,12 +69,17 @@ export class PaymentsController {
 
   @Get('order/:orderCode')
   async getInfo(@Param('orderCode') orderCode: string) {
-    this.logger.log(`Retrieving payment info for order code: ${orderCode}`);
-    const info = await this.paymentService.getPaymentInfo(orderCode);
-    if (!info) {
-      this.logger.warn(`No payment info found for order code: ${orderCode}`);
-      return { error: 'Payment info not found' };
+    try {
+      this.logger.log(`Retrieving payment info for order code: ${orderCode}`);
+      const info = await this.paymentService.getPaymentInfo(orderCode);
+      if (!info) {
+        this.logger.warn(`No payment info found for order code: ${orderCode}`);
+        return { error: 'Payment info not found' };
+      }
+      return info;
+    } catch (error) {
+      this.logger.error(`Failed to retrieve payment info for order code: ${orderCode}`, error);
+      return { error: 'Failed to retrieve payment info', details: error.message };
     }
-    return info;
   }
 }

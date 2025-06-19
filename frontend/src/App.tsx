@@ -15,6 +15,7 @@ import CardPaymentPage from "./pages/payment/CardPaymentPage";
 import SeatMap from "./pages/seatMap/SeatMap";
 import SuccessPage from "./pages/payment/SuccessPage";
 import CancelPage from "./pages/payment/CancelPage";
+import MyProfile from "./pages/myProfile/page";
 
 function App() {
     return (
@@ -55,6 +56,7 @@ function App() {
                             path="/event/:id/select-seats"
                             element={<SeatMap />}
                         />
+                        <Route path="/profile" element={<MyProfile />} />
                     </Routes>
                 </main>
                 <Footer />

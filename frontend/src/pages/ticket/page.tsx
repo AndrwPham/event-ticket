@@ -99,7 +99,7 @@ const Ticket = () => {
             {/* Centered Main filter tabs */}
             <div className="flex justify-center mb-8">
               <div className="flex items-center space-x-4">
-                {["All", "Finished", "Processing", "Cancelled"].map((tab) => (
+                {["All", "Finished", "Pending", "Cancelled"].map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}

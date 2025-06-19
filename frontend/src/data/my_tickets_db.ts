@@ -4,7 +4,7 @@ export interface MyTicket {
   date: string;
   location: string;
   image: string;
-  status: 'Processing' | 'Finished' | 'Cancelled';
+  status: 'Pending' | 'Finished' | 'Cancelled';
 }
 
 // We use the current date to determine which tickets are upcoming vs. past.
@@ -16,7 +16,7 @@ export const myTickets: MyTicket[] = [
     date: "2025-08-15T19:00:00",
     location: "Nhà hát Thanh Niên, Q1, TPHCM",
     image: "https://placehold.co/400x200/2D1D53/FFFFFF/?text=Event",
-    status: 'Processing',
+    status: 'Pending',
   },
   {
     id: 2,
@@ -32,7 +32,7 @@ export const myTickets: MyTicket[] = [
       date: "2025-09-01T20:00:00",
       location: "Trung tâm Hội nghị Quốc gia, Hà Nội",
       image: "https://placehold.co/400x200/2D1D53/FFFFFF/?text=Event",
-      status: 'Processing',
+      status: 'Pending',
   },
   {
       id: 4,

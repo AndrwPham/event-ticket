@@ -1,17 +1,17 @@
 import { Injectable, ConflictException, InternalServerErrorException, BadRequestException, NotFoundException } from '@nestjs/common';
 import { OrderStatus } from './order-status.enum';
 import { TicketStatus } from '../issuedticket/ticket-status.enum';
-import { ClaimedTicketStatus } from '../claimedticket/claimedticket-status.enum';
 import { PrismaService } from '../prisma/prisma.service';
 import { HoldService } from './hold.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { CreatePaymentDto } from '../payment/dto/create-payment.dto';
 import { IssuedTicketService } from '../issuedticket/issuedticket.service';
-import { ClaimedTicketService } from '../claimedticket/claimedticket.service';
-import { Prisma } from '@prisma/client';
 import { PaymentService } from '../payment/payment.service';
 import { v4 as uuidv4 } from 'uuid';
+import { ClaimedTicketService } from '../claimedticket/claimedticket.service';
+import { ClaimedTicketStatus } from '../claimedticket/claimedticket-status.enum';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class OrderService {
@@ -19,8 +19,8 @@ export class OrderService {
     private readonly prisma: PrismaService,
     private readonly holdService: HoldService,
     private readonly issuedTicketService: IssuedTicketService,
-    private readonly claimedTicketService: ClaimedTicketService,
     private readonly paymentService: PaymentService,
+    private readonly claimedTicketService: ClaimedTicketService,
   ) { }
 
   async create(dto: CreateOrderDto) {
@@ -50,22 +50,16 @@ export class OrderService {
 
     let createdOrder;
     try {
-      createdOrder = await this.prisma.$transaction(async (tx: import('@prisma/client').PrismaClient) => {
+      createdOrder = await this.prisma.$transaction(async (tx: PrismaClient) => {
         const order = await tx.order.create({
           data: {
             totalPrice,
             status: OrderStatus.PENDING,
             method,
             attendee: { connect: { id: userId } },
+            ticketItems
           },
         });
-        await this.claimedTicketService.createClaimedTickets(
-          order.id,
-          userId,
-          ticketItems,
-          ClaimedTicketStatus.READY,
-          tx
-        );
         await Promise.all(ticketItems.map(ticketId =>
           this.issuedTicketService.update(ticketId, { status: TicketStatus.HELD }, tx)
         ));
@@ -115,14 +109,12 @@ export class OrderService {
     } catch (error) {
       await this.holdService.releaseTickets(ticketItems);
       if (createdOrder && createdOrder.id) {
-        await this.prisma.$transaction(async (tx: import('@prisma/client').PrismaClient) => {
+        await this.prisma.$transaction(async (tx: PrismaClient) => {
           await tx.order.update({
             where: { id: createdOrder.id },
             data: { status: OrderStatus.FAILED },
           });
-          // delete claimed tickets
-          await tx.claimedTicket.deleteMany({ where: { orderId: createdOrder.id } });
-          // reset issued ticket status
+          // Removed claimedTicket.deleteMany: no claimed tickets exist before payment confirmation
           await Promise.all(ticketItems.map(ticketId =>
             this.issuedTicketService.update(ticketId, { status: TicketStatus.AVAILABLE }, tx)
           ));
@@ -162,10 +154,24 @@ export class OrderService {
       if (order.status !== OrderStatus.PENDING) {
         throw new BadRequestException('Only pending orders can be confirmed as paid');
       }
-      return await this.prisma.order.update({
-        where: { id },
-        data: { status: OrderStatus.PAID },
+      const ticketItems = order.ticketItems;
+      if (!ticketItems || ticketItems.length === 0) {
+        throw new BadRequestException('No ticket items found for this order');
+      }
+      await this.prisma.$transaction(async (tx: PrismaClient) => {
+        await this.claimedTicketService.createClaimedTickets(
+          order.id, order.attendeeId, ticketItems, ClaimedTicketStatus.READY, tx
+        );
+        await Promise.all(ticketItems.map(ticketId =>
+          this.issuedTicketService.update(ticketId, { status: TicketStatus.CLAIMED }, tx)
+        ));
+        await tx.order.update({
+          where: { id },
+          data: { status: OrderStatus.PAID },
+        });
+        await this.holdService.releaseTickets(ticketItems);
       });
+      return await this.prisma.order.findUnique({ where: { id } });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         throw new ConflictException('Database error during payment confirmation');

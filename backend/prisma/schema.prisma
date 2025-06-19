@@ -176,6 +176,8 @@ model Order {
 
   tickets ClaimedTicket[] @relation("OrderClaimedTickets")
 
+  ticketItems String[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

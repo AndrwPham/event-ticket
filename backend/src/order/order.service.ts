@@ -65,43 +65,36 @@ export class OrderService {
         ));
         return order;
       });
-
     } catch (error) {
       await this.holdService.releaseTickets(ticketItems);
-
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
         throw new ConflictException('One or more tickets are not available or already claimed');
       }
-
       throw new InternalServerErrorException('Failed to create order');
     }
 
     // payment
     try {
-      const ticketDetails = await Promise.all(
-        ticketItems.map((ticketId) => this.issuedTicketService.findOne(ticketId))
-      );
+      // DB order id = orderCode for PayOS
+      const orderCode = createdOrder.id;
       const paymentItems = ticketDetails
         .filter((ticket) => ticket !== null)
         .map((ticket) => ({
-          id: ticket!.id,
+          name: ticket!.id, // Use ticket id as name, or use actual name if available
           price: ticket!.price,
           quantity: 1,
         }));
 
-      const orderCode = uuidv4();
-
+      // TODO: add buyer details
       const paymentDto: CreatePaymentDto = {
         orderCode,
-        description: `${orderCode}`,
+        description: `Order #${orderCode}`,
         amount: totalPrice,
         items: paymentItems,
         returnUrl: `https://localhost:5173/payment/success?orderCode=${orderCode}`,
         cancelUrl: `https://localhost:5173/payment/cancel?orderCode=${orderCode}`,
       };
-
       const paymentLink = await this.paymentService.createPaymentLink(paymentDto);
-
       return {
         order: createdOrder,
         paymentLink,
@@ -114,7 +107,6 @@ export class OrderService {
             where: { id: createdOrder.id },
             data: { status: OrderStatus.FAILED },
           });
-          // Removed claimedTicket.deleteMany: no claimed tickets exist before payment confirmation
           await Promise.all(ticketItems.map(ticketId =>
             this.issuedTicketService.update(ticketId, { status: TicketStatus.AVAILABLE }, tx)
           ));

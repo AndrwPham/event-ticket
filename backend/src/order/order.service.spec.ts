@@ -8,6 +8,7 @@ import { PaymentService } from '../payment/payment.service';
 import { OrderStatus } from './order-status.enum';
 import { TicketStatus } from '../issuedticket/ticket-status.enum';
 import { ClaimedTicketStatus } from '../claimedticket/claimedticket-status.enum';
+import { ConfigService } from '@nestjs/config';
 
 const mockPrisma = {
   $transaction: jest.fn(),
@@ -31,6 +32,7 @@ describe('OrderService', () => {
         { provide: IssuedTicketService, useValue: mockIssuedTicketService },
         { provide: ClaimedTicketService, useValue: mockClaimedTicketService },
         { provide: PaymentService, useValue: mockPaymentService },
+        { provide: ConfigService, useValue: { get: jest.fn() } },
       ],
     }).compile();
     service = module.get<OrderService>(OrderService);
@@ -251,6 +253,53 @@ describe('OrderService', () => {
       expect(txConfirm.order.update).toHaveBeenCalledWith({ where: { id: 'order1' }, data: { status: OrderStatus.PAID } });
       expect(mockHoldService.releaseTickets).toHaveBeenCalledWith(['t1', 't2']);
       expect(confirmResult).toEqual({ id: 'order1', status: OrderStatus.PAID });
+    });
+  });
+
+  describe('edge cases for order flow', () => {
+    it('should not claim tickets twice if payment is confirmed twice', async () => {
+      mockPrisma.order.findUnique
+        .mockResolvedValueOnce({ id: 'order1', status: OrderStatus.PAID, attendeeId: 'u1', ticketItems: ['t1', 't2'] });
+      await expect(service.confirmPayment('order1')).rejects.toThrow('Order is not pending');
+    });
+
+    it('should throw if confirming payment for non-existent order', async () => {
+      mockPrisma.order.findUnique.mockResolvedValueOnce(null);
+      await expect(service.confirmPayment('order404')).rejects.toThrow('Order not found');
+    });
+
+    it('should throw if confirming payment for cancelled order', async () => {
+      mockPrisma.order.findUnique.mockResolvedValueOnce({ id: 'order1', status: OrderStatus.CANCELLED });
+      await expect(service.confirmPayment('order1')).rejects.toThrow('Order is not pending');
+    });
+
+    it('should throw if duplicate ticket IDs are provided', async () => {
+      mockIssuedTicketService.findOne.mockResolvedValue({ id: 't1', price: 100, status: TicketStatus.AVAILABLE });
+      mockHoldService.holdTickets.mockResolvedValue(undefined);
+      const tx = {
+        order: { create: jest.fn().mockResolvedValue({ id: 'order1' }) },
+        issuedTicket: { update: jest.fn().mockResolvedValue({}), updateMany: jest.fn() },
+      };
+      mockPrisma.$transaction.mockImplementation(async (cb) => cb(tx));
+      const dto = { userId: 'u1', ticketItems: ['t1', 't1'], method: 'card' };
+      await expect(service.create(dto)).rejects.toThrow('Duplicate ticket IDs');
+    });
+
+    it('should throw if claimed ticket creation fails during payment confirmation', async () => {
+      mockPrisma.order.findUnique
+        .mockResolvedValueOnce({ id: 'order1', status: OrderStatus.PENDING, attendeeId: 'u1', ticketItems: ['t1'] });
+      // Simulate error thrown during transaction
+      mockPrisma.$transaction.mockImplementation(async () => {
+        throw new (require('@nestjs/common').InternalServerErrorException)('Failed to claim tickets');
+      });
+      await expect(service.confirmPayment('order1')).rejects.toThrow('Failed to claim tickets');
+    });
+
+    it('should throw if ticket is already held by another user', async () => {
+      mockIssuedTicketService.findOne.mockResolvedValueOnce({ id: 't1', price: 100, status: TicketStatus.HELD });
+      mockHoldService.holdTickets.mockRejectedValue(new Error('Ticket already held'));
+      const dto = { userId: 'u1', ticketItems: ['t1'], method: 'card' };
+      await expect(service.create(dto)).rejects.toThrow('Ticket t1 is not available for sale');
     });
   });
 });

@@ -32,6 +32,12 @@ export class OrderService {
       throw new BadRequestException('No ticket items provided');
     }
 
+    // check duplicate ticket IDs
+    const uniqueTickets = new Set(ticketItems);
+    if (uniqueTickets.size !== ticketItems.length) {
+      throw new BadRequestException('Duplicate ticket IDs');
+    }
+
     // Calculate total price from ticket items (fraud prevention)
     const ticketDetails = await Promise.all(
       ticketItems.map((ticketId) => this.issuedTicketService.findOne(ticketId))
@@ -145,19 +151,25 @@ export class OrderService {
     try {
       const order = await this.prisma.order.findUnique({ where: { id } });
       if (!order) {
-        throw new NotFoundException(`Order with id ${id} not found`);
+        throw new NotFoundException('Order not found');
       }
       if (order.status !== OrderStatus.PENDING) {
-        throw new BadRequestException('Only pending orders can be confirmed as paid');
+        throw new BadRequestException('Order is not pending');
       }
       const ticketItems = order.ticketItems;
       if (!ticketItems || ticketItems.length === 0) {
         throw new BadRequestException('No ticket items found for this order');
       }
+      let transactionError;
       await this.prisma.$transaction(async (tx: PrismaClient) => {
-        await this.claimedTicketService.createClaimedTickets(
-          order.id, order.attendeeId, ticketItems, ClaimedTicketStatus.READY, tx
-        );
+        try {
+          await this.claimedTicketService.createClaimedTickets(
+            order.id, order.attendeeId, ticketItems, ClaimedTicketStatus.READY, tx
+          );
+        } catch (err) {
+          transactionError = new InternalServerErrorException('Failed to claim tickets');
+          throw transactionError;
+        }
         await Promise.all(ticketItems.map(ticketId =>
           this.issuedTicketService.update(ticketId, { status: TicketStatus.CLAIMED }, tx)
         ));
@@ -167,6 +179,7 @@ export class OrderService {
         });
         await this.holdService.releaseTickets(ticketItems);
       });
+      if (transactionError) throw transactionError;
       return await this.prisma.order.findUnique({ where: { id } });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {

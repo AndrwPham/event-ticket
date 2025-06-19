@@ -53,8 +53,28 @@ export class OrderService {
       throw new BadRequestException('Order total must be greater than zero');
     }
 
+    let attendeeId = userId;
+    // create AttendeeInfo if userId is not provided (guest checkout)
+    if (!userId) {
+      if (!dto.guestEmail) {
+        throw new BadRequestException('Guest email is required for guest checkout');
+      }
+      let guestAttendee = await this.prisma.attendeeInfo.findUnique({ where: { email: dto.guestEmail } });
+      if (!guestAttendee) {
+        guestAttendee = await this.prisma.attendeeInfo.create({
+          data: {
+            email: dto.guestEmail,
+            phone: dto.guestPhone,
+            first_name: dto.guestName,
+          },
+        });
+      }
+      attendeeId = guestAttendee.id;
+    }
+
     // put on hold, if conflict, return ConflictException
-    await this.holdService.holdTickets(ticketItems, userId);
+    if (!attendeeId) throw new BadRequestException('No attendeeId resolved for order');
+    await this.holdService.holdTickets(ticketItems, attendeeId);
 
     let createdOrder;
     try {
@@ -64,7 +84,7 @@ export class OrderService {
             totalPrice,
             status: OrderStatus.PENDING,
             method,
-            attendee: { connect: { id: userId } },
+            attendee: { connect: { id: attendeeId } },
             ticketItems
           },
         });

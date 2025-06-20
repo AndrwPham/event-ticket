@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { IssuedTicketService } from './issuedticket.service';
 import { IssuedTicketController } from './issuedticket.controller';
-import { PrismaModule } from 'src/prisma/prisma.module';
-import { AuthModule } from 'src/auth/auth.module';
+import { PrismaModule } from '../prisma/prisma.module';
+import { AuthModule } from '../auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
 
 

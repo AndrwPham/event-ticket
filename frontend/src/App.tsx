@@ -6,9 +6,8 @@ import Footer from "./components/Footer";
 import ContactSales from "./pages/contactSales/page";
 import CreateEvent from "./pages/createEvent/page";
 import Ticket from "./pages/ticket/page";
-//import Login from "./pages/login/page";
 import LogIn from "./components/log-in";
-import SignUp from "./pages/signUp/page";
+import SignUp from "./components/sign-up";
 import Home from "./pages/home/page";
 import SearchPage from "./pages/search/page";
 import Payment from "./pages/payment/Payment";
@@ -69,7 +68,13 @@ function App() {
                         <Route path="/profile" element={<MyProfile />} />
                     </Routes>
                 </main>
-                {/*{isSignUpOpen && <SignUp onClose={() => { setIsSignUpOpen(false); }} />}*/}
+                {isSignUpOpen && (
+                    <SignUp
+                        onClose={() => {
+                            setIsSignUpOpen(false);
+                        }}
+                    />
+                )}
                 {isLogInOpen && (
                     <LogIn
                         onClose={() => {
@@ -86,5 +91,4 @@ function App() {
         </Router>
     );
 }
-
 export default App;

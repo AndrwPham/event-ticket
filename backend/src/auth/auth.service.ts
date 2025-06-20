@@ -9,6 +9,8 @@ import { SwitchRoleDto } from './dto/switch-role.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { log } from 'console';
 import { JwtPayload } from './types/jwt-payload.type';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { UserCreatedEvent } from '../notification/events/user-created.event';
 
 @Injectable()
 export class AuthService {
@@ -16,7 +18,8 @@ export class AuthService {
 
   constructor(
     private prisma: PrismaService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
+    private eventEmitter: EventEmitter2,
   ) { }
 
   private async hash(data: string) {
@@ -63,7 +66,10 @@ export class AuthService {
     });
 
     this.logger.debug(`User registered: ${user.username} (${user.id}) with token ${confirmToken}`);
-    // TODO: call email service to send confirmation email. api: auth/confirm?token=$confirmToken
+    this.eventEmitter.emit(
+      'user.created',
+      new UserCreatedEvent(user.id, email, username, confirmToken)
+    );
   }
 
   async confirmEmail(token: string): Promise<{ message: string }> {

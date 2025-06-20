@@ -1,213 +1,211 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { IssuedTicketService } from '../issuedticket/issuedticket.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
-import { Prisma } from '@prisma/client';
+import { Prisma, Tag } from '@prisma/client';
+import { GenerateIssuedTicketsDto } from '../issuedticket/dto/generate-issued-tickets.dto';
 
 @Injectable()
 export class EventService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private issuedTicketService: IssuedTicketService,
+  ) {}
 
   async create(dto: CreateEventDto) {
-    const { tagIds, organizerId, imageIds, tickets, ...eventData } = dto;
+    const { tagNames, imageIds, tickets, organizationId, ...eventData } = dto;
 
-    const event = await this.prisma.event.create({
-      data: {
-        ...eventData,
-        organizer: { connect: { id: organizerId } },
-        tags: {
-          connect: tagIds?.map((id) => ({ id })) || [],
-        },
-        images: {
-          connect: imageIds?.map((id) => ({ id })) || [],
-        },
-        tickets: {
-          create: tickets?.flatMap((ticket): Prisma.IssuedTicketCreateWithoutEventInput[] => {
-            const { seatMapDesign, price, class: ticketClass, status, currencyId, quantity } = ticket;
-            const { StartCoordinate, EndCoordinate, Class } = seatMapDesign;
+    try {
+      // Handle tags: create new ones or connect existing
+      let resolvedTagIds: string[] = [];
+      if (tagNames?.length) {
+        const createdTags = await this.createOrGetTags(tagNames);
+        resolvedTagIds = createdTags.map(tag => tag.id);
+      }
 
-            if (Class !== ticketClass) {
-              throw new Error(`SeatMapDesign Class (${Class}) must match ticket class (${ticketClass})`);
-            }
+      // Start a transaction for event creation and related operations
+      const event = await this.prisma.$transaction(async (prisma) => {
+        // Create the event
+        const createdEvent = await prisma.event.create({
+          data: {
+            ...eventData,
+            organization: { connect: { id: organizationId } },
+            tags: {
+              connect: resolvedTagIds.map((id) => ({ id })),
+            },
+            images: {
+              connect: imageIds?.map((id) => ({ id })) || [],
+            },
+          },
+          include: {
+            images: true,
+            tickets: true,
+            tags: true,
+            organization: true,
+          },
+        });
 
-            const [startX, startY] = StartCoordinate;
-            const [endX, endY] = EndCoordinate;
-            const rows = endY - startY + 1;
-            const cols = endX - startX + 1;
+        // Generate tickets if provided
+        if (tickets?.length) {
+          const ticketDto: GenerateIssuedTicketsDto = {
+            eventId: createdEvent.id,
+            organizationId,
+            currencyId: tickets[0].currencyId, // Assuming all tickets use the same currency
+            schema: {
+              eventId: createdEvent.id,
+              classes: tickets.map(ticket => ({
+                label: ticket.class,
+                price: ticket.price,
+                quantity: 1, // Assuming one ticket per entry; adjust if needed
+                seats: ticket.seat ? [{ seatNumber: ticket.seat, price: ticket.price }] : undefined,
+              })),
+            },
+          };
 
-            const ticketData: Prisma.IssuedTicketCreateWithoutEventInput[] = [];
-            let count = 0;
-            for (let y = startY; y <= endY && count < quantity; y++) {
-              const rowLetter = String.fromCharCode(65 + y - startY);
-              for (let x = startX; x <= endX && count < quantity; x++) {
-                const seatId = `${rowLetter}-${x}`;
-                ticketData.push({
-                  price,
-                  class: ticketClass,
-                  seat: seatId,
-                  status,
-                  organizer: { connect: { id: organizerId } },
-                  currency: { connect: { id: currencyId } },
-                });
-                count++;
-              }
-            }
+          await this.issuedTicketService.generateTicketsFromSchema(ticketDto);
+        }
 
-            return ticketData;
-          }) || [],
-        },
-      },
-      include: {
-        images: true,
-        tickets: true,
-        tags: true,
-        organizer: true,
-      },
-    });
+        return createdEvent;
+      });
 
-    return event;
+      return event;
+    } catch (error) {
+      if (error.code === 'P2025') {
+        throw new NotFoundException('Related record not found (organization, tags, or images).');
+      }
+      throw new BadRequestException(error.message || 'Failed to create event.');
+    }
   }
 
-  findAll() {
-    return this.prisma.event.findMany({
-      include: {
-        images: true,
-        tickets: true,
-        tags: true,
-        organizer: true,
-      },
-    });
+  async createOrGetTags(tagNames: string[]): Promise<Tag[]> {
+    const tags: Tag[] = [];
+    
+    for (const name of tagNames) {
+      const existingTag = await this.prisma.tag.findUnique({ where: { name } });
+      if (existingTag) {
+        tags.push(existingTag);
+      } else {
+        const newTag = await this.prisma.tag.create({
+          data: { name },
+        });
+        tags.push(newTag);
+      }
+    }
+    
+    return tags;
   }
 
-  findOne(id: string) {
-    return this.prisma.event.findUnique({
-      where: { id },
-      include: {
-        images: true,
-        tickets: true,
-        tags: true,
-        organizer: true,
-      },
-    });
+  async findAll() {
+    try {
+      return await this.prisma.event.findMany({
+        include: {
+          images: true,
+          tickets: true,
+          tags: true,
+          organization: true,
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to fetch events.');
+    }
+  }
+
+  async findOne(id: string) {
+    try {
+      const event = await this.prisma.event.findUnique({
+        where: { id },
+        include: {
+          images: true,
+          tickets: true,
+          tags: true,
+          organization: true,
+        },
+      });
+      if (!event) throw new NotFoundException('Event not found.');
+      return event;
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException('Failed to fetch event.');
+    }
   }
 
   async findByTag(tagId: string) {
-    return this.prisma.event.findMany({
-      where: { tagIds: { has: tagId } },
-      include: {
-        images: true,
-        tickets: true,
-        tags: true,
-        organizer: true,
-      },
-    });
-  }
-
-  findByCity(city: string) {
-    return this.prisma.event.findMany({
-      where: { city },
-      include: {
-        images: true,
-        tickets: true,
-        tags: true,
-        organizer: true,
-      },
-    });
-  }
-
-  findByDistrict(district: string) {
-    return this.prisma.event.findMany({
-      where: { district },
-      include: {
-        images: true,
-        tickets: true,
-        tags: true,
-        organizer: true,
-      },
-    });
-  }
-
-  findByWard(ward: string) {
-    return this.prisma.event.findMany({
-      where: { ward },
-      include: {
-        images: true,
-        tickets: true,
-        tags: true,
-        organizer: true,
-      },
-    });
-  }
-
-  async update(id: string, dto: UpdateEventDto) {
-    const { tagIds, organizerId, imageIds, tickets, ...eventData } = dto;
-
-    const updatedEvent = await this.prisma.event.update({
-      where: { id },
-      data: {
-        ...eventData,
-        organizer: organizerId ? { connect: { id: organizerId } } : undefined,
-        tags: {
-          set: [],
-          connect: tagIds?.map((id) => ({ id })) || [],
+    try {
+      return await this.prisma.event.findMany({
+        where: { tagIds: { has: tagId } },
+        include: {
+          images: true,
+          tickets: true,
+          tags: true,
+          organization: true,
         },
-        images: {
-          set: [],
-          connect: imageIds?.map((id) => ({ id })) || [],
-        },
-        tickets: tickets
-          ? {
-              deleteMany: {}, // Clear existing tickets
-              create: tickets.flatMap((ticket): Prisma.IssuedTicketCreateWithoutEventInput[] => {
-                const { seatMapDesign, price, class: ticketClass, status, currencyId, quantity } = ticket;
-                const { StartCoordinate, EndCoordinate, Class } = seatMapDesign;
-
-                if (Class !== ticketClass) {
-                  throw new Error(`SeatMapDesign Class (${Class}) must match ticket class (${ticketClass})`);
-                }
-
-                const [startX, startY] = StartCoordinate;
-                const [endX, endY] = EndCoordinate;
-                const rows = endY - startY + 1;
-                const cols = endX - startX + 1;
-
-                const ticketData: Prisma.IssuedTicketCreateWithoutEventInput[] = [];
-                let count = 0;
-                for (let y = startY; y <= endY && count < quantity; y++) {
-                  const rowLetter = String.fromCharCode(65 + y - startY);
-                  for (let x = startX; x <= endX && count < quantity; x++) {
-                    const seatId = `${rowLetter}-${x}`;
-                    ticketData.push({
-                      price,
-                      class: ticketClass,
-                      seat: seatId,
-                      status,
-                      organizer: { connect: { id: organizerId } },
-                      currency: { connect: { id: currencyId } },
-                    });
-                    count++;
-                  }
-                }
-
-                return ticketData;
-              }),
-            }
-          : undefined,
-      },
-      include: {
-        images: true,
-        tickets: true,
-        tags: true,
-        organizer: true,
-      },
-    });
-
-    return updatedEvent;
+      });
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to fetch events by tag.');
+    }
   }
 
-  remove(id: string) {
-    return this.prisma.event.delete({
-      where: { id },
-    });
+  async findByCity(city: string) {
+    try {
+      return await this.prisma.event.findMany({
+        where: { city },
+        include: {
+          images: true,
+          tickets: true,
+          tags: true,
+          organization: true,
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to fetch events by city.');
+    }
+  }
+
+  async findByDistrict(district: string) {
+    try {
+      return await this.prisma.event.findMany({
+        where: { district },
+        include: {
+          images: true,
+          tickets: true,
+          tags: true,
+          organization: true,
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to fetch events by district.');
+    }
+  }
+
+  async findByWard(ward: string) {
+    try {
+      return await this.prisma.event.findMany({
+        where: { ward },
+        include: {
+          images: true,
+          tickets: true,
+          tags: true,
+          organization: true,
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to fetch events by ward.');
+    }
+  }
+
+  //update event
+
+  async remove(id: string) {
+    try {
+      return await this.prisma.event.delete({
+        where: { id },
+      });
+    } catch (error) {
+      if (error.code === 'P2025') {
+        throw new NotFoundException('Event not found.');
+      }
+      throw new BadRequestException(error.message || 'Failed to delete event.');
+    }
   }
 }

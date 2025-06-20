@@ -6,25 +6,19 @@ export class CreateEventDto {
   sale_start_date: Date;
   sale_end_date: Date;
   city?: string;
+  district?: string;
   ward?: string;
   street?: string;
-  district?: string;
   type: string;
-  tagIds: string[];
-  organizerId: string;
-  imageIds: string[];
-  tickets: {
+  organizationId: string;
+  tagNames?: string[];
+  imageIds?: string[];
+  tickets?: {
     price: number;
     class: string;
-    status: "available" | "unavailable";
-    organizerId: string; // Organizer ID for the ticke
-    eventId: string; // Event ID for the ticket
+    seat: string;
+    status?: string;
+    holdExpiresAt?: Date;
     currencyId: string;
-    quantity: number; // Number of tickets to create within the seat map
-    seatMapDesign: {
-      StartCoordinate: [number, number];
-      EndCoordinate: [number, number];
-      Class: string;
-    };
   }[];
 }

@@ -64,7 +64,11 @@ const Login: React.FC<LogInProps> = ({ onClose }) => {
           Sign In
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+            Email or Phone
+          </label>
           <input
+            id="username"
             type="text"
             placeholder="Input username, email, or phone number"
             value={username}
@@ -73,6 +77,9 @@ const Login: React.FC<LogInProps> = ({ onClose }) => {
             className="w-full border rounded px-4 py-2"
             disabled={loading}
           />
+          <label htmlFor='password' className="block text-sm font-medium text-gray-700 mb-1">
+            Password
+          </label>
           <input
             type="password"
             placeholder="Input password"

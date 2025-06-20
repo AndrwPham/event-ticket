@@ -1,4 +1,4 @@
-import { TicketSchemaDto } from 'src/event/dto/ticket-schema.dto';
+import { TicketSchemaDto } from '../../event/dto/ticket-schema.dto';
 
 export class GenerateIssuedTicketsDto {
   eventId: string;

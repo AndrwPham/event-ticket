@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Param, Delete, UseGuards, Patch } from '@nestjs/common';
 import { TagService } from './tag.service';
-import { CreateTagDto } from 'src/tag/dto/create-tag.dto';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { CreateTagDto } from './dto/create-tag.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('tags')
 export class TagController {

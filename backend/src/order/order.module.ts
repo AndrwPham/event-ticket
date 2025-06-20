@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { OrderController } from './order.controller';
-import { PrismaModule } from 'src/prisma/prisma.module';
+import { PrismaModule } from '../prisma/prisma.module';
 import { JwtModule } from '@nestjs/jwt';
-import { AuthModule } from 'src/auth/auth.module';
-import { IssuedTicketModule } from 'src/issuedticket/issuedticket.module';
-import { ClaimedTicketModule } from 'src/claimedticket/claimedticket.module';
+import { AuthModule } from '../auth/auth.module';
+import { IssuedTicketModule } from '../issuedticket/issuedticket.module';
+import { ClaimedTicketModule } from '../claimedticket/claimedticket.module';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { HoldService } from './hold.service';
 

@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException, NotFoundException, ConflictException, InternalServerErrorException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { PrismaClient } from '@prisma/client';
 import { CreateIssuedTicketDto } from './dto/create-issuedticket.dto';
 import { UpdateIssuedTicketDto } from './dto/update-issuedticket.dto';

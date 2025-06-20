@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const Login: React.FC = () => {
+interface LogInProps {
+    onClose: () => void;
+}
+
+const Login: React.FC<LogInProps> = ({ onClose }) => {
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [error, setError] = useState<string>('');
@@ -53,8 +57,9 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-white text-black">
-      <div className="w-full max-w-md p-8 space-y-6">
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div className="bg-white text-black p-8 rounded-lg w-full max-w-md relative">
+        <button onClick={onClose} className="absolute top-2 right-3 text-xl">&times;</button>
         <h2 className="text-3xl font-bold text-center text-[#1D0E3C]">
           Sign In
         </h2>

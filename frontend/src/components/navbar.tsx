@@ -2,7 +2,11 @@ import { FC } from "react";
 import { FiSearch } from "react-icons/fi";
 import { useLocation, Link } from "react-router-dom";
 
-const Navbar: FC = () => {
+interface NavbarProps {
+    onLogInClick: () => void;
+}
+
+const Navbar: FC<NavbarProps> = ({ onLogInClick }) => {
     const { pathname } = useLocation();
 
     const routes = [
@@ -17,7 +21,6 @@ const Navbar: FC = () => {
             active: pathname === "/create-event",
         },
         { href: "/ticket", label: "Ticket", active: pathname === "/ticket" },
-        { href: "/login", label: "Log In", active: pathname === "/login" },
         { href: "/sign-up", label: "Sign Up", active: pathname === "/sign-up" },
     ];
 
@@ -52,6 +55,9 @@ const Navbar: FC = () => {
                         {route.label}
                     </Link>
                 ))}
+                <button onClick={onLogInClick} className="hover:underline">
+                    Log In
+                </button>
             </div>
         </nav>
     );

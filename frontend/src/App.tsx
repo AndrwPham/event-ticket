@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import React from "react";
 
 import Navbar from "./components/navbar";
 import Footer from "./components/Footer";
@@ -18,50 +19,54 @@ import CancelPage from "./pages/payment/CancelPage";
 import MyProfile from "./pages/myProfile/page";
 
 function App() {
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    const isLogInOpen = location.pathname === '/login';
+
     return (
-        <Router>
-            <div className="flex flex-col min-h-screen bg-gray-100">
-                <Navbar />
-                <main className="flex-grow">
-                    <Routes>
-                        <Route path="/" element={<Home />} />
-                        <Route path="/event/:id" element={<TicketDetails />} />
-                        <Route
-                            path="/event/:id/payment"
-                            element={<Payment />}
-                        />
-                        <Route path="/home" element={<Home />} />
-                        <Route
-                            path="/contact-sales"
-                            element={<ContactSales />}
-                        />
-                        <Route path="/create-event" element={<CreateEvent />} />
-                        <Route path="/ticket" element={<Ticket />} />
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/sign-up" element={<SignUp />} />
-                        <Route path="/search" element={<SearchPage />} />
-                        <Route
-                            path="/event/:id/payment/card"
-                            element={<CardPaymentPage />}
-                        />
-                        <Route
-                            path="/event/:id/payment/success"
-                            element={<SuccessPage />}
-                        />
-                        <Route
-                            path="/event/:id/payment/cancel"
-                            element={<CancelPage />}
-                        />
-                        <Route
-                            path="/event/:id/select-seats"
-                            element={<SeatMap />}
-                        />
-                        <Route path="/profile" element={<MyProfile />} />
-                    </Routes>
-                </main>
-                <Footer />
-            </div>
-        </Router>
+        <div className="flex flex-col min-h-screen bg-gray-100">
+            <Navbar onLogInClick={() => navigate('/login')}/>
+            <main className="flex-grow">
+                <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/event/:id" element={<TicketDetails />} />
+                    <Route
+                        path="/event/:id/payment"
+                        element={<Payment />}
+                    />
+                    <Route path="/home" element={<Home />} />
+                    <Route
+                        path="/contact-sales"
+                        element={<ContactSales />}
+                    />
+                    <Route path="/create-event" element={<CreateEvent />} />
+                    <Route path="/ticket" element={<Ticket />} />
+                    <Route path="/login" element={null} />
+                    <Route path="/sign-up" element={<SignUp />} />
+                    <Route path="/search" element={<SearchPage />} />
+                    <Route
+                        path="/event/:id/payment/card"
+                        element={<CardPaymentPage />}
+                    />
+                    <Route
+                        path="/event/:id/payment/success"
+                        element={<SuccessPage />}
+                    />
+                    <Route
+                        path="/event/:id/payment/cancel"
+                        element={<CancelPage />}
+                    />
+                    <Route
+                        path="/event/:id/select-seats"
+                        element={<SeatMap />}
+                    />
+                    <Route path="/profile" element={<MyProfile />} />
+                </Routes>
+            </main>
+            <Footer />
+            {isLogInOpen && <Login onClose={() => navigate(-1)} />} 
+        </div>
     );
 }
 

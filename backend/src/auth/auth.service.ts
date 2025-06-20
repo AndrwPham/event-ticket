@@ -11,6 +11,7 @@ import { log } from 'console';
 import { JwtPayload } from './types/jwt-payload.type';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UserCreatedEvent } from '../notification/events/user-created.event';
+import { UserConfirmedEvent } from '../notification/events/user-confirmed.event';
 
 @Injectable()
 export class AuthService {
@@ -95,7 +96,16 @@ export class AuthService {
       },
     });
 
+    // fetch info to send welcome email after confirmation
+    const attendeeInfo = await this.prisma.attendeeInfo.findUnique({ where: { userId: user.id } });
+    if (!attendeeInfo || !attendeeInfo.email) {
+      throw new BadRequestException('User email not found for welcome notification');
+    }
     this.logger.debug(`Email confirmed for user: ${user.username} (${user.id})`);
+    this.eventEmitter.emit(
+      'user.confirmed',
+      new UserConfirmedEvent(user.id, attendeeInfo.email, user.username, new Date())
+    );
     return { message: 'Email confirmed successfully' };
   }
 

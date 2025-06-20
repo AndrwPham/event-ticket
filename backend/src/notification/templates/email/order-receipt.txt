@@ -1,0 +1,11 @@
+Hi{{#if name}} {{name}}{{/if}},
+Thank you for your order!
+Order ID: {{orderId}}
+Date: {{createdAt}}
+Payment Method: {{method}}
+Total: ${{totalPrice}}
+Items:
+{{#each items}}
+- {{this}}
+{{/each}}
+We hope you enjoy your event!

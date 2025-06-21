@@ -1,0 +1,12 @@
+<p>Hi{{#if name}} {{name}}{{/if}},</p>
+<p>Thank you for your order!</p>
+<p><strong>Order ID:</strong> {{orderId}}</p>
+<p><strong>Date:</strong> {{createdAt}}</p>
+<p><strong>Payment Method:</strong> {{method}}</p>
+<p><strong>Total:</strong> ${{totalPrice}}</p>
+<ul>
+  {{#each items}}
+    <li>{{this}}</li>
+  {{/each}}
+</ul>
+<p>We hope you enjoy your event!</p>

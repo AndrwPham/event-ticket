@@ -13,6 +13,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { ClaimedTicketService } from '../claimedticket/claimedticket.service';
 import { ClaimedTicketStatus } from '../claimedticket/claimedticket-status.enum';
 import { Prisma, PrismaClient } from '@prisma/client';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { OrderCompletedEvent } from '../notification/events/order-completed.event';
 
 @Injectable()
 export class OrderService {
@@ -23,6 +25,7 @@ export class OrderService {
     private readonly paymentService: PaymentService,
     private readonly claimedTicketService: ClaimedTicketService,
     private readonly configService: ConfigService,
+    private readonly eventEmitter: EventEmitter2,
   ) { }
 
   async create(dto: CreateOrderDto) {
@@ -200,6 +203,12 @@ export class OrderService {
         await this.holdService.releaseTickets(ticketItems);
       });
       if (transactionError) throw transactionError;
+
+      // emit event for order completion
+      this.eventEmitter.emit(
+        'order.completed',
+        new OrderCompletedEvent(order.id, order.attendeeId)
+      );
       return await this.prisma.order.findUnique({ where: { id } });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {

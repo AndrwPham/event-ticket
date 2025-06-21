@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 
-interface sendSeatmapButtonConfig {
-    selectedSeatStartCoord: [number, number] | null;
-    selectedSeatEndCoord: [number, number] | null;
+interface SendSeatmapButtonConfig {
+    selectedSeatStartId: string | null;
+    selectedSeatEndId: string | null;
     selectedVenueID: number;
     hasSelectionChanged: boolean;
     setHasSelectionChanged: React.Dispatch<React.SetStateAction<boolean>>;
@@ -11,31 +11,15 @@ interface sendSeatmapButtonConfig {
 /**
  * Send Seatmap button.
  *
- * Default State: button read "Save", but not clickable.
- * - Change to Ready state once a change in seat selection is detected.
- *
- * Ready State: button read "Save", clickable.
- * - Change to In Progress state once clicked.
- *
- * In Progress State: button read "Saving...", not clickable.
- * - Change to Save Failed: if the POST request for saving failed.
- * - Change to Save Success: if the POST request for saving succeeded.
- *
- * Save Failed state: button read "Failed to Save", not clickable. Background turn to red.
- * - Change to Ready state after 1.5s.
- *
- * Save Success state: button read "Save Success", not clickable. Background turn to green.
- * - Change to Default state after 1.5s.
- *
  * @author LunaciaDev
  */
 export const SendSeatmapButton = ({
-    selectedSeatStartCoord,
-    selectedSeatEndCoord,
+    selectedSeatStartId,
+    selectedSeatEndId,
     selectedVenueID,
     hasSelectionChanged,
     setHasSelectionChanged,
-}: sendSeatmapButtonConfig) => {
+}: SendSeatmapButtonConfig) => {
     const state = Object.freeze({
         READY: 1,
         IN_PROGRESS: 2,
@@ -61,22 +45,19 @@ export const SendSeatmapButton = ({
 
     const postSeatmapConfig = async () => {
         try {
-            if (
-                selectedSeatStartCoord === null ||
-                selectedSeatEndCoord === null
-            ) {
+            if (selectedSeatStartId === null || selectedSeatEndId === null) {
                 return;
             }
 
             const headers = new Headers();
             headers.append("Content-Type", "application/json");
 
-            const response = await fetch("gttps://localhost:5000/api/data", {
+            const response = await fetch("https://localhost:5000/api/data", {
                 method: "POST",
                 headers: headers,
                 body: JSON.stringify({
-                    SeatmapStartCoordinate: selectedSeatStartCoord,
-                    SeatmapEndCoordinate: selectedSeatEndCoord,
+                    SeatmapStartId: selectedSeatStartId,
+                    SeatmapEndId: selectedSeatEndId,
                     VenueID: selectedVenueID,
                 }),
             });
@@ -121,7 +102,7 @@ export const SendSeatmapButton = ({
         <button
             onMouseUp={handleMouseUp}
             disabled={!hasSelectionChanged}
-            className=".bg-blue-600"
+            className="bg-blue-600"
         >
             {getButtonText()}
         </button>

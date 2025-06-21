@@ -1,12 +1,17 @@
 import { useState } from "react";
-import { DragSeatMap } from "./drag-seat-map";
+import { SeatMap } from "./seatmap";
 import { VenueButtonGroup } from "./venue-button-group";
 import { SendSeatmapButton } from "./send-seatmap-button";
+
+export interface SeatCell {
+    type: "seat" | "aisle" | "empty" | "stage";
+    seatId?: string;
+}
 
 export interface Venue {
     id: number;
     name: string;
-    size: [number, number];
+    layout: SeatCell[][];
 }
 
 interface VenueList {
@@ -14,51 +19,60 @@ interface VenueList {
 }
 
 /**
- * Venue seat configuration page.
+ * Venue Configuration Component
+ *
+ * This component expects a list of possible venues and their standard configurations.
+ * It allows the event organizer to modify the standard venue configuration with seat types:
+ *
+ * - Unavailable: The seat cannot be booked.
+ * - Available:
+ *   - Standard seat: All available seats start at this tier.
+ *   - Tiered seat: Special seat class defined by the event organizer.
+ *
+ * TODO: Implement the ability to switch seat tiers.
  *
  * @example
- *  <VenueConfig venueList={[
- *      {
- *          id: 0,
- *          name: "Venue A",
- *          size: [5, 10]
- *      }, {
- *          id: 1,
- *          name: "Venue B",
- *          size: [6, 12],
- *      }, {
- *          id: 2,
- *          name: "Venue C",
- *          size: [4, 5],
- *      }
- *  ]}
- *  />
+ * <VenueConfig
+ *   venueList={[
+ *     {
+ *       id: 1,
+ *       name: "Standard Auditorium",
+ *       layout: [
+ *         [{ type: 'stage' }, { type: 'stage' }, { type: 'stage' }],
+ *         [{ type: 'empty' }, { type: 'empty' }, { type: 'empty' }],
+ *         [{ type: 'seat', seatId: 'A1' }, { type: 'aisle' }, { type: 'seat', seatId: 'A2' }],
+ *         [{ type: 'seat', seatId: 'B1' }, { type: 'aisle' }, { type: 'seat', seatId: 'B2' }],
+ *         [{ type: 'seat', seatId: 'C1' }, { type: 'aisle' }, { type: 'seat', seatId: 'C2' }],
+ *         [{ type: 'seat', seatId: 'D1' }, { type: 'aisle' }, { type: 'seat', seatId: 'D2' }]
+ *       ]
+ *     }
+ *   ]}
+ * />
  *
  * @author LunaciaDev
  */
 export const VenueConfig = ({ venueList }: VenueList) => {
     const [selectedVenue, setSelectedVenue] = useState(venueList[0].id);
-    const [venueSize, setVenueSize] = useState(venueList[0].size);
-    const [selectedSeatStartCoord, setSelectedSeatStartCoord] = useState<
-        [number, number] | null
+    const [venueLayout, setVenueLayout] = useState(venueList[0].layout);
+    const [selectedSeatStartId, setSelectedSeatStartId] = useState<
+        string | null
     >(null);
-    const [selectedSeatEndCoord, setSelectedSeatEndCoord] = useState<
-        [number, number] | null
-    >(null);
+    const [selectedSeatEndId, setSelectedSeatEndId] = useState<string | null>(
+        null,
+    );
     const [hasSelectionChanged, setHasSelectionChanged] = useState(false);
 
     const handleSelectedVenueChange = (venueID: number) => {
-        venueList.forEach((venue) => {
-            if (venue.id === venueID) {
-                setSelectedVenue(venue.id);
-                setVenueSize(venue.size);
-                setHasSelectionChanged(true);
+        const venue = venueList.find((v) => v.id === venueID);
+        if (venue) {
+            setSelectedVenue(venue.id);
+            setVenueLayout(venue.layout);
+            setHasSelectionChanged(true);
 
-                // reset the selected coordinates.
-                setSelectedSeatStartCoord(null);
-                setSelectedSeatEndCoord(null);
-            }
-        });
+            // reset the selected seats.
+            setSelectedSeatStartId(null);
+            setSelectedSeatEndId(null);
+        }
     };
 
     return (
@@ -71,17 +85,16 @@ export const VenueConfig = ({ venueList }: VenueList) => {
                 setSelectedVenue={handleSelectedVenueChange}
             />
             <h2>Configure Venue Seat Map:</h2>
-            <DragSeatMap
+            <SeatMap
                 key={selectedVenue}
-                rowCount={venueSize[0]}
-                colCount={venueSize[1]}
-                setSelectedSeatStartCoord={setSelectedSeatStartCoord}
-                setSelectedSeatEndCoord={setSelectedSeatEndCoord}
+                layout={venueLayout}
+                setSelectedSeatStartId={setSelectedSeatStartId}
+                setSelectedSeatEndId={setSelectedSeatEndId}
                 setHasSelectionChanged={setHasSelectionChanged}
             />
             <SendSeatmapButton
-                selectedSeatStartCoord={selectedSeatStartCoord}
-                selectedSeatEndCoord={selectedSeatEndCoord}
+                selectedSeatStartId={selectedSeatStartId}
+                selectedSeatEndId={selectedSeatEndId}
                 selectedVenueID={selectedVenue}
                 hasSelectionChanged={hasSelectionChanged}
                 setHasSelectionChanged={setHasSelectionChanged}

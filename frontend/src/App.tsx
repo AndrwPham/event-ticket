@@ -1,38 +1,71 @@
-import { ClickSeatMap } from "./components/click-seat-map";
+import { VenueConfig } from "./components/venue-config";
 
 function App() {
     return (
         <>
-            <ClickSeatMap
-                venueSize={{
-                    rowCount: 9,
-                    colCount: 9,
-                }}
-                seatTypes={[
+            <VenueConfig
+                venueList={[
                     {
-                        colorCode: "bg-blue-200",
-                        tierID: 1,
-                        startPos: [0, 0],
-                        endPos: [0, 8],
-                    },
-                    {
-                        colorCode: "bg-yellow-200",
-                        tierID: 2,
-                        startPos: [1, 2],
-                        endPos: [1, 6],
+                        id: 1,
+                        name: "Standard Auditorium",
+                        layout: [
+                            [
+                                { type: "stage" },
+                                { type: "stage" },
+                                { type: "stage" },
+                                { type: "stage" },
+                                { type: "stage" },
+                                { type: "stage" },
+                                { type: "stage" },
+                            ],
+                            [
+                                { type: "empty" },
+                                { type: "empty" },
+                                { type: "empty" },
+                                { type: "empty" },
+                                { type: "empty" },
+                                { type: "empty" },
+                                { type: "empty" },
+                            ],
+                            [
+                                { type: "seat", seatId: "A1" },
+                                { type: "seat", seatId: "A2" },
+                                { type: "seat", seatId: "A3" },
+                                { type: "aisle" },
+                                { type: "seat", seatId: "A4" },
+                                { type: "seat", seatId: "A5" },
+                                { type: "seat", seatId: "A6" },
+                            ],
+                            [
+                                { type: "seat", seatId: "B1" },
+                                { type: "seat", seatId: "B2" },
+                                { type: "seat", seatId: "B3" },
+                                { type: "aisle" },
+                                { type: "seat", seatId: "B4" },
+                                { type: "seat", seatId: "B5" },
+                                { type: "seat", seatId: "B6" },
+                            ],
+                            [
+                                { type: "seat", seatId: "C1" },
+                                { type: "seat", seatId: "C2" },
+                                { type: "seat", seatId: "C3" },
+                                { type: "aisle" },
+                                { type: "seat", seatId: "C4" },
+                                { type: "seat", seatId: "C5" },
+                                { type: "seat", seatId: "C6" },
+                            ],
+                            [
+                                { type: "seat", seatId: "D1" },
+                                { type: "seat", seatId: "D2" },
+                                { type: "seat", seatId: "D3" },
+                                { type: "aisle" },
+                                { type: "seat", seatId: "D4" },
+                                { type: "seat", seatId: "D5" },
+                                { type: "seat", seatId: "D6" },
+                            ],
+                        ],
                     },
                 ]}
-                bookedSeats={[
-                    [0, 3],
-                    [0, 4],
-                    [0, 5],
-                    [1, 3],
-                    [2, 5],
-                ]}
-                configuredSeats={{
-                    startPos: [0, 0],
-                    endPos: [8, 8],
-                }}
             />
         </>
     );

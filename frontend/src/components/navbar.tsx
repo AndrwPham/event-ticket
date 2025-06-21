@@ -23,7 +23,7 @@ const Navbar: FC<NavbarProps> = ({ onLogInClick, onSignUpClick }) => {
             label: "Create Event",
         },
         {
-            href: "/tickets",
+            href: "/ticket",
             label: "Tickets",
         },
     ];

@@ -64,6 +64,8 @@ export class AuthService {
 
     this.logger.debug(`User registered: ${user.username} (${user.id}) with token ${confirmToken}`);
     // TODO: call email service to send confirmation email. api: auth/confirm?token=$confirmToken
+    const { ...name } = user;
+    return name;
   }
 
   async confirmEmail(token: string): Promise<{ message: string }> {

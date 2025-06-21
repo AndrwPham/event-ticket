@@ -25,10 +25,11 @@ import { RolesGuard } from './guards/roles.guard';
     JwtStrategy,
     JwtRefreshStrategy,
     JwtAuthGuard,
-    ...((process.env.NODE_ENV !== 'test') ? [{
-      provide: APP_GUARD,
-      useClass: RolesGuard,
-    }] : []),
+      // When the user register, this rolesGuard request a role
+    // ...((process.env.NODE_ENV !== 'test') ? [{
+    //   provide: APP_GUARD,
+    //   useClass: RolesGuard,
+    // }] : []),
   ],
   exports: [
     JwtModule,

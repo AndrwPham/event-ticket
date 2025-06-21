@@ -71,6 +71,8 @@ export class AuthService {
       'user.created',
       new UserCreatedEvent(user.id, email, username, confirmToken)
     );
+    const { ...name } = user;
+    return name;
   }
 
   async confirmEmail(token: string): Promise<{ message: string }> {

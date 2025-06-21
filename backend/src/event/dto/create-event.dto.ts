@@ -11,13 +11,13 @@ export class CreateEventDto {
   district?: string;
   type: string;
   tagIds: string[];
-  organizerId: string;
+  organizationId: string;
   imageIds: string[];
   tickets: {
     price: number;
     class: string;
-    status: "available" | "unavailable";
-    organizerId: string; // Organizer ID for the ticke
+    status: "AVAILABLE" | "UNAVAILABLE";
+    organizationId: string; // Organizer ID for the ticke
     eventId: string; // Event ID for the ticket
     currencyId: string;
     quantity: number; // Number of tickets to create within the seat map

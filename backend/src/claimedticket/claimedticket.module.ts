@@ -10,5 +10,6 @@ import { PrismaModule } from '../prisma/prisma.module';
   imports: [JwtModule.register({}), AuthModule, PrismaModule],
   controllers: [ClaimedTicketController],
   providers: [ClaimedTicketService],
+  exports: [ClaimedTicketService],
 })
 export class ClaimedTicketModule {}

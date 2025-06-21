@@ -26,10 +26,11 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     JwtStrategy,
     JwtRefreshStrategy,
     JwtAuthGuard,
-    ...((process.env.NODE_ENV !== 'test') ? [{
-      provide: APP_GUARD,
-      useClass: RolesGuard,
-    }] : []),
+      // When the user register, this rolesGuard request a role
+    // ...((process.env.NODE_ENV !== 'test') ? [{
+    //   provide: APP_GUARD,
+    //   useClass: RolesGuard,
+    // }] : []),
   ],
   exports: [
     JwtModule,

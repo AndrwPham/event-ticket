@@ -1,4 +1,5 @@
 import React from "react";
+import { useAuth } from "../context/AuthContext"; // We assume AuthContext.tsx is in src/context
 import { ApiError, isApiError, User } from "../types";
 
 interface LogInProps {
@@ -7,17 +8,14 @@ interface LogInProps {
 }
 
 interface LoginResponse {
-    tokens: {
-        accessToken: string;
-        refreshToken: string;
-    };
-    user: User & { activeRole: string };
+    user: User;
 }
 
 export default function LogIn({ onClose, onSwitchToSignUp }: LogInProps) {
+    const { login } = useAuth();
+
     const [email, setEmail] = React.useState("");
     const [password, setPassword] = React.useState("");
-
     const [isLoading, setIsLoading] = React.useState(false);
     const [apiError, setApiError] = React.useState<string | null>(null);
 
@@ -27,7 +25,6 @@ export default function LogIn({ onClose, onSwitchToSignUp }: LogInProps) {
         setIsLoading(true);
 
         try {
-            // 1. API Call to the Backend
             const response = await fetch(
                 `${import.meta.env.VITE_API_URL}/auth/login`,
                 {
@@ -35,45 +32,39 @@ export default function LogIn({ onClose, onSwitchToSignUp }: LogInProps) {
                     headers: {
                         "Content-Type": "application/json",
                     },
+                    // The fetch 'credentials' option is needed to send cookies to the backend
+                    credentials: "include",
                     body: JSON.stringify({
-                        username: email, // The backend expects a 'username' field
+                        username: email,
                         password: password,
-                        activeRole: "Attendee", // Hardcoding the role for now
+                        activeRole: "Attendee",
                     }),
                 },
             );
 
             const data: unknown = await response.json();
 
-            // 2. Handle Backend Response
             if (!response.ok) {
-                // Use our type guard to check for the known error shape
                 if (isApiError(data)) {
-                    throw new Error(
-                        Array.isArray(data.message)
-                            ? data.message.join(", ")
-                            : data.message,
-                    );
+                    const message = Array.isArray(data.message)
+                        ? data.message.join(", ")
+                        : data.message;
+                    throw new Error(message);
                 }
                 throw new Error("An unexpected error occurred.");
             }
 
-            // 3. Handle Success
             const loginData = data as LoginResponse;
-            console.log("Successfully logged in:", loginData);
 
-            // In a real app, you would save these tokens and update the user state
-            localStorage.setItem("accessToken", loginData.tokens.accessToken);
-            localStorage.setItem("refreshToken", loginData.tokens.refreshToken);
+            // Call the global login function from our context with the user data
+            login(loginData.user);
 
-            alert(`Login successful! Welcome, ${loginData.user.username}`);
             onClose(); // Close the modal on success
         } catch (error) {
-            // 4. Handle Errors
             if (error instanceof Error) {
                 setApiError(error.message);
             } else {
-                setApiError("An unexpected error occurred.");
+                setApiError("An unknown error occurred.");
             }
             console.error("Login failed:", error);
         } finally {
@@ -82,12 +73,11 @@ export default function LogIn({ onClose, onSwitchToSignUp }: LogInProps) {
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 transition-opacity duration-300">
-            <div className="bg-white text-slate-800 p-8 rounded-2xl shadow-xl w-full max-w-md relative transform transition-all duration-300 scale-100">
-                {/* Close Button */}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+            <div className="bg-white text-slate-800 p-8 rounded-2xl shadow-xl w-full max-w-md relative">
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
                     aria-label="Close"
                 >
                     <svg
@@ -114,7 +104,6 @@ export default function LogIn({ onClose, onSwitchToSignUp }: LogInProps) {
                     </p>
                 </div>
 
-                {/* Form */}
                 <form
                     onSubmit={(e) => {
                         void handleSubmit(e);
@@ -160,14 +149,12 @@ export default function LogIn({ onClose, onSwitchToSignUp }: LogInProps) {
                         />
                     </div>
 
-                    {/* API Error Message */}
                     {apiError && (
                         <div className="p-4 border border-red-200 bg-red-50 text-red-700 text-sm rounded-lg">
                             <p className="font-semibold">{apiError}</p>
                         </div>
                     )}
 
-                    {/* Submit Button */}
                     <button
                         type="submit"
                         disabled={isLoading}

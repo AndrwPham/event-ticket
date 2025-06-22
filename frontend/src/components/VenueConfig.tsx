@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useLayoutEffect } from "react";
 
 interface SeatCell {
     type: "seat" | "aisle" | "empty" | "stage";
@@ -195,7 +195,6 @@ const SeatMap = ({
     >(null);
     const [selectedSeatIds, setSelectedSeatIds] = useState<string[]>([]);
 
-    // Helper to check if a cell at [r][c] is a seat
     const isSeatCell = (cell: SeatCell) =>
         cell.type === "seat" && !!cell.seatId;
 
@@ -334,6 +333,50 @@ const SeatMap = ({
 };
 
 /**
+ * Create a legend for labelling which color correspond to which seat class.
+ */
+const Legend = ({
+    seatClasses,
+    seatMapHeight,
+}: {
+    seatClasses: { id: string; name: string; color: string }[];
+    seatMapHeight: number | null;
+}) => (
+    <div
+        className="flex flex-col min-w-[120px]"
+        style={{ maxHeight: seatMapHeight ? seatMapHeight : undefined }}
+    >
+        <h2 className="mb-2 font-semibold sticky top-0 bg-white z-10">
+            Legend:
+        </h2>
+        <div
+            className="flex flex-col gap-3 pr-4"
+            style={{
+                maxHeight: seatMapHeight ? seatMapHeight - 40 : undefined,
+                overflowY: seatMapHeight ? "auto" : undefined,
+            }}
+        >
+            {seatClasses.map((cls) => (
+                <div key={cls.id} className="flex items-center gap-2">
+                    <span
+                        className="inline-block w-6 h-6 border border-gray-300 rounded"
+                        style={{ backgroundColor: cls.color }}
+                    />
+                    <span>{cls.name}</span>
+                </div>
+            ))}
+            <div className="flex items-center gap-2">
+                <span
+                    className="inline-block w-6 h-6 border border-gray-300 rounded"
+                    style={{ backgroundColor: "#93C5FD" }}
+                />
+                <span>Stage</span>
+            </div>
+        </div>
+    </div>
+);
+
+/**
  * Venue Configuration Component
  *
  * This component expects a list of possible venues and their standard configurations.
@@ -392,6 +435,15 @@ export const VenueConfig = ({ venueList }: VenueList) => {
     }>(venueList[0].seatAssignments || {});
     const [newClassName, setNewClassName] = useState("");
     const [newClassPrice, setNewClassPrice] = useState("");
+
+    const seatMapRef = useRef<HTMLDivElement>(null);
+    const [seatMapHeight, setSeatMapHeight] = useState<number | null>(null);
+
+    useLayoutEffect(() => {
+        if (seatMapRef.current) {
+            setSeatMapHeight(seatMapRef.current.offsetHeight);
+        }
+    }, [venueLayout, seatClasses, selectedVenue]);
 
     const handleSelectedVenueChange = (venueID: number) => {
         const venue = venueList.find((v) => v.id === venueID);
@@ -572,33 +624,20 @@ export const VenueConfig = ({ venueList }: VenueList) => {
             </div>
             <h2>Configure Venue Seat Map:</h2>
             <div className="flex items-start gap-8">
-                <SeatMap
-                    key={selectedVenue}
-                    layout={venueLayout}
-                    seatAssignments={seatAssignments}
-                    onAssignClass={handleAssignClassToSeat}
-                    seatClasses={seatClasses}
-                    selectedClassId={selectedClassId}
-                />
-                <div className="flex flex-col gap-3 min-w-[120px]">
-                    <h2 className="mb-2 font-semibold">Legend:</h2>
-                    {seatClasses.map((cls) => (
-                        <div key={cls.id} className="flex items-center gap-2">
-                            <span
-                                className="inline-block w-6 h-6 border border-gray-300 rounded"
-                                style={{ backgroundColor: cls.color }}
-                            />
-                            <span>{cls.name}</span>
-                        </div>
-                    ))}
-                    <div className="flex items-center gap-2">
-                        <span
-                            className="inline-block w-6 h-6 border border-gray-300 rounded"
-                            style={{ backgroundColor: "#93C5FD" }}
-                        />
-                        <span>Stage</span>
-                    </div>
+                <div ref={seatMapRef} style={{ flexShrink: 0 }}>
+                    <SeatMap
+                        key={selectedVenue}
+                        layout={venueLayout}
+                        seatAssignments={seatAssignments}
+                        onAssignClass={handleAssignClassToSeat}
+                        seatClasses={seatClasses}
+                        selectedClassId={selectedClassId}
+                    />
                 </div>
+                <Legend
+                    seatClasses={seatClasses}
+                    seatMapHeight={seatMapHeight}
+                />
             </div>
             <SendSeatmapButton
                 seatAssignments={seatAssignments}

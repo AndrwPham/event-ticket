@@ -6,6 +6,7 @@ interface SignUpProps {
 }
 
 export default function SignUp({ onClose }: SignUpProps) {
+    const [username, setUsername] = React.useState("");
     const [email, setEmail] = React.useState("");
     const [password, setPassword] = React.useState("");
     const [retypePassword, setRetypePassword] = React.useState("");
@@ -46,7 +47,7 @@ export default function SignUp({ onClose }: SignUpProps) {
                     },
                     body: JSON.stringify({
                         email: email,
-                        username: email,
+                        username: username,
                         password: trimmedPassword,
                     }),
                 },
@@ -136,6 +137,26 @@ export default function SignUp({ onClose }: SignUpProps) {
                             value={email}
                             onChange={(e) => {
                                 setEmail(e.target.value);
+                            }}
+                            required
+                            className="w-full border-slate-300 bg-slate-50 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#311f5a] focus:border-transparent transition"
+                        />
+                    </div>
+
+                    <div>
+                        <label
+                            htmlFor="username"
+                            className="block text-sm font-medium text-slate-700 mb-1"
+                        >
+                            Username
+                        </label>
+                        <input
+                            id="username"
+                            type="username"
+                            placeholder="Your username"
+                            value={username}
+                            onChange={(e) => {
+                                setUsername(e.target.value);
                             }}
                             required
                             className="w-full border-slate-300 bg-slate-50 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#311f5a] focus:border-transparent transition"

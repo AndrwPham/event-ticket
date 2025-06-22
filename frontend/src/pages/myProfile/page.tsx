@@ -50,7 +50,11 @@ const MyProfile = () => {
                                     Account of
                                 </h3>
                                 <p className="font-bold text-lg">
-                                    {profile ? profile.username : "Loading..."}
+                                    {profile
+                                        ? profile.username ||
+                                          profile.email ||
+                                          "Loading..."
+                                        : "Loading..."}
                                 </p>
                             </div>
                             <nav className="space-y-2 text-gray-600">

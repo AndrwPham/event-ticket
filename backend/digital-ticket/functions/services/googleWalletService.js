@@ -64,15 +64,6 @@ async function createPassClass() {
                   ]
                 }
               },
-              "endItem": {
-                "firstValue": {
-                  "fields": [
-                    {
-                      "fieldPath": "object.textModulesData['booth_visited']"
-                    }
-                  ]
-                }
-              }
             }
           }
         ]
@@ -107,24 +98,86 @@ async function createPassClass() {
 /**
  * Create a Wallet pass for the user
  */
-async function createOrUpdatePassObject(email, fullName, code, booth_visited = 0) {
-  const objectSuffix = `${email.replace(/[^\w.-]/g, '_')}`;
+async function createOrUpdatePassObject(payload) {
+  const { email, name, code, class: ticketClass, seat, price, event, eventId, status } = payload;
+  // Use class name if provided, otherwise fallback to default
+  const className = ticketClass ? ticketClass.replace(/\s+/g, '').toLowerCase() : 'generalAdmission';
+  const eventCode = eventId ? eventId.replace(/[^a-zA-Z0-9._-]/g, '_') : 'CFIED2025';
+  const dynamicClassId = `${issuerId}.${eventCode}.${className}`;
+  // Sanitize objectSuffix for Google Wallet requirements
+  const objectSuffix = `${email}`.replace(/[^a-zA-Z0-9._-]/g, '_');
   const objectId = `${issuerId}.${objectSuffix}`;
+
+  // Try to ensure the class exists (create if not)
+  try {
+    await httpClient.request({
+      url: `${baseUrl}/eventTicketClass/${dynamicClassId}`,
+      method: 'GET'
+    });
+    // Class exists
+  } catch (err) {
+    if (err.response && err.response.status === 404) {
+      // Create new class on the fly
+      const eventTicketClass = {
+        "id": dynamicClassId,
+        "issuerName": "VGU Career Services",
+        "reviewStatus": "UNDER_REVIEW",
+        "eventName": {
+          "defaultValue": { "language": "en-US", "value": event || "Career Fair and Industrial Exploration Day 2025" }
+        },
+        "logo": {
+          "sourceUri": {
+            "uri": "https://raw.githubusercontent.com/fuisl/cfied25-ticket/main/src/assets/logo.jpg"
+          },
+          "contentDescription": { "defaultValue": { "language": "en-US", "value": "LOGO" } }
+        },
+        "heroImage": {
+          "sourceUri": {
+            "uri": "https://raw.githubusercontent.com/fuisl/cfied25-ticket/main/src/assets/banner.jpg"
+          },
+          "contentDescription": { "defaultValue": { "language": "en-US", "value": "HERO IMAGE" } }
+        },
+        "eventId": eventCode,
+        "venue": {
+          "name": { "defaultValue": { "language": "en-US", "value": "Conventional Hall, VGU Campus" } },
+          "address": { "defaultValue": { "language": "en-US", "value": "Vanh Dai 4 St., Thoi Hoa Ward\nBen Cat, Binh Duong" } }
+        },
+        "dateTime": {
+          "doorsOpen": "2025-05-14T08:00:00+07:00",
+          "start": "2025-05-14T08:30:00+07:00",
+          "end": "2025-05-14T13:30:00+07:00"
+        },
+        "merchantLocation": [
+          {
+            "latitude": 11.0572,
+            "longitude": 106.6442
+          }
+        ]
+      };
+      await httpClient.request({
+        url: `${baseUrl}/eventTicketClass`,
+        method: 'POST',
+        data: eventTicketClass
+      });
+    } else {
+      throw err;
+    }
+  }
 
   const eventTicketObject = {
     "id": objectId,
-    "classId": classId,
+    "classId": dynamicClassId,
     "ticketType": {
       "defaultValue": {
         "language": "en-US",
-        "value": "General Admission"
+        "value": ticketClass || "General Admission"
       }
     },
     "state": "ACTIVE",
     "cardTitle": {
       "defaultValue": {
         "language": "en-US",
-        "value": "CFIED 2025"
+        "value": event || "CFIED 2025"
       }
     },
     "linkModulesData": [
@@ -142,8 +195,10 @@ async function createOrUpdatePassObject(email, fullName, code, booth_visited = 0
       }
     ],
     "textModulesData": [
-      { "id": "full_name", "header": "Attendee", "body": fullName },
-      { "id": "booth_visited", "header": "Booth visited", "body": booth_visited },
+      { "id": "full_name", "header": "Attendee", "body": name },
+      ...(seat ? [{ "id": "seat", "header": "Seat", "body": seat }] : []),
+      ...(price ? [{ "id": "price", "header": "Price", "body": price }] : []),
+      ...(ticketClass ? [{ "id": "admission_level", "header": "Admission Level", "body": ticketClass }] : []),
     ],
     "barcode": {
       "type": "QR_CODE",

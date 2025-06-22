@@ -49,7 +49,7 @@ router.post(
         color: { dark: '#000000', light: '#FFFFFF' }
       });
 
-      const googleWalletUrl = await createPassObject(email, name, lookupCode);
+      const googleWalletUrl = await createPassObject(req.body);
 
       const protocol = req.headers['x-forwarded-proto'] || req.protocol;
       const host = req.get('host');

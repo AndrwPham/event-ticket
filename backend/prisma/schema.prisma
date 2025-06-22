@@ -60,7 +60,8 @@ model User {
     confirmToken          String?
     confirmTokenExpiresAt DateTime?
 
-    attendeeInfo AttendeeInfo? @relation("UserAttendeeInfo")
+  attendeeInfo AttendeeInfo? @relation("UserAttendeeInfo")
+  pendingEmail String?
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt

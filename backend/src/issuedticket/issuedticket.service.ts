@@ -141,10 +141,11 @@ export class IssuedTicketService {
           }
         } else {
           for (let i = 0; i < ticketClass.quantity; i++) {
+            const seatId = `#${i}`;
             ticketsToCreate.push({
               price: ticketClass.price,
               class: ticketClass.label,
-              seat: '',
+              seat: seatId,
               status: TicketStatus.UNAVAILABLE,
               eventId,
               organizationId,
@@ -207,11 +208,12 @@ export class IssuedTicketService {
         }
       } else {
         for (let i = 0; i < ticketClass.quantity; i++) {
-          const key = `${ticketClass.label}:#${i}`;
+          const seatId = `#${i}`;
+          const key = `${ticketClass.label}:${seatId}`;
           newMap.set(key, {
             price: ticketClass.price,
             class: ticketClass.label,
-            seat: '',
+            seat: seatId,
             status: TicketStatus.UNAVAILABLE,
             eventId,
             organizationId,

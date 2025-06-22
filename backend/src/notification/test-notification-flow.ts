@@ -6,12 +6,14 @@ import { UserConfirmedEvent } from './events/user-confirmed.event';
 import { OrderCompletedEvent } from './events/order-completed.event';
 import { NewsletterEvent } from './events/newsletter.event';
 import { EventNotificationEvent } from './events/event-notification.event';
+import { PrismaService } from '../prisma/prisma.service';
 
 // This script emits all notification events to test real email sending.
 // Make sure your .env SMTP config is set and NotificationModule is properly wired in your app for a full test.
 // USE MOCK PRISMA SERVICE FOR TESTING
 async function main() {
   const app = await NestFactory.createApplicationContext(NotificationModule, { logger: ['error', 'warn', 'log'] });
+  // Override PrismaService with mock for testing
   const eventEmitter = app.get(EventEmitter2);
 
   // Simulate user registration (confirmation email)
@@ -29,7 +31,7 @@ async function main() {
   // Simulate order completion (order receipt)
   eventEmitter.emit(
     'order.completed',
-    new OrderCompletedEvent('order123', 'user1', '10422021@student.vgu.edu.vn')
+    new OrderCompletedEvent('b7e2c1a4-5f3d-4e2a-9c1a-123456789abd', 'user1', '10422021@student.vgu.edu.vn')
   );
 
   // Simulate newsletter

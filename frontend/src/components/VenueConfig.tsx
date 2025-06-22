@@ -467,6 +467,41 @@ export const VenueConfig = ({ venueList }: VenueList) => {
                 setSelectedVenue={handleSelectedVenueChange}
             />
             <h2>Seat Classes:</h2>
+            <div className="flex items-center gap-1 mb-4">
+                <input
+                    type="text"
+                    placeholder="Class name"
+                    value={newClassName}
+                    onChange={(e) => {
+                        setNewClassName(e.target.value);
+                    }}
+                    className="border px-1"
+                />
+                <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="Price (₫)"
+                    value={
+                        newClassPrice
+                            ? Number(newClassPrice).toLocaleString("vi-VN") +
+                              " ₫"
+                            : ""
+                    }
+                    onChange={(e) => {
+                        // Remove all non-digit characters
+                        const raw = e.target.value.replace(/\D/g, "");
+                        setNewClassPrice(raw);
+                    }}
+                    className="w-28 border px-1 text-right"
+                />
+                <button
+                    onClick={handleAddClass}
+                    className="bg-green-200 px-2 rounded"
+                >
+                    Add
+                </button>
+            </div>
+
             <div className="flex gap-2 mb-4 flex-wrap">
                 {seatClasses.map((cls) => (
                     <div
@@ -483,17 +518,29 @@ export const VenueConfig = ({ venueList }: VenueList) => {
                         </button>
                         {cls.id !== "unavailable" && (
                             <input
-                                type="number"
-                                min="0"
-                                value={cls.price ?? ""}
+                                type="text"
+                                inputMode="numeric"
+                                value={
+                                    cls.price !== null && cls.price !== 0
+                                        ? Number(cls.price).toLocaleString(
+                                              "vi-VN",
+                                          ) + " ₫"
+                                        : cls.price === 0
+                                          ? "0 ₫"
+                                          : ""
+                                }
                                 onChange={(e) => {
+                                    const raw = e.target.value.replace(
+                                        /\D/g,
+                                        "",
+                                    );
                                     handleClassPriceChange(
                                         cls.id,
-                                        Number(e.target.value),
+                                        raw ? Number(raw) : 0,
                                     );
                                 }}
-                                className="w-16 border px-1"
-                                placeholder="Price"
+                                className="w-28 border px-1 text-right"
+                                placeholder="Price (₫)"
                                 disabled={cls.id === "unavailable"}
                             />
                         )}
@@ -522,33 +569,6 @@ export const VenueConfig = ({ venueList }: VenueList) => {
                         )}
                     </div>
                 ))}
-                <div className="flex items-center gap-1">
-                    <input
-                        type="text"
-                        placeholder="Class name"
-                        value={newClassName}
-                        onChange={(e) => {
-                            setNewClassName(e.target.value);
-                        }}
-                        className="border px-1"
-                    />
-                    <input
-                        type="number"
-                        min="0"
-                        placeholder="Price"
-                        value={newClassPrice}
-                        onChange={(e) => {
-                            setNewClassPrice(e.target.value);
-                        }}
-                        className="w-16 border px-1"
-                    />
-                    <button
-                        onClick={handleAddClass}
-                        className="bg-green-200 px-2 rounded"
-                    >
-                        Add
-                    </button>
-                </div>
             </div>
             <h2>Configure Venue Seat Map:</h2>
             <div className="flex items-start gap-8">

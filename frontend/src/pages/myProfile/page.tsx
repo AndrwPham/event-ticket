@@ -11,6 +11,12 @@ type UserProfile = {
 const MyProfile = () => {
     const [profile, setProfile] = useState<UserProfile | null>(null);
 
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
+    const [phone, setPhone] = useState("");
+
+    const isFormValid = Boolean(firstName && lastName && phone);
+
     useEffect(() => {
         // No need to get token from localStorage
         const fetchProfile = async () => {
@@ -50,11 +56,7 @@ const MyProfile = () => {
                                     Account of
                                 </h3>
                                 <p className="font-bold text-lg">
-                                    {profile
-                                        ? profile.username ||
-                                          profile.email ||
-                                          "Loading..."
-                                        : "Loading..."}
+                                    {profile ? profile.username : "Loading..."}
                                 </p>
                             </div>
                             <nav className="space-y-2 text-gray-600">
@@ -90,17 +92,39 @@ const MyProfile = () => {
                         <form className="space-y-6">
                             <div>
                                 <label
-                                    htmlFor="fullName"
+                                    htmlFor="firstName"
                                     className="block text-sm font-medium text-gray-700"
                                 >
-                                    Full Name
+                                    First Name
                                 </label>
                                 <input
                                     type="text"
-                                    id="fullName"
-                                    name="fullName"
-                                    defaultValue={profile ? profile.email : ""}
+                                    id="firstName"
+                                    name="firstName"
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    value={firstName}
+                                    onChange={(e) => {
+                                        setFirstName(e.target.value);
+                                    }}
+                                />
+                            </div>
+
+                            <div>
+                                <label
+                                    htmlFor="lastName"
+                                    className="block text-sm font-medium text-gray-700"
+                                >
+                                    Last Name
+                                </label>
+                                <input
+                                    type="text"
+                                    id="lastName"
+                                    name="lastName"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    value={lastName}
+                                    onChange={(e) => {
+                                        setLastName(e.target.value);
+                                    }}
                                 />
                             </div>
 
@@ -115,24 +139,12 @@ const MyProfile = () => {
                                     type="tel"
                                     id="phone"
                                     name="phone"
-                                    defaultValue="0123456789"
+                                    placeholder="0123456789"
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                />
-                            </div>
-
-                            <div>
-                                <label
-                                    htmlFor="email"
-                                    className="block text-sm font-medium text-gray-700"
-                                >
-                                    Email
-                                </label>
-                                <input
-                                    type="email"
-                                    id="email"
-                                    name="email"
-                                    defaultValue={profile ? profile.email : ""}
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    value={phone}
+                                    onChange={(e) => {
+                                        setPhone(e.target.value);
+                                    }}
                                 />
                             </div>
 
@@ -140,6 +152,7 @@ const MyProfile = () => {
                                 <button
                                     type="submit"
                                     className="bg-[#1A0B49] text-white font-semibold py-2 px-6 rounded-md hover:bg-opacity-90"
+                                    disabled={!isFormValid}
                                 >
                                     Complete
                                 </button>

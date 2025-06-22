@@ -163,7 +163,7 @@ export const SendSeatmapButton = ({
     };
 
     return (
-        <button onMouseUp={handleMouseUp} className="bg-blue-600">
+        <button onMouseUp={handleMouseUp} className="bg-blue-600 text-white">
             {getButtonText()}
         </button>
     );
@@ -279,7 +279,7 @@ const SeatMap = ({
                                 // eslint-disable-next-line jsx-a11y/no-static-element-interactions
                                 <div
                                     key={cell.seatId}
-                                    className={`w-[30px] h-[30px] m-[2px] border border-gray-300 cursor-pointer`}
+                                    className={`w-[30px] h-[30px] m-[2px] border border-gray-300 cursor-pointer text-center`}
                                     style={{ backgroundColor: classColor }}
                                     onMouseDown={() => {
                                         handleMouseDown(rowIdx, colIdx);
@@ -295,7 +295,9 @@ const SeatMap = ({
                                             ? "true"
                                             : "false"
                                     }
-                                />
+                                >
+                                    {cell.seatId ?? "unknown"}
+                                </div>
                             );
                         }
                         if (cell.type === "aisle") {

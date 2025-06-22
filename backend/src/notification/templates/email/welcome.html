@@ -1,3 +1,77 @@
-<p>Welcome{{#if name}} {{name}}{{/if}}!</p>
-<p>Your account has been successfully confirmed. We're excited to have you join us.</p>
-<p>Enjoy exploring our platform!</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to VGU</title>
+    <link href="https://fonts.googleapis.com/css2?family=Alata&display=swap" rel="stylesheet" type="text/css" />
+    <style>
+        body {
+            background-color: #f8f8f8;
+            margin: 0;
+            padding: 0;
+            font-family: 'Alata', Arial, sans-serif;
+        }
+        .container {
+            max-width: 520px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            padding: 32px 24px 24px 24px;
+        }
+        .header {
+            text-align: left;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #eee;
+        }
+        .header img {
+            width: 120px;
+            height: auto;
+        }
+        .content {
+            margin-top: 32px;
+            color: #222;
+        }
+        .content h1 {
+            font-size: 28px;
+            margin-bottom: 12px;
+            color: #003f20;
+        }
+        .content p {
+            font-size: 18px;
+            margin-bottom: 24px;
+        }
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+            border-top: 1px solid #eee;
+            padding-top: 16px;
+        }
+        @media only screen and (max-width: 600px) {
+            .container { padding: 16px 4px; }
+            .header img { width: 90px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://vgu.edu.vn/cms-vgu-theme-4/images/cms/vgu_logo.png" alt="VGU Logo" />
+        </div>
+        <div class="content">
+            <h1>Welcome{{#if name}} {{name}}{{/if}}!</h1>
+            <p>Your account has been successfully confirmed. We're excited to have you join us.</p>
+            <p>Enjoy exploring our platform!</p>
+        </div>
+        <div class="footer">
+            Need help? Contact us at <a href="mailto:10422021@student.vgu.edu.vn" style="color:#d27024;text-decoration:none;">10422021@student.vgu.edu.vn</a><br>
+            Platform creator: LIA<br>
+            <a href="https://fb.com/Fuisloy" style="color:#10962f;text-decoration:none;">fb.com/Fuisloy</a><br>
+            ©2025 VGU Career Service
+        </div>
+    </div>
+</body>
+</html>

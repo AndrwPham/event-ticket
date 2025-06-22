@@ -1,12 +1,123 @@
-<p>Hi{{#if name}} {{name}}{{/if}},</p>
-<p>Thank you for your order!</p>
-<p><strong>Order ID:</strong> {{orderId}}</p>
-<p><strong>Date:</strong> {{createdAt}}</p>
-<p><strong>Payment Method:</strong> {{method}}</p>
-<p><strong>Total:</strong> ${{totalPrice}}</p>
-<ul>
-  {{#each items}}
-    <li>{{this}}</li>
-  {{/each}}
-</ul>
-<p>We hope you enjoy your event!</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Receipt</title>
+    <link href="https://fonts.googleapis.com/css2?family=Alata&display=swap" rel="stylesheet" type="text/css" />
+    <style>
+        body {
+            background-color: #f8f8f8;
+            margin: 0;
+            padding: 0;
+            font-family: 'Alata', Arial, sans-serif;
+        }
+        .container {
+            max-width: 520px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            padding: 32px 24px 24px 24px;
+        }
+        .header {
+            text-align: left;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #eee;
+        }
+        .header img {
+            width: 120px;
+            height: auto;
+        }
+        .content {
+            margin-top: 32px;
+            color: #222;
+        }
+        .content h1 {
+            font-size: 26px;
+            margin-bottom: 12px;
+            color: #003f20;
+        }
+        .order-details {
+            margin-bottom: 24px;
+        }
+        .order-details p {
+            margin: 6px 0;
+            font-size: 16px;
+        }
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 24px;
+        }
+        .items-table th, .items-table td {
+            border: 1px solid #eee;
+            padding: 10px 8px;
+            text-align: left;
+            font-size: 16px;
+        }
+        .items-table th {
+            background: #f4f4f4;
+            color: #003f20;
+        }
+        .total-row td {
+            font-weight: bold;
+            color: #10962f;
+        }
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+            border-top: 1px solid #eee;
+            padding-top: 16px;
+        }
+        @media only screen and (max-width: 600px) {
+            .container { padding: 16px 4px; }
+            .header img { width: 90px; }
+            .items-table th, .items-table td { font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://vgu.edu.vn/cms-vgu-theme-4/images/cms/vgu_logo.png" alt="VGU Logo" />
+        </div>
+        <div class="content">
+            <h1>Order Receipt</h1>
+            <p style="font-size:18px;">Hi{{#if name}} {{name}}{{/if}},</p>
+            <p style="font-size:17px;">Thank you for your order! Here are your order details:</p>
+            <div class="order-details">
+                <p><strong>Order ID:</strong> {{orderId}}</p>
+                <p><strong>Date:</strong> {{createdAt}}</p>
+                <p><strong>Payment Method:</strong> {{method}}</p>
+            </div>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each items}}
+                    <tr>
+                        <td>{{this}}</td>
+                    </tr>
+                    {{/each}}
+                    <tr class="total-row">
+                        <td>Total: ${{totalPrice}}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p style="font-size:16px;">We hope you enjoy your event!</p>
+        </div>
+        <div class="footer">
+            Need help? Contact us at <a href="mailto:10422021@student.vgu.edu.vn" style="color:#d27024;text-decoration:none;">10422021@student.vgu.edu.vn</a><br>
+            Platform creator: LIA<br>
+            <a href="https://fb.com/Fuisloy" style="color:#10962f;text-decoration:none;">fb.com/Fuisloy</a><br>
+            ©2025 VGU Career Service
+        </div>
+    </div>
+</body>
+</html>

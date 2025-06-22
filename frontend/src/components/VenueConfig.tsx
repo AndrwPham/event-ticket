@@ -130,6 +130,15 @@ const SeatMap = ({
         if (!isSeatCell(layout[row][col])) return;
         setIsMouseDown(true);
         setSelectionStart([row, col]);
+
+        // Click functionality, selecting a single seat
+        const cell = layout[row][col];
+        if (isSeatCell(cell) && cell.seatId) {
+            setSelectedSeatIds([cell.seatId]);
+            setSelectedSeatStartId(cell.seatId);
+            setSelectedSeatEndId(cell.seatId);
+            setHasSelectionChanged(true);
+        }
     };
 
     // Extand the end of selection, making sure that we have top-bottom order.

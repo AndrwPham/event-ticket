@@ -28,7 +28,7 @@ router.post(
   [
     body('email').isEmail(),
     body('name').notEmpty(),
-    body('code').isAlphanumeric().isLength({ min: 6, max: 6 }).withMessage('code is required and must be 6 alphanumeric chars'),
+    body('code').notEmpty().withMessage('code is required'),
     body('serial').notEmpty().withMessage('serial is required'),
   ],
   async (req, res, next) => {

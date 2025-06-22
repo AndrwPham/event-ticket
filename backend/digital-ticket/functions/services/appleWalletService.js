@@ -26,8 +26,8 @@ const certificates = {
 const baseProps = {
   teamIdentifier,
   passTypeIdentifier,
-  organizationName: "VGU Career Services",
-  description: "Entrance ticket for Career Fair and Industrial Exploration Day 2025",
+  organizationName: "VGU LIA",
+  description: "Digital Ticket",
   webServiceURL,
   authenticationToken: authToken,
 };
@@ -71,20 +71,54 @@ async function createPassForUser(email, fullName, code, serial, fields = {}) {
     }
   );
   pass.setBarcodes(code);
-  pass.secondaryFields = [
+
+  let restFields = { ...fields };
+  let admissionLevelField = null;
+  if (fields.class) {
+    admissionLevelField = {
+      key: 'admission_level',
+      label: 'Admission Level',
+      value: fields.class,
+      textAlignment: 'PKTextAlignmentRight'
+    };
+    delete restFields.class;
+  } else if (fields.ticketClass) {
+    admissionLevelField = {
+      key: 'admission_level',
+      label: 'Admission Level',
+      value: fields.ticketClass,
+      textAlignment: 'PKTextAlignmentRight'
+    };
+    delete restFields.ticketClass;
+  }
+
+  // Remove standard JWT claims from restFields
+  const jwtClaims = [
+    'iat', 'exp', 'nbf', 'aud', 'iss', 'sub', 'jti', 'scope', 'typ', 'azp', 'auth_time', 'nonce', 'acr', 'amr', 'sid'
+  ];
+  for (const claim of jwtClaims) {
+    delete restFields[claim];
+  }
+
+  const secondaryFieldsArray = [
     {
       key: 'name',
       label: 'Attendee',
       value: fullName,
       textAlignment: 'PKTextAlignmentLeft'
     },
-    ...Object.entries(fields).map(([key, value]) => ({
+    ...Object.entries(restFields).map(([key, value]) => ({
       key,
       label: key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()),
       value,
       textAlignment: 'PKTextAlignmentRight'
     }))
   ];
+  pass.secondaryFields.push(...secondaryFieldsArray);
+
+  if (admissionLevelField) {
+    pass.auxiliaryFields.push(admissionLevelField);
+  }
 
   return pass.getAsBuffer();
 }

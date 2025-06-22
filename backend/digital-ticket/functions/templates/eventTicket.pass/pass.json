@@ -3,8 +3,8 @@
   "passTypeIdentifier": "pass.vn.edu.vgu.careerfair.cfied25",
   "serialNumber": "123456",
   "teamIdentifier": "C2239MGQ69",
-  "organizationName": "VGU Career Services",
-  "description": "Entrance ticket for Career Fair and Industrial Exploration Day 2025",
+  "organizationName": "VGU LIA",
+  "description": "Digital ticket",
   "logoText": "CFIED 2025",
   "eventTicket": {
     "headerFields": [
@@ -18,17 +18,7 @@
       }
     ],
     "secondaryFields": [],
-    "auxiliaryFields": [
-      {
-        "key": "admission_level",
-        "label": "Admission Level",
-        "value": "General Admission",
-        "semantics": {
-          "admissionLevel": "General Admission",
-          "admissionLevelAbbreviation": "GA"
-        }
-      }
-    ],
+    "auxiliaryFields": [],
     "backFields": [
       {
         "key": "Event venue",

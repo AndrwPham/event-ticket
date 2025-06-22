@@ -7,9 +7,10 @@ interface TicketCardProps {
 }
 
 const statusStyles: Record<MyTicket["status"], string> = {
-    Processing: "bg-blue-100 text-blue-800",
-    Finished: "bg-green-100 text-green-800",
+    Ready: "bg-blue-100 text-blue-800",
+    Used: "bg-green-100 text-green-800",
     Cancelled: "bg-red-100 text-red-800",
+    Expired: "bg-yellow-100 text-yellow-800",
 };
 
 const TicketCard: FC<TicketCardProps> = ({ ticket }) => {

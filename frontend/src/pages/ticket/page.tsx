@@ -105,9 +105,10 @@ const Ticket = () => {
                             <div className="flex items-center space-x-4">
                                 {[
                                     "All",
-                                    "Finished",
-                                    "Processing",
+                                    "Ready",
+                                    "Used",
                                     "Cancelled",
+                                    "Expired",
                                 ].map((tab) => (
                                     <button
                                         key={tab}

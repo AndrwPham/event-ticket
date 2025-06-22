@@ -24,32 +24,34 @@ import { PrismaService } from '../prisma/prisma.service';
     EmailProvider,
     FirebaseProvider,
     PrismaService,  // uncomment if testing with mocked data
-    // {
-    //   provide: PrismaService,
-    //   useValue: {
-    //     order: {
-    //       findUnique: async ({ where }) => ({
-    //         id: where.id,
-    //         createdAt: new Date(),
-    //         method: 'Credit Card',
-    //         totalPrice: 123.45,
-    //         attendee: {
-    //           first_name: 'Test',
-    //           last_name: 'User',
-    //           email: '10422021@student.vgu.edu.vn',
-    //         },
-    //         ticketItems: [
-    //           { name: 'VIP Ticket', price: 100, quantity: 1 },
-    //           { name: 'Standard Ticket', price: 23.45, quantity: 1 },
-    //         ],
-    //         tickets: [
-    //           { id: 't1', seat: 'A1' },
-    //           { id: 't2', seat: 'A2' },
-    //         ],
-    //       }),
-    //     },
-    //   },
-    // },
+    // Mock ClaimedTicketService for testing
+    {
+      provide: require('../claimedticket/claimedticket.service').ClaimedTicketService,
+      useValue: {
+        findByOrder: async (orderId: string) => [
+          {
+            issuedTicket: {
+              id: 'ABC123',
+              class: 'VIP',
+              seat: 'A1',
+              eventId: 'event1',
+              price: 100,
+            },
+            attendee: {
+              email: '10422021@student.vgu.edu.vn',
+              first_name: 'Test',
+              last_name: 'User',
+            },
+            status: 'READY',
+          },
+        ],
+      },
+    },
+    // Mock IssuedTicketService for testing
+    {
+      provide: require('../issuedticket/issuedticket.service').IssuedTicketService,
+      useValue: {},
+    },
   ],
   exports: [NotificationService],
 })

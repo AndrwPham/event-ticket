@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { OrderService } from './order.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { HoldService } from './hold.service';
@@ -26,6 +27,7 @@ describe('OrderService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
+      imports: [EventEmitterModule.forRoot()],
       providers: [
         OrderService,
         { provide: PrismaService, useValue: mockPrisma },

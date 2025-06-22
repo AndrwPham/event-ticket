@@ -1,5 +1,6 @@
 // src/auth/auth.service.spec.ts
 import { Test, TestingModule } from '@nestjs/testing';
+import { EventEmitterModule, EventEmitter2 } from '@nestjs/event-emitter';
 import { AuthService }        from './auth.service';
 import { PrismaService }      from '../prisma/prisma.service';
 import { JwtService }         from '@nestjs/jwt';
@@ -40,10 +41,12 @@ describe('AuthService', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
+      imports: [EventEmitterModule.forRoot()],
       providers: [
         AuthService,
         { provide: PrismaService, useValue: prisma },
         { provide: JwtService,     useValue: jwt   },
+        { provide: EventEmitter2, useValue: { emit: jest.fn() } },
       ],
     }).compile();
 
@@ -103,6 +106,7 @@ describe('AuthService', () => {
     it('flips confirmed=true on valid token', async () => {
       (prisma.user.findFirst as jest.Mock).mockResolvedValue({ id: 'u1' });
       (prisma.user.update as jest.Mock).mockResolvedValue({});
+      (prisma.attendeeInfo.findUnique as jest.Mock).mockResolvedValue({ email: 'a@b.com' });
 
       const res = await service.confirmEmail('token-123');
       expect(prisma.user.update).toHaveBeenCalledWith({

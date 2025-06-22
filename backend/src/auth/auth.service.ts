@@ -76,10 +76,21 @@ export class AuthService {
           gt: new Date(),
         },
       },
+      include: { attendeeInfo: true },
     });
 
     if (!user) {
       throw new BadRequestException('Invalid or expired confirmation token');
+    }
+
+    if (user.pendingEmail) {
+      if (!user.attendeeInfo) {
+        throw new BadRequestException('Attendee info not found for user');
+      }
+      await this.prisma.attendeeInfo.update({
+        where: { id: user.attendeeInfo.id },
+        data: { email: user.pendingEmail },
+      });
     }
 
     await this.prisma.user.update({
@@ -88,6 +99,7 @@ export class AuthService {
         confirmed: true,
         confirmToken: null,
         confirmTokenExpiresAt: null,
+        pendingEmail: null,
       },
     });
 
@@ -120,9 +132,9 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials or email not confirmed');
     }
 
-    // if (!user.confirmed) {
-    //   throw new UnauthorizedException('Email not confirmed');
-    // }
+    if (!user.confirmed) {
+      throw new UnauthorizedException('Email not confirmed');
+    }
 
     if (!user.roles.includes(activeRole)) {
       throw new UnauthorizedException(`You don't have ${activeRole} role`);
@@ -212,5 +224,25 @@ export class AuthService {
 
   async getCurrentUser(userId: string) {
     return this.prisma.user.findUnique({ where: { id: userId } });
+  }
+
+  async sendConfirmationEmail(user: any, newEmail?: string) {
+    // If newEmail is provided, store it as pendingEmail and send confirmation to that address
+    const token = uuidv4();
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // Token valid for 60 minutes
+    let updateData: any = {
+      confirmToken: token,
+      confirmTokenExpiresAt: expiresAt,
+    };
+    if (newEmail) {
+      updateData.pendingEmail = newEmail;
+    }
+    const updatedUser = await this.prisma.user.update({
+      where: { id: user.id },
+      data: updateData,
+    });
+    // TODO: Actually send the email (use a mailer service)
+    this.logger.debug(`Confirmation email sent to ${newEmail || user.attendeeInfo?.email || user.username} with token: ${token}`);
+    return updatedUser;
   }
 }

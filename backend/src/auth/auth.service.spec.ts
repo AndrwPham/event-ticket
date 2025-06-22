@@ -111,6 +111,7 @@ describe('AuthService', () => {
           confirmed: true,
           confirmToken: null,
           confirmTokenExpiresAt: null,
+          pendingEmail: null,
         },
       });
       expect(res).toEqual({ message: 'Email confirmed successfully' });

@@ -112,8 +112,23 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const { username, password, activeRole } = dto;
-    const user = await this.prisma.user.findUnique({ where: { username } });
+    const { credential, password, activeRole } = dto;
+
+    if (!credential) {
+      throw new BadRequestException('Credential (username or email) must be provided');
+    }
+
+    let user;
+    if (credential.includes('@')) {
+      const userInfo = await this.prisma.attendeeInfo.findUnique({ where: { email: credential } });
+      if (!userInfo || !userInfo.userId) {
+        throw new UnauthorizedException('Invalid credentials or email not confirmed');
+      }
+      user = await this.prisma.user.findUnique({ where: { id: userInfo.userId } });
+    } else {
+      user = await this.prisma.user.findUnique({ where: { username: credential } });
+    }
+
     if (
       !user ||
       !await this.compare(password, user.password)

@@ -20,6 +20,7 @@ const schema = Joi.object({
   AW_WEB_SERVICE_URL: Joi.string().uri().optional(),
   AW_APN_KEY_PATH: Joi.string().optional(),         // e.g. './AuthKey_XXXXXXXX.p8'
   AW_APN_KEY_ID: Joi.string().optional(),
+  AW_JWT_SECRET: Joi.string().required(),
   APPLE_AUTH_TOKEN: Joi.string().optional()      // e.g. 'XXXXXXXXXX' from Apple Dev
 })
   .unknown()  // allow other ENV vars
@@ -52,6 +53,7 @@ module.exports = {
     webServiceURL: env.AW_WEB_SERVICE_URL,  // may be undefined
     apnKeyPath: env.AW_APN_KEY_PATH,
     apnKeyId: env.AW_APN_KEY_ID,
+    jwtSecret: env.AW_JWT_SECRET, // <-- Added
     authToken: env.APPLE_AUTH_TOKEN,
   },
 };

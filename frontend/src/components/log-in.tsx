@@ -14,7 +14,7 @@ interface LoginResponse {
 export default function LogIn({ onClose, onSwitchToSignUp }: LogInProps) {
     const { login } = useAuth();
 
-    const [email, setEmail] = React.useState("");
+    const [credential, setCredential] = React.useState("");
     const [password, setPassword] = React.useState("");
     const [isLoading, setIsLoading] = React.useState(false);
     const [apiError, setApiError] = React.useState<string | null>(null);
@@ -35,7 +35,7 @@ export default function LogIn({ onClose, onSwitchToSignUp }: LogInProps) {
                     // The fetch 'credentials' option is needed to send cookies to the backend
                     credentials: "include",
                     body: JSON.stringify({
-                        username: email,
+                        credential: credential,
                         password: password,
                         activeRole: "Attendee",
                     }),
@@ -112,18 +112,18 @@ export default function LogIn({ onClose, onSwitchToSignUp }: LogInProps) {
                 >
                     <div>
                         <label
-                            htmlFor="email"
+                            htmlFor="credential"
                             className="block text-sm font-medium text-slate-700 mb-1"
                         >
-                            Email
+                            Username or Email
                         </label>
                         <input
                             id="email"
-                            type="email"
+                            type="text"
                             placeholder="Email Address"
-                            value={email}
+                            value={credential}
                             onChange={(e) => {
-                                setEmail(e.target.value);
+                                setCredential(e.target.value);
                             }}
                             required
                             className="w-full border-slate-300 bg-slate-50 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#311f5a] focus:border-transparent transition"

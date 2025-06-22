@@ -6,6 +6,7 @@ const {
     initTemplate,
     createPassForUser
 } = require('../services/appleWalletService');
+const jwt = require('jsonwebtoken'); // Add JWT support
 
 const router = express.Router();
 const db = admin.firestore();
@@ -46,6 +47,24 @@ function requireAppleToken(req, res, next) {
             .send('Unauthorized');
     }
     next();
+}
+
+function verifyTicketJWT(req, res) {
+    const auth = req.header('Authorization') || '';
+    if (!auth.startsWith('Bearer ')) {
+        res.status(401).send('Missing or invalid Bearer token');
+        return null;
+    }
+    const token = auth.slice('Bearer '.length);
+    try {
+        // Use your backend's public key or secret for verification
+        // For demo: use appleWallet.jwtSecret (should be set in config)
+        const payload = jwt.verify(token, appleWallet.jwtSecret);
+        return payload;
+    } catch (err) {
+        res.status(401).send('Invalid or expired JWT');
+        return null;
+    }
 }
 
 /**
@@ -114,51 +133,39 @@ router.get(
 );
 
 
-
 /**
  * GET /v1/passes/:passTypeIdentifier/:serialNumber
  * — Called by Apple devices to fetch or refresh a .pkpass
+ * Requires: Authorization: Bearer <JWT>
  */
 router.get(
     '/v1/passes/:passTypeIdentifier/:serialNumber',
     requireAppleToken,
     async (req, res, next) => {
         try {
+            const payload = verifyTicketJWT(req, res);
+            if (!payload) return; // Error already sent
+
             const { passTypeIdentifier, serialNumber } = req.params;
-
-            // 1) Find your pass in Firestore by its serialNumber
-            const ticketQuery = await db
-                .collection('tickets')
-                .where('serial', '==', serialNumber)
-                .limit(1)
-                .get();
-
-            if (ticketQuery.empty) {
-                return res.status(404).send('Pass not found');
+            if (payload.serial !== serialNumber) {
+                return res.status(400).send('Serial mismatch');
             }
 
-            const ticket = ticketQuery.docs[0].data();
-            // ticket.code      → barcode value
-            // ticket.email     → derive serialNumber in template
-            // ticket.name      → display name
-            // ticket.boothVisited
-
-            // 2) Regenerate the .pkpass
+            const { email, name, code, serial, ...fields } = payload;
             const passBuffer = await createPassForUser(
-                ticket.email,
-                ticket.name,
-                ticket.code,
-                ticket.boothVisited
+                email,
+                name,
+                code,
+                serial,
+                fields
             );
 
-            // 3) Send it back with the correct headers
             res.set({
                 'Content-Type': 'application/vnd.apple.pkpass',
                 'Content-Disposition': `attachment; filename="${serialNumber}.pkpass"`,
                 'Cache-Control': 'no-cache, no-store'
             });
             return res.send(passBuffer);
-
         } catch (err) {
             next(err);
         }

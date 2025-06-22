@@ -1,44 +1,43 @@
 const express = require('express');
 const { createPassForUser } = require('../services/appleWalletService');
-const admin = require('firebase-admin');
-
-// admin.initializeApp();
-const db = admin.firestore();
+const jwt = require('jsonwebtoken');
+const { appleWallet } = require('../config');
 const router = express.Router();
+
+function verifyTicketJWT(req, res) {
+  const auth = req.header('Authorization') || '';
+  if (!auth.startsWith('Bearer ')) {
+    res.status(401).send('Missing or invalid Bearer token');
+    return null;
+  }
+  const token = auth.slice('Bearer '.length);
+  try {
+    const payload = jwt.verify(token, appleWallet.jwtSecret);
+    return payload;
+  } catch (err) {
+    res.status(401).send('Invalid or expired JWT');
+    return null;
+  }
+}
 
 router.get('/pass', async (req, res, next) => {
   try {
-    const { email, name, code } = req.query;
-    if (!email || !code || !name) {
-      return res
-        .status(400)
-        .send('Missing parameters.');
+    // Accept all ticket data from JWT only
+    const payload = verifyTicketJWT(req, res);
+    if (!payload) return;
+    const { email, name, code, serial, ...fields } = payload;
+    if (!email || !code || !name || !serial) {
+      return res.status(400).send('Missing parameters in JWT.');
     }
-    const ticketSnap = await db.collection('tickets').doc(code).get();
-    if (!ticketSnap.exists) {
-      return res
-        .status(404)
-        .send('Ticket not found.');
-    }
-    const ticket = ticketSnap.data();
-
-    if (ticket.email !== email || ticket.name !== name) {
-      return res
-        .status(403)
-        .send('Provided email/name does not match our records.');
-    }
-
-    const passBuffer = await createPassForUser(email, name, code);
-
+    const passBuffer = await createPassForUser(email, name, code, serial, fields);
     res
       .status(200)
       .set({
         'Content-Type': 'application/vnd.apple.pkpass',
-        'Content-Disposition': `attachment; filename="${code}.pkpass"`,
+        'Content-Disposition': `attachment; filename="${serial}.pkpass"`,
         'Cache-Control': 'no-store, no-cache'
       })
       .send(passBuffer);
-
   } catch (err) {
     console.error('❌ Error generating Apple pass:', err);
     next(err);

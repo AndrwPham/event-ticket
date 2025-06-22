@@ -50,17 +50,19 @@ async function initTemplate() {
 /**
  * Generate a user-specific .pkpass buffer.
  *
- * @param {string} email     – user’s email (to derive serialNumber)
+ * @param {string} email     – user’s email (for display, not serial)
  * @param {string} fullName  – to display on the pass
  * @param {string} code      – QR code / barcode value
+ * @param {string} serial    – unique serial number (from JWT)
+ * @param {object} [fields]  – additional fields to display (optional)
  * @returns {Buffer}         – raw .pkpass data
  */
-async function createPassForUser(email, fullName, code, booth_visited = 0) {
+async function createPassForUser(email, fullName, code, serial, fields = {}) {
   if (!passTemplate) {
     throw new Error('Template not initialized! Call initTemplate() first.');
   }
 
-  const serialNumber = email.replace(/[^\w.-]/g, '_');
+  const serialNumber = serial;
 
   const pass = await PKPass.from(
     passTemplate,
@@ -69,20 +71,20 @@ async function createPassForUser(email, fullName, code, booth_visited = 0) {
     }
   );
   pass.setBarcodes(code);
-  pass.secondaryFields.push(
+  pass.secondaryFields = [
     {
-      "key": "name",
-      "label": "Attendee",
-      "value": fullName,
-      "textAlignment": "PKTextAlignmentLeft"
+      key: 'name',
+      label: 'Attendee',
+      value: fullName,
+      textAlignment: 'PKTextAlignmentLeft'
     },
-    {
-      "key": "boothVisited",
-      "label": "Booth Visited",
-      "value": booth_visited,
-      "textAlignment": "PKTextAlignmentRight"
-    }
-  );
+    ...Object.entries(fields).map(([key, value]) => ({
+      key,
+      label: key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()),
+      value,
+      textAlignment: 'PKTextAlignmentRight'
+    }))
+  ];
 
   return pass.getAsBuffer();
 }

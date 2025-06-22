@@ -108,102 +108,115 @@ async function createOrUpdatePassObject(payload) {
   const objectSuffix = `${email}`.replace(/[^a-zA-Z0-9._-]/g, '_');
   const objectId = `${issuerId}.${objectSuffix}`;
 
-  // Try to ensure the class exists (create if not)
+  // Try to ensure the class exists (create or update if needed)
+  let classExists = false;
+  let existingClass = null;
   try {
-    await httpClient.request({
+    const res = await httpClient.request({
       url: `${baseUrl}/eventTicketClass/${dynamicClassId}`,
       method: 'GET'
     });
-    // Class exists
+    classExists = true;
+    existingClass = res.data;
   } catch (err) {
     if (err.response && err.response.status === 404) {
-      // Create new class on the fly
-      const eventTicketClass = {
-        "id": dynamicClassId,
-        "issuerName": "VGU Career Services",
-        "reviewStatus": "UNDER_REVIEW",
-        "eventName": {
-          "defaultValue": { "language": "en-US", "value": event || "Career Fair and Industrial Exploration Day 2025" }
-        },
-        "logo": {
-          "sourceUri": {
-            "uri": "https://raw.githubusercontent.com/fuisl/cfied25-ticket/main/src/assets/logo.jpg"
-          },
-          "contentDescription": { "defaultValue": { "language": "en-US", "value": "LOGO" } }
-        },
-        "heroImage": {
-          "sourceUri": {
-            "uri": "https://raw.githubusercontent.com/fuisl/cfied25-ticket/main/src/assets/banner.jpg"
-          },
-          "contentDescription": { "defaultValue": { "language": "en-US", "value": "HERO IMAGE" } }
-        },
-        "eventId": eventCode,
-        "venue": {
-          "name": { "defaultValue": { "language": "en-US", "value": "Conventional Hall, VGU Campus" } },
-          "address": { "defaultValue": { "language": "en-US", "value": "Vanh Dai 4 St., Thoi Hoa Ward\nBen Cat, Binh Duong" } }
-        },
-        "dateTime": {
-          "doorsOpen": "2025-05-14T08:00:00+07:00",
-          "start": "2025-05-14T08:30:00+07:00",
-          "end": "2025-05-14T13:30:00+07:00"
-        },
-        "merchantLocation": [
-          {
-            "latitude": 11.0572,
-            "longitude": 106.6442
-          }
-        ],
-        "classTemplateInfo": {
-          "cardTemplateOverride": {
-            "cardRowTemplateInfos": [
-              {
-                "twoItems": {
-                  "startItem": {
-                    "firstValue": {
-                      "fields": [
-                        { "fieldPath": "object.textModulesData['full_name']" }
-                      ]
-                    }
-                  },
-                  "endItem": {
-                    "firstValue": {
-                      "fields": [
-                        { "fieldPath": "object.textModulesData['admission_level']" }
-                      ]
-                    }
-                  }
-                }
-              },
-              {
-                "twoItems": {
-                  "startItem": {
-                    "firstValue": {
-                      "fields": [
-                        { "fieldPath": "object.textModulesData['seat']" }
-                      ]
-                    }
-                  },
-                  "endItem": {
-                    "firstValue": {
-                      "fields": [
-                        { "fieldPath": "object.textModulesData['price']" }
-                      ]
-                    }
-                  }
-                }
-              }
-            ]
-          }
-        }
-      };
-      await httpClient.request({
-        url: `${baseUrl}/eventTicketClass`,
-        method: 'POST',
-        data: eventTicketClass
-      });
+      classExists = false;
     } else {
       throw err;
     }
+  }
+  const eventTicketClass = {
+    "id": dynamicClassId,
+    "issuerName": "VGU Career Services",
+    "reviewStatus": "UNDER_REVIEW",
+    "eventName": {
+      "defaultValue": { "language": "en-US", "value": event || "Career Fair and Industrial Exploration Day 2025" }
+    },
+    "logo": {
+      "sourceUri": {
+        "uri": "https://raw.githubusercontent.com/fuisl/cfied25-ticket/main/src/assets/logo.jpg"
+      },
+      "contentDescription": { "defaultValue": { "language": "en-US", "value": "LOGO" } }
+    },
+    "heroImage": {
+      "sourceUri": {
+        "uri": "https://raw.githubusercontent.com/fuisl/cfied25-ticket/main/src/assets/banner.jpg"
+      },
+      "contentDescription": { "defaultValue": { "language": "en-US", "value": "HERO IMAGE" } }
+    },
+    "eventId": eventCode,
+    "venue": {
+      "name": { "defaultValue": { "language": "en-US", "value": "Conventional Hall, VGU Campus" } },
+      "address": { "defaultValue": { "language": "en-US", "value": "Vanh Dai 4 St., Thoi Hoa Ward\nBen Cat, Binh Duong" } }
+    },
+    "dateTime": {
+      "doorsOpen": "2025-05-14T08:00:00+07:00",
+      "start": "2025-05-14T08:30:00+07:00",
+      "end": "2025-05-14T13:30:00+07:00"
+    },
+    "merchantLocation": [
+      {
+        "latitude": 11.0572,
+        "longitude": 106.6442
+      }
+    ],
+    "classTemplateInfo": {
+      "cardTemplateOverride": {
+        "cardRowTemplateInfos": [
+          {
+            "twoItems": {
+              "startItem": {
+                "firstValue": {
+                  "fields": [
+                    { "fieldPath": "object.textModulesData['full_name']" }
+                  ]
+                }
+              },
+              "endItem": {
+                "firstValue": {
+                  "fields": [
+                    { "fieldPath": "object.textModulesData['admission_level']" }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "twoItems": {
+              "startItem": {
+                "firstValue": {
+                  "fields": [
+                    { "fieldPath": "object.textModulesData['seat']" }
+                  ]
+                }
+              },
+              "endItem": {
+                "firstValue": {
+                  "fields": [
+                    { "fieldPath": "object.textModulesData['price']" }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  };
+  if (classExists) {
+    // Merge new template fields into the existing class
+    const updatedClass = { ...existingClass, ...eventTicketClass };
+    await httpClient.request({
+      url: `${baseUrl}/eventTicketClass/${dynamicClassId}`,
+      method: 'PUT',
+      data: updatedClass
+    });
+  } else {
+    await httpClient.request({
+      url: `${baseUrl}/eventTicketClass`,
+      method: 'POST',
+      data: eventTicketClass
+    });
   }
 
   const eventTicketObject = {

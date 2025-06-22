@@ -26,12 +26,14 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res) {
     const result = await this.authService.login(dto);
+
     res.cookie('accessToken', result.tokens.accessToken, {
       httpOnly: true,
       secure: false, // set to true in production with HTTPS
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
     });
+    
     return {
       user: result.user,
     };

@@ -123,26 +123,7 @@ export default function SignUp({ onClose }: SignUpProps) {
                     }}
                     className="space-y-5"
                 >
-                    <div>
-                        <label
-                            htmlFor="email"
-                            className="block text-sm font-medium text-slate-700 mb-1"
-                        >
-                            Email Address
-                        </label>
-                        <input
-                            id="email"
-                            type="email"
-                            placeholder="Your email address"
-                            value={email}
-                            onChange={(e) => {
-                                setEmail(e.target.value);
-                            }}
-                            required
-                            className="w-full border-slate-300 bg-slate-50 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#311f5a] focus:border-transparent transition"
-                        />
-                    </div>
-
+                    
                     <div>
                         <label
                             htmlFor="username"
@@ -157,6 +138,26 @@ export default function SignUp({ onClose }: SignUpProps) {
                             value={username}
                             onChange={(e) => {
                                 setUsername(e.target.value);
+                            }}
+                            required
+                            className="w-full border-slate-300 bg-slate-50 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#311f5a] focus:border-transparent transition"
+                        />
+                    </div>
+
+                    <div>
+                        <label
+                            htmlFor="email"
+                            className="block text-sm font-medium text-slate-700 mb-1"
+                        >
+                            Email Address
+                        </label>
+                        <input
+                            id="email"
+                            type="email"
+                            placeholder="Your email address"
+                            value={email}
+                            onChange={(e) => {
+                                setEmail(e.target.value);
                             }}
                             required
                             className="w-full border-slate-300 bg-slate-50 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#311f5a] focus:border-transparent transition"

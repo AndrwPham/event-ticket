@@ -2,12 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { OrderCompletedEvent } from '../events/order-completed.event';
 import { ClaimedTicketService } from '../../claimedticket/claimedticket.service';
 import { IssuedTicketService } from '../../issuedticket/issuedticket.service';
+import { FirebaseProvider } from '../providers/firebase.provider';
 
 @Injectable()
 export class TicketDeliveryHandler {
   constructor(
     private readonly claimedTicketService: ClaimedTicketService,
     private readonly issuedTicketService: IssuedTicketService,
+    private readonly firebaseProvider: FirebaseProvider,
   ) {}
 
   async handle(event: OrderCompletedEvent) {
@@ -28,6 +30,11 @@ export class TicketDeliveryHandler {
         status: ct.status,
       };
     });
+    for (const payload of ticketPayloads) {
+      if (payload.email) {
+        await this.firebaseProvider.sendTicket(payload);
+      }
+    }
     return ticketPayloads;
   }
 }

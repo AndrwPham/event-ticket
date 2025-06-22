@@ -9,6 +9,13 @@ interface Venue {
     id: number;
     name: string;
     layout: SeatCell[][];
+    seatClasses?: {
+        id: string;
+        name: string;
+        price: number | null;
+        color: string;
+    }[];
+    seatAssignments?: { [seatId: string]: string };
 }
 
 interface VenueList {
@@ -266,7 +273,7 @@ const SeatMap = ({
                             const seatClass = getSeatClass(cell.seatId);
                             const classColor =
                                 seatClasses.find((cls) => cls.id === seatClass)
-                                    ?.color ?? "#e5e7eb";
+                                    ?.color ?? "#4B5563";
                             return (
                                 // also no plan to add keyboard interaction
                                 // eslint-disable-next-line jsx-a11y/no-static-element-interactions
@@ -295,7 +302,8 @@ const SeatMap = ({
                             return (
                                 <div
                                     key={colIdx}
-                                    className="w-[30px] h-[30px] m-[2px] bg-yellow-100"
+                                    className="w-[30px] h-[30px] m-[2px]"
+                                    style={{ backgroundColor: "#FFFFFF" }}
                                 />
                             );
                         }
@@ -303,14 +311,17 @@ const SeatMap = ({
                             return (
                                 <div
                                     key={colIdx}
-                                    className="w-[30px] h-[30px] m-[2px] bg-purple-300"
+                                    className="w-[30px] h-[30px] m-[2px]"
+                                    style={{ backgroundColor: "#93C5FD" }}
                                 />
                             );
                         }
+                        // empty
                         return (
                             <div
                                 key={colIdx}
-                                className="w-[30px] h-[30px] m-[2px] bg-white"
+                                className="w-[30px] h-[30px] m-[2px]"
+                                style={{ backgroundColor: "#FFFFFF" }}
                             />
                         );
                     })}
@@ -352,27 +363,31 @@ const SeatMap = ({
  * @author LunaciaDev
  */
 export const VenueConfig = ({ venueList }: VenueList) => {
-    const [selectedVenue, setSelectedVenue] = useState(venueList[0].id);
-    const [venueLayout, setVenueLayout] = useState(venueList[0].layout);
-    const [seatClasses, setSeatClasses] = useState([
+    const defaultSeatClasses = [
         {
             id: "unavailable",
             name: "Unavailable",
             price: null,
-            color: "#ef4444", // red marking
+            color: "#D1D5DB", // light gray
         },
         {
             id: "standard",
             name: "Standard",
             price: 0,
-            color: "#e5e7eb", // gray marking
+            color: "#4B5563", // dark gray
         },
-    ]);
-
+    ];
+    const [selectedVenue, setSelectedVenue] = useState(venueList[0].id);
+    const [venueLayout, setVenueLayout] = useState(venueList[0].layout);
+    const [seatClasses, setSeatClasses] = useState(
+        venueList[0].seatClasses && venueList[0].seatClasses.length > 0
+            ? venueList[0].seatClasses
+            : defaultSeatClasses,
+    );
     const [selectedClassId, setSelectedClassId] = useState("standard");
     const [seatAssignments, setSeatAssignments] = useState<{
         [seatId: string]: string;
-    }>({});
+    }>(venueList[0].seatAssignments || {});
     const [newClassName, setNewClassName] = useState("");
     const [newClassPrice, setNewClassPrice] = useState("");
 
@@ -381,7 +396,12 @@ export const VenueConfig = ({ venueList }: VenueList) => {
         if (venue) {
             setSelectedVenue(venue.id);
             setVenueLayout(venue.layout);
-            setSeatAssignments({});
+            setSeatClasses(
+                venue.seatClasses && venue.seatClasses.length > 0
+                    ? venue.seatClasses
+                    : defaultSeatClasses,
+            );
+            setSeatAssignments(venue.seatAssignments || {});
         }
     };
 
@@ -529,14 +549,35 @@ export const VenueConfig = ({ venueList }: VenueList) => {
                 </div>
             </div>
             <h2>Configure Venue Seat Map:</h2>
-            <SeatMap
-                key={selectedVenue}
-                layout={venueLayout}
-                seatAssignments={seatAssignments}
-                onAssignClass={handleAssignClassToSeat}
-                seatClasses={seatClasses}
-                selectedClassId={selectedClassId}
-            />
+            <div className="flex items-start gap-8">
+                <SeatMap
+                    key={selectedVenue}
+                    layout={venueLayout}
+                    seatAssignments={seatAssignments}
+                    onAssignClass={handleAssignClassToSeat}
+                    seatClasses={seatClasses}
+                    selectedClassId={selectedClassId}
+                />
+                <div className="flex flex-col gap-3 min-w-[120px]">
+                    <h2 className="mb-2 font-semibold">Legend:</h2>
+                    {seatClasses.map((cls) => (
+                        <div key={cls.id} className="flex items-center gap-2">
+                            <span
+                                className="inline-block w-6 h-6 border border-gray-300 rounded"
+                                style={{ backgroundColor: cls.color }}
+                            />
+                            <span>{cls.name}</span>
+                        </div>
+                    ))}
+                    <div className="flex items-center gap-2">
+                        <span
+                            className="inline-block w-6 h-6 border border-gray-300 rounded"
+                            style={{ backgroundColor: "#93C5FD" }}
+                        />
+                        <span>Stage</span>
+                    </div>
+                </div>
+            </div>
             <SendSeatmapButton
                 seatAssignments={seatAssignments}
                 seatClasses={seatClasses}

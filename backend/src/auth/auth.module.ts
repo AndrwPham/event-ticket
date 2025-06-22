@@ -9,6 +9,7 @@ import { AuthController } from './auth.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './guards/roles.guard';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [JwtModule.registerAsync({
@@ -18,7 +19,7 @@ import { RolesGuard } from './guards/roles.guard';
       secret: configService.get('JWT_SECRET'),
       signOptions: { expiresIn: '15m' },
     }),
-  }), ConfigModule, PrismaModule],
+  }), ConfigModule, PrismaModule, EventEmitterModule.forRoot()],
   controllers: [AuthController],
   providers: [
     AuthService,

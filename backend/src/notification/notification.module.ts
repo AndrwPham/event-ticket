@@ -10,6 +10,8 @@ import { EventNotificationHandler } from './handlers/event-notification.handler'
 import { EmailProvider } from './providers/email.provider';
 import { FirebaseProvider } from './providers/firebase.provider';
 import { PrismaService } from '../prisma/prisma.service';
+import { ClaimedTicketService } from '../claimedticket/claimedticket.service';
+import { IssuedTicketService } from '../issuedticket/issuedticket.service';
 
 @Module({
   imports: [EventEmitterModule.forRoot()],
@@ -23,35 +25,9 @@ import { PrismaService } from '../prisma/prisma.service';
     EventNotificationHandler,
     EmailProvider,
     FirebaseProvider,
-    PrismaService,  // uncomment if testing with mocked data
-    // Mock ClaimedTicketService for testing
-    {
-      provide: require('../claimedticket/claimedticket.service').ClaimedTicketService,
-      useValue: {
-        findByOrder: async (orderId: string) => [
-          {
-            issuedTicket: {
-              id: 'ABC123',
-              class: 'VIP',
-              seat: 'A1',
-              eventId: 'event1',
-              price: 100,
-            },
-            attendee: {
-              email: '10422021@student.vgu.edu.vn',
-              first_name: 'Test',
-              last_name: 'User',
-            },
-            status: 'READY',
-          },
-        ],
-      },
-    },
-    // Mock IssuedTicketService for testing
-    {
-      provide: require('../issuedticket/issuedticket.service').IssuedTicketService,
-      useValue: {},
-    },
+    PrismaService,
+    ClaimedTicketService,
+    IssuedTicketService,
   ],
   exports: [NotificationService],
 })

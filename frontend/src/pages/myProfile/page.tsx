@@ -15,26 +15,28 @@ const MyProfile = () => {
         // No need to get token from localStorage
         const fetchProfile = async () => {
             try {
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/me`, {
-                    method: "GET",
-                    credentials: "include", // Send cookies
-                });
+                const response = await fetch(
+                    `${import.meta.env.VITE_API_URL}/auth/me`,
+                    {
+                        method: "GET",
+                        credentials: "include", // Send cookies
+                    },
+                );
 
                 if (!response.ok) throw new Error("Failed to fetch profile");
 
-                const data = await response.json() as UserProfile;
+                const data = (await response.json()) as UserProfile;
 
                 setProfile(data);
                 console.log("Fetched profile:", data); // Log fetched profile
-
             } catch (err) {
                 console.error("Failed to fetch profile:", err);
             }
         };
-        
+
         void fetchProfile();
     }, []);
-    
+
     return (
         <div className="bg-white">
             {/* This container is restored to its original size */}

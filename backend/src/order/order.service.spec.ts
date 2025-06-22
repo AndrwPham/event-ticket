@@ -193,12 +193,32 @@ describe('OrderService', () => {
 
   describe('cancel', () => {
     it('should update order status to CANCELLED', async () => {
-      // Mock order as PENDING
-      mockPrisma.order.findUnique.mockResolvedValue({ id: 'order1', status: OrderStatus.PENDING });
+      // Mock order as PENDING, then CANCELLED after update
+      mockPrisma.order.findUnique
+        .mockResolvedValueOnce({ id: 'order1', status: OrderStatus.PENDING }) // initial fetch
+        .mockResolvedValueOnce({ id: 'order1', status: OrderStatus.CANCELLED }); // after update
       mockPrisma.order.update.mockResolvedValue({ id: 'order1', status: OrderStatus.CANCELLED });
+      // Use the full mockPrisma as the tx context
+      mockPrisma.$transaction.mockImplementation(async (cb) => cb(mockPrisma));
       const result = await service.cancel('order1');
       expect(mockPrisma.order.update).toHaveBeenCalledWith({ where: { id: 'order1' }, data: { status: OrderStatus.CANCELLED } });
-      expect(result.status).toBe(OrderStatus.CANCELLED);
+      expect(result && result.status).toBe(OrderStatus.CANCELLED);
+    });
+
+    it('should release held tickets and set their status to AVAILABLE when cancelling', async () => {
+      const ticketItems = ['t1', 't2'];
+      mockPrisma.order.findUnique.mockResolvedValue({ id: 'order1', status: OrderStatus.PENDING, ticketItems });
+      mockPrisma.order.update.mockResolvedValue({ id: 'order1', status: OrderStatus.CANCELLED });
+      // Use the full mockPrisma as the tx context
+      mockPrisma.$transaction.mockImplementation(async (cb) => cb(mockPrisma));
+      mockIssuedTicketService.update.mockResolvedValue({});
+      mockHoldService.releaseTickets.mockResolvedValue(undefined);
+
+      await service.cancel('order1');
+
+      expect(mockIssuedTicketService.update).toHaveBeenCalledWith('t1', { status: TicketStatus.AVAILABLE }, expect.anything());
+      expect(mockIssuedTicketService.update).toHaveBeenCalledWith('t2', { status: TicketStatus.AVAILABLE }, expect.anything());
+      expect(mockHoldService.releaseTickets).toHaveBeenCalledWith(ticketItems);
     });
   });
 

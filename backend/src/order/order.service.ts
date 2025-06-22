@@ -158,10 +158,20 @@ export class OrderService {
       if (order.status !== OrderStatus.PENDING && order.status !== OrderStatus.FAILED) {
         throw new BadRequestException('Only pending or failed orders can be cancelled');
       }
-      return await this.prisma.order.update({
-        where: { id },
-        data: { status: OrderStatus.CANCELLED },
+      const ticketItems = order.ticketItems;
+      await this.prisma.$transaction(async (tx: PrismaClient) => {
+        await tx.order.update({
+          where: { id },
+          data: { status: OrderStatus.CANCELLED },
+        });
+        if (ticketItems && ticketItems.length > 0) {
+          await Promise.all(ticketItems.map(ticketId =>
+            this.issuedTicketService.update(ticketId, { status: TicketStatus.AVAILABLE }, tx)
+          ));
+          await this.holdService.releaseTickets(ticketItems);
+        }
       });
+      return await this.prisma.order.findUnique({ where: { id } });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         throw new ConflictException('Database error during order cancellation');

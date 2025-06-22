@@ -15,6 +15,8 @@ import { SharedModule } from './common/shared.module';
 import { RedisModule, RedisModuleOptions } from '@nestjs-modules/ioredis';
 import { PaymentModule } from './payment/payment.module';
 import { NotificationModule } from './notification/notification.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { TicketCleanupService } from './issuedticket/ticket-cleanup.service';
 
 @Module({
   imports: [
@@ -48,8 +50,9 @@ import { NotificationModule } from './notification/notification.module';
     }),
     PaymentModule,
     NotificationModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, TicketCleanupService],
 })
 export class AppModule { }

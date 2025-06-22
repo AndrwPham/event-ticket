@@ -10,9 +10,9 @@ async function main() {
   const payload = {
     email: '10422021@student.vgu.edu.vn',
     name: 'Test User',
-    code: 'ABC123',      // Must be 6 alphanumeric chars
-    serial: 'ABC123',
-    class: 'VIP',
+    code: 'b7e2c1a4-5f3d-4e2a-9c1a-123456789abd', // Simulated ticket UUID
+    serial: 'b7e2c1a4-5f3d-4e2a-9c1a-123456789abd', // Simulated ticket UUID
+    class: 'VVIP',
     seat: 'A1',
     event: 'event1',
     price: 100,

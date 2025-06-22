@@ -152,7 +152,49 @@ async function createOrUpdatePassObject(payload) {
             "latitude": 11.0572,
             "longitude": 106.6442
           }
-        ]
+        ],
+        "classTemplateInfo": {
+          "cardTemplateOverride": {
+            "cardRowTemplateInfos": [
+              {
+                "twoItems": {
+                  "startItem": {
+                    "firstValue": {
+                      "fields": [
+                        { "fieldPath": "object.textModulesData['full_name']" }
+                      ]
+                    }
+                  },
+                  "endItem": {
+                    "firstValue": {
+                      "fields": [
+                        { "fieldPath": "object.textModulesData['admission_level']" }
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "twoItems": {
+                  "startItem": {
+                    "firstValue": {
+                      "fields": [
+                        { "fieldPath": "object.textModulesData['seat']" }
+                      ]
+                    }
+                  },
+                  "endItem": {
+                    "firstValue": {
+                      "fields": [
+                        { "fieldPath": "object.textModulesData['price']" }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
       };
       await httpClient.request({
         url: `${baseUrl}/eventTicketClass`,

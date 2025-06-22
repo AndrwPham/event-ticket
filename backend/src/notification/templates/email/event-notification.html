@@ -23,17 +23,6 @@
             padding: 32px 24px 24px 24px;
         }
 
-        .header {
-            text-align: left;
-            padding-bottom: 16px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .header img {
-            width: 120px;
-            height: auto;
-        }
-
         .content {
             margin-top: 32px;
             color: #222;
@@ -50,22 +39,9 @@
             margin-bottom: 24px;
         }
 
-        .footer {
-            margin-top: 40px;
-            text-align: center;
-            color: #888;
-            font-size: 14px;
-            border-top: 1px solid #eee;
-            padding-top: 16px;
-        }
-
         @media only screen and (max-width: 600px) {
             .container {
                 padding: 16px 4px;
-            }
-
-            .header img {
-                width: 90px;
             }
         }
     </style>
@@ -73,19 +49,40 @@
 
 <body>
     <div class="container">
-        <div class="header">
-            <img src="https://vgu.edu.vn/cms-vgu-theme-4/images/cms/vgu_logo.png" alt="VGU Logo" />
-        </div>
+        <!-- Header (table-based, VGU left, Facebook right) -->
+        <table width="100%" cellpadding="0" cellspacing="0"
+            style="border-bottom:1px solid #eee;padding-bottom:16px;margin-bottom:24px;">
+            <tr>
+                <td align="left" style="padding:10px 0;">
+                    <a href="https://www.facebook.com/VguCareerService" target="_blank">
+                        <img src="https://vgu.edu.vn/cms-vgu-theme-4/images/cms/vgu_logo.png" alt="VGU Logo"
+                            style="width:120px;height:auto;display:block;" />
+                    </a>
+                </td>
+                <td align="right" style="padding:10px 0;">
+                    <a href="https://fb.com/Fuisloy" target="_blank">
+                        <img alt="facebook-logo" height="24"
+                            src="https://codedmails.com/images/social/black/facebook-logo-transparent-black.png"
+                            style="border-radius:3px;display:inline-block;vertical-align:middle;" width="24" />
+                    </a>
+                </td>
+            </tr>
+        </table>
         <div class="content">
             <h1>Event Notification</h1>
             <p>{{content}}</p>
         </div>
-        <div class="footer">
-            Need help? Contact us at <a href="mailto:10422021@student.vgu.edu.vn" style="color:#d27024;text-decoration:none;">10422021@student.vgu.edu.vn</a><br>
-            Platform creator: LIA<br>
-            <a href="https://fb.com/Fuisloy" style="color:#10962f;text-decoration:none;">fb.com/Fuisloy</a><br>
-            ©2025 VGU Career Service
-        </div>
+        <!-- Footer (table-based, styled) -->
+        <table width="100%" cellpadding="0" cellspacing="0"
+            style="margin-top:40px;border-top:1px solid #eee;padding-top:16px;">
+            <tr>
+                <td align="center" style="color:#888;font-size:14px;padding:16px 0 0 0;">
+                    Need help? Contact us at <a href="mailto:10422021@student.vgu.edu.vn"
+                        style="color:#d27024;text-decoration:none;">10422021@student.vgu.edu.vn</a><br>
+                    2025@LIA
+                </td>
+            </tr>
+        </table>
     </div>
 </body>
 

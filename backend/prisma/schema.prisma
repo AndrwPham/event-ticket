@@ -19,6 +19,12 @@ enum EventStatus {
     REJECTED
 }
 
+enum EventStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum TicketStatus {
     UNAVAILABLE
     AVAILABLE

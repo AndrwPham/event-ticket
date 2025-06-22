@@ -27,11 +27,11 @@ describe('IssuedTicketController (e2e)', () => {
         },
       ],
     }).overrideProvider(APP_GUARD)
-      .useClass(MockAuthGuard)
-      .compile();
+        .useClass(MockAuthGuard)
+        .compile();
 
     app = moduleFixture.createNestApplication();
-    prisma = moduleFixture.get(PrismaService);
+    prisma = app.get(PrismaService); // Correctly get prisma instance from the app
     await app.init();
   });
 
@@ -39,10 +39,26 @@ describe('IssuedTicketController (e2e)', () => {
     await app.close();
   });
 
+  // Reusable mock ticket data with all required fields
+  const mockTicket = {
+    id: '1',
+    price: 100,
+    class: 'VIP',
+    seat: 'A1',
+    status: TicketStatus.AVAILABLE,
+    eventId: 'e1',
+    organizationId: 'o1',
+    currencyId: 'c1',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    holdExpiresAt: null,
+    claim: null,
+  };
+
   it('/tickets (GET) should return all tickets', async () => {
-    jest.spyOn(prisma.issuedTicket, 'findMany').mockResolvedValueOnce([
-      { id: '1', price: 100, class: 'VIP', seat: 'A1', status: TicketStatus.AVAILABLE, holdExpiresAt: null, eventId: 'e1', organizationId: 'o1', currencyId: 'c1', createdAt: new Date(), updatedAt: new Date() },
-    ]);
+    // FIX: Use the complete mockTicket object
+    jest.spyOn(prisma.issuedTicket, 'findMany').mockResolvedValueOnce([mockTicket]);
+
     const res = await request(app.getHttpServer()).get('/tickets');
     expect(res.status).toBe(200);
     expect(res.body[0].class).toBe('VIP');
@@ -63,46 +79,48 @@ describe('IssuedTicketController (e2e)', () => {
       },
     };
     const res = await request(app.getHttpServer())
-      .post('/tickets/generate')
-      .send(dto);
+        .post('/tickets/generate')
+        .send(dto);
     expect(res.status).toBe(201);
   });
 
   it('/tickets/:id (GET) should return a ticket by id', async () => {
-    jest.spyOn(prisma.issuedTicket, 'findUnique').mockResolvedValueOnce({
-      id: '1', price: 100, class: 'VIP', seat: 'A1', status: TicketStatus.AVAILABLE, holdExpiresAt: null, eventId: 'e1', organizationId: 'o1', currencyId: 'c1', createdAt: new Date(), updatedAt: new Date(),
-    });
+    // FIX: Use the complete mockTicket object
+    jest.spyOn(prisma.issuedTicket, 'findUnique').mockResolvedValueOnce(mockTicket);
+
     const res = await request(app.getHttpServer()).get('/tickets/1');
     expect(res.status).toBe(200);
     expect(res.body.class).toBe('VIP');
   });
 
   it('/tickets/event/:id (GET) should return tickets for an event', async () => {
-    jest.spyOn(prisma.issuedTicket, 'findMany').mockResolvedValueOnce([
-      { id: '2', price: 50, class: 'General', seat: '', status: TicketStatus.AVAILABLE, holdExpiresAt: null, eventId: 'e2', organizationId: 'o2', currencyId: 'c2', createdAt: new Date(), updatedAt: new Date() },
-    ]);
+    // FIX: Use the complete mockTicket object for the event
+    const mockEventTicket = { ...mockTicket, id: '2', class: 'General' };
+    jest.spyOn(prisma.issuedTicket, 'findMany').mockResolvedValueOnce([mockEventTicket]);
+
     const res = await request(app.getHttpServer()).get('/tickets/event/e2');
     expect(res.status).toBe(200);
     expect(res.body[0].class).toBe('General');
   });
 
   it('/tickets/:id (PATCH) should update a ticket', async () => {
-    jest.spyOn(prisma.issuedTicket, 'update').mockResolvedValueOnce({
-      id: '1', price: 200, class: 'VIP', seat: 'A1', status: TicketStatus.AVAILABLE, holdExpiresAt: null, eventId: 'e1', organizationId: 'o1', currencyId: 'c1', createdAt: new Date(), updatedAt: new Date(),
-    });
+    // FIX: Use the complete mockTicket, but override the price for the response
+    const updatedTicket = { ...mockTicket, price: 200 };
+    jest.spyOn(prisma.issuedTicket, 'update').mockResolvedValueOnce(updatedTicket);
+
     const res = await request(app.getHttpServer())
-      .patch('/tickets/1')
-      .send({ price: 200 });
+        .patch('/tickets/1')
+        .send({ price: 200 });
     expect(res.status).toBe(200);
     expect(res.body.price).toBe(200);
   });
 
   it('/tickets/:id (DELETE) should remove a ticket', async () => {
-    jest.spyOn(prisma.issuedTicket, 'delete').mockResolvedValueOnce({
-      id: '1', price: 100, class: 'VIP', seat: 'A1', status: TicketStatus.AVAILABLE, holdExpiresAt: null, eventId: 'e1', organizationId: 'o1', currencyId: 'c1', createdAt: new Date(), updatedAt: new Date(),
-    });
+    // FIX: Use the complete mockTicket object
+    jest.spyOn(prisma.issuedTicket, 'delete').mockResolvedValueOnce(mockTicket);
+
     const res = await request(app.getHttpServer())
-      .delete('/tickets/1');
+        .delete('/tickets/1');
     expect(res.status).toBe(200);
     expect(res.body.id).toBe('1');
   });
@@ -121,8 +139,8 @@ describe('IssuedTicketController (e2e)', () => {
       },
     };
     const res = await request(app.getHttpServer())
-      .post('/tickets/generate')
-      .send(dto);
+        .post('/tickets/generate')
+        .send(dto);
     expect(res.status).toBe(400);
   });
 });

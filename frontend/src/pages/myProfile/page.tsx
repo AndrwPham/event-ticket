@@ -1,6 +1,42 @@
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
+// Define the user profile type based on your backend response
+type UserProfile = {
+    username: string;
+    email: string;
+    // Add other fields if needed
+};
+
 const MyProfile = () => {
+    const [profile, setProfile] = useState<UserProfile | null>(null);
+
+    useEffect(() => {
+        // No need to get token from localStorage
+        const fetchProfile = async () => {
+            try {
+                const response = await fetch(
+                    `${import.meta.env.VITE_API_URL}/auth/me`,
+                    {
+                        method: "GET",
+                        credentials: "include", // Send cookies
+                    },
+                );
+
+                if (!response.ok) throw new Error("Failed to fetch profile");
+
+                const data = (await response.json()) as UserProfile;
+
+                setProfile(data);
+                console.log("Fetched profile:", data); // Log fetched profile
+            } catch (err) {
+                console.error("Failed to fetch profile:", err);
+            }
+        };
+
+        void fetchProfile();
+    }, []);
+
     return (
         <div className="bg-white">
             {/* This container is restored to its original size */}
@@ -14,7 +50,11 @@ const MyProfile = () => {
                                     Account of
                                 </h3>
                                 <p className="font-bold text-lg">
-                                    Nguyen Van A
+                                    {profile
+                                        ? profile.username ||
+                                          profile.email ||
+                                          "Loading..."
+                                        : "Loading..."}
                                 </p>
                             </div>
                             <nav className="space-y-2 text-gray-600">
@@ -59,7 +99,7 @@ const MyProfile = () => {
                                     type="text"
                                     id="fullName"
                                     name="fullName"
-                                    defaultValue="Nguyen Van A"
+                                    defaultValue={profile ? profile.email : ""}
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                 />
                             </div>
@@ -91,7 +131,7 @@ const MyProfile = () => {
                                     type="email"
                                     id="email"
                                     name="email"
-                                    defaultValue="nguyenvana1234@gmail.com"
+                                    defaultValue={profile ? profile.email : ""}
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                 />
                             </div>

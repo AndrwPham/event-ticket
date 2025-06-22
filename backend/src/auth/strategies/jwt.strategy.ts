@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtPayload } from '../types/jwt-payload.type';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Role } from '../types/role.enum';
+import { Request } from 'express';
 
 
 @Injectable()
@@ -17,7 +18,11 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     if (!jwtSecret) throw new Error('JWT_SECRET not set in environment');
 
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (request: Request) => {
+          return request?.cookies?.accessToken;
+        },
+      ]),
       secretOrKey: jwtSecret,
     });
   }

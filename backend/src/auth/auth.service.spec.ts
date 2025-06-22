@@ -83,7 +83,7 @@ describe('AuthService', () => {
       expect(prisma.attendeeInfo.create).toHaveBeenCalledWith({
         data: { email: 'a@b.com', user: { connect: { id: 'u1' } } },
       });
-      expect(result).toBeUndefined(); // register does not return a value
+      expect(result).toEqual({ id: 'u1', username: 'alice' }); // register returns user object
     });
 
     it('throws conflict if username taken', async () => {
@@ -115,6 +115,7 @@ describe('AuthService', () => {
           confirmed: true,
           confirmToken: null,
           confirmTokenExpiresAt: null,
+          pendingEmail: null,
         },
       });
       expect(res).toEqual({ message: 'Email confirmed successfully' });
@@ -127,7 +128,7 @@ describe('AuthService', () => {
   });
 
   describe('login', () => {
-    const dto = { username:'alice', password:'pw', activeRole: Role.Attendee };
+    const dto = { credential:'alice', password:'pw', activeRole: Role.Attendee };
     beforeEach(() => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       (jwt.signAsync as jest.Mock).mockResolvedValueOnce('access-1').mockResolvedValueOnce('refresh-1');
@@ -165,6 +166,34 @@ describe('AuthService', () => {
       (prisma.user.findUnique as jest.Mock).mockResolvedValue({
         password:'pw', confirmed:true, roles:[Role.Admin]
       });
+      await expect(service.login(dto)).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('returns tokens on valid email credential', async () => {
+      // Mock attendeeInfo and user lookup
+      (prisma.attendeeInfo.findUnique as jest.Mock).mockResolvedValue({ userId: 'u2' });
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+        id: 'u2', username: 'bob', password: 'pw', confirmed: true, roles: [Role.Attendee]
+      });
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      (jwt.signAsync as jest.Mock).mockReset();
+      (jwt.signAsync as jest.Mock).mockResolvedValueOnce('access-2').mockResolvedValueOnce('refresh-2');
+      const dto = { credential: 'bob@example.com', password: 'pw', activeRole: Role.Attendee };
+      const out = await service.login(dto);
+      expect(out.tokens).toEqual({ accessToken: 'access-2', refreshToken: 'refresh-2' });
+      expect(out.user).toMatchObject({ id: 'u2', username: 'bob', roles: [Role.Attendee], activeRole: Role.Attendee });
+    });
+
+    it('throws if attendeeInfo not found for email', async () => {
+      (prisma.attendeeInfo.findUnique as jest.Mock).mockResolvedValue(null);
+      const dto = { credential: 'noone@example.com', password: 'pw', activeRole: Role.Attendee };
+      await expect(service.login(dto)).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('throws if user not found for attendeeInfo email', async () => {
+      (prisma.attendeeInfo.findUnique as jest.Mock).mockResolvedValue({ userId: 'u3' });
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
+      const dto = { credential: 'ghost@example.com', password: 'pw', activeRole: Role.Attendee };
       await expect(service.login(dto)).rejects.toThrow(UnauthorizedException);
     });
   });

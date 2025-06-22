@@ -1,6 +1,7 @@
 import { FC } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { FiSearch } from "react-icons/fi";
+import { useAuth } from "../context/AuthContext"; // We assume AuthContext is in src/context
 
 interface NavbarProps {
     onLogInClick: () => void;
@@ -9,8 +10,10 @@ interface NavbarProps {
 
 const Navbar: FC<NavbarProps> = ({ onLogInClick, onSignUpClick }) => {
     const { pathname } = useLocation();
+    const { isAuthenticated, logout } = useAuth();
 
-    const routes = [
+    // Base routes that are always visible
+    const baseRoutes = [
         {
             href: "/contact-sales",
             label: "Contact Sales",
@@ -20,18 +23,35 @@ const Navbar: FC<NavbarProps> = ({ onLogInClick, onSignUpClick }) => {
             label: "Create Event",
         },
         {
-            href: "/tickets",
+            href: "/ticket",
             label: "Tickets",
         },
-        {
-            label: "Log In",
-            onClick: onLogInClick,
-        },
-        {
-            label: "Sign Up",
-            onClick: onSignUpClick,
-        },
     ];
+
+    // Dynamically add auth-related routes
+    const authRoutes = isAuthenticated
+        ? [
+              {
+                  href: "/profile",
+                  label: "My Account",
+              },
+              {
+                  label: "Log Out",
+                  onClick: logout,
+              },
+          ]
+        : [
+              {
+                  label: "Log In",
+                  onClick: onLogInClick,
+              },
+              {
+                  label: "Sign Up",
+                  onClick: onSignUpClick,
+              },
+          ];
+
+    const allRoutes = [...baseRoutes, ...authRoutes];
 
     return (
         <nav className="bg-[#1D0E3C] text-white px-6 py-4 flex flex-row items-center justify-between">
@@ -47,7 +67,7 @@ const Navbar: FC<NavbarProps> = ({ onLogInClick, onSignUpClick }) => {
             </div>
 
             <div className="flex flex-row items-center justify-end basis-1/2 gap-12 text-sm font-medium">
-                {routes.map((route) => {
+                {allRoutes.map((route) => {
                     const isActive = route.href && pathname === route.href;
 
                     const commonClasses = "hover:underline transition";
@@ -59,7 +79,8 @@ const Navbar: FC<NavbarProps> = ({ onLogInClick, onSignUpClick }) => {
 
                     const finalClassName = `${commonClasses} ${createEventClasses} ${activeClasses}`;
 
-                    return route.onClick ? (
+                    return "onClick" in route &&
+                        typeof route.onClick === "function" ? (
                         <button
                             key={route.label}
                             onClick={route.onClick}

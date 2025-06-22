@@ -10,5 +10,6 @@ import { JwtModule } from '@nestjs/jwt';
   imports: [JwtModule.register({}), AuthModule, PrismaModule],
   controllers: [IssuedTicketController],
   providers: [IssuedTicketService],
+  exports: [IssuedTicketService],
 })
 export class IssuedTicketModule {}

@@ -119,9 +119,9 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials or email not confirmed');
     }
 
-    // if (!user.confirmed) {
-    //   throw new UnauthorizedException('Email not confirmed');
-    // }
+    if (!user.confirmed) {
+      throw new UnauthorizedException('Email not confirmed');
+    }
 
     if (!user.roles.includes(activeRole)) {
       throw new UnauthorizedException(`You don't have ${activeRole} role`);

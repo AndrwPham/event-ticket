@@ -81,7 +81,6 @@ async function createPassForUser(email, fullName, code, serial, fields = {}) {
       value: fields.class,
       textAlignment: 'PKTextAlignmentRight'
     };
-    delete restFields.class;
   } else if (fields.ticketClass) {
     admissionLevelField = {
       key: 'admission_level',
@@ -89,15 +88,21 @@ async function createPassForUser(email, fullName, code, serial, fields = {}) {
       value: fields.ticketClass,
       textAlignment: 'PKTextAlignmentRight'
     };
-    delete restFields.ticketClass;
   }
 
-  // Remove standard JWT claims from restFields
-  const jwtClaims = [
-    'iat', 'exp', 'nbf', 'aud', 'iss', 'sub', 'jti', 'scope', 'typ', 'azp', 'auth_time', 'nonce', 'acr', 'amr', 'sid'
-  ];
-  for (const claim of jwtClaims) {
-    delete restFields[claim];
+  // Build auxiliary fields: Admission Level (align left), Price (align left)
+  const auxiliaryFields = [];
+  if (admissionLevelField) {
+    admissionLevelField.textAlignment = 'PKTextAlignmentLeft';
+    auxiliaryFields.push(admissionLevelField);
+  }
+  if (typeof fields.price !== 'undefined') {
+    auxiliaryFields.push({
+      key: 'price',
+      label: 'Price',
+      value: fields.price,
+      textAlignment: 'PKTextAlignmentLeft'
+    });
   }
 
   const secondaryFieldsArray = [
@@ -106,18 +111,27 @@ async function createPassForUser(email, fullName, code, serial, fields = {}) {
       label: 'Attendee',
       value: fullName,
       textAlignment: 'PKTextAlignmentLeft'
-    },
-    ...Object.entries(restFields).map(([key, value]) => ({
-      key,
-      label: key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()),
-      value,
-      textAlignment: 'PKTextAlignmentRight'
-    }))
+    }
   ];
-  pass.secondaryFields.push(...secondaryFieldsArray);
+  if (typeof fields.seat !== 'undefined') {
+    secondaryFieldsArray.push({
+      key: 'seat',
+      label: 'Seat',
+      value: fields.seat,
+      textAlignment: 'PKTextAlignmentRight'
+    });
+  }
 
-  if (admissionLevelField) {
-    pass.auxiliaryFields.push(admissionLevelField);
+  // Ensure eventTicket fields are set for event ticket pass type
+  if (pass.eventTicket) {
+    if (!pass.eventTicket.auxiliaryFields) pass.eventTicket.auxiliaryFields = [];
+    if (!pass.eventTicket.secondaryFields) pass.eventTicket.secondaryFields = [];
+    pass.eventTicket.auxiliaryFields.push(...auxiliaryFields);
+    pass.eventTicket.secondaryFields.push(...secondaryFieldsArray);
+  } else {
+    // fallback for generic pass types
+    pass.auxiliaryFields.push(...auxiliaryFields);
+    pass.secondaryFields.push(...secondaryFieldsArray);
   }
 
   return pass.getAsBuffer();

@@ -55,7 +55,7 @@ router.post(
       const host = req.get('host');
       const baseUrl = `${protocol}://${host}`;
 
-      const appleWalletPayload = { email, name, code: lookupCode, serial };
+      const appleWalletPayload = { ...req.body };
       const appleWalletJwt = jwt.sign(appleWalletPayload, appleWallet.jwtSecret);
       const appleWalletUrl = `${baseUrl}/api/tickets/apple-wallet-download?token=${appleWalletJwt}`;
 

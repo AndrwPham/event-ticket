@@ -1,4 +1,4 @@
-import { VenueConfig } from "./components/venue-config";
+import { VenueConfig } from "./components/VenueConfig";
 
 function App() {
     return (

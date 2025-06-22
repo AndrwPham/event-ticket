@@ -9,12 +9,12 @@ export class EventService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateEventDto) {
-    const { tagIds, organizerId, imageIds, tickets, ...eventData } = dto;
+    const { tagIds, organizationId, imageIds, tickets, ...eventData } = dto;
 
     const event = await this.prisma.event.create({
       data: {
         ...eventData,
-        organizer: { connect: { id: organizerId } },
+        organization: { connect: { id: organizationId } },
         tags: {
           connect: tagIds?.map((id) => ({ id })) || [],
         },
@@ -46,7 +46,7 @@ export class EventService {
                   class: ticketClass,
                   seat: seatId,
                   status,
-                  organizer: { connect: { id: organizerId } },
+                  organization: { connect: { id: organizationId } },
                   currency: { connect: { id: currencyId } },
                 });
                 count++;
@@ -61,7 +61,7 @@ export class EventService {
         images: true,
         tickets: true,
         tags: true,
-        organizer: true,
+        organization: true,
       },
     });
 
@@ -74,7 +74,7 @@ export class EventService {
         images: true,
         tickets: true,
         tags: true,
-        organizer: true,
+        organization: true,
       },
     });
   }
@@ -86,7 +86,7 @@ export class EventService {
         images: true,
         tickets: true,
         tags: true,
-        organizer: true,
+        organization: true,
       },
     });
   }
@@ -98,7 +98,7 @@ export class EventService {
         images: true,
         tickets: true,
         tags: true,
-        organizer: true,
+        organization: true,
       },
     });
   }
@@ -110,7 +110,7 @@ export class EventService {
         images: true,
         tickets: true,
         tags: true,
-        organizer: true,
+        organization: true,
       },
     });
   }
@@ -122,7 +122,7 @@ export class EventService {
         images: true,
         tickets: true,
         tags: true,
-        organizer: true,
+        organization: true,
       },
     });
   }
@@ -134,19 +134,19 @@ export class EventService {
         images: true,
         tickets: true,
         tags: true,
-        organizer: true,
+        organization: true,
       },
     });
   }
 
   async update(id: string, dto: UpdateEventDto) {
-    const { tagIds, organizerId, imageIds, tickets, ...eventData } = dto;
+    const { tagIds, organizationId, imageIds, tickets, ...eventData } = dto;
 
     const updatedEvent = await this.prisma.event.update({
       where: { id },
       data: {
         ...eventData,
-        organizer: organizerId ? { connect: { id: organizerId } } : undefined,
+        organization: organizationId ? { connect: { id: organizationId } } : undefined,
         tags: {
           set: [],
           connect: tagIds?.map((id) => ({ id })) || [],
@@ -182,7 +182,7 @@ export class EventService {
                       class: ticketClass,
                       seat: seatId,
                       status,
-                      organizer: { connect: { id: organizerId } },
+                      organization: { connect: { id: organizationId } },
                       currency: { connect: { id: currencyId } },
                     });
                     count++;
@@ -198,7 +198,7 @@ export class EventService {
         images: true,
         tickets: true,
         tags: true,
-        organizer: true,
+        organization: true,
       },
     });
 

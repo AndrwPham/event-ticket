@@ -83,3 +83,19 @@ export interface IVenue {
     name: string;
     layout: LayoutCell[][];
 }
+
+export interface ApiError {
+    message: string | string[];
+    error?: string;
+    statusCode?: number;
+}
+
+export interface User {
+    id: string;
+    email: string;
+    username: string;
+}
+
+export function isApiError(data: unknown): data is ApiError {
+    return typeof data === "object" && data !== null && "message" in data;
+}

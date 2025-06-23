@@ -1,100 +1,79 @@
-import { FC } from "react";
-import { LayoutCell, ISeat } from "../../../types";
+import { useMemo } from "react";
 import Seat from "./Seat";
+import { IssuedTicket, Venue } from "../../../types";
 
 interface VenueMapProps {
-    layout: LayoutCell[][];
-    seats: { [seatId: string]: ISeat };
-    selectedSeats: ISeat[];
-    onSeatClick: (seat: ISeat) => void;
+    layout: Venue["layout"];
+    tickets: IssuedTicket[];
+    selectedSeats: IssuedTicket[];
+    onSeatSelect: (ticket: IssuedTicket) => void;
 }
 
-const VenueMap: FC<VenueMapProps> = ({
+export default function VenueMap({
     layout,
-    seats,
+    tickets,
     selectedSeats,
-    onSeatClick,
-}) => {
-    const SEAT_SIZE = 25;
-    const SEAT_SPACING = 5;
-    const AISLE_SIZE = 20;
+    onSeatSelect,
+}: VenueMapProps) {
+    const ticketMap = useMemo(
+        () => new Map(tickets.map((ticket) => [ticket.seat, ticket])),
+        [tickets],
+    );
 
-    let x = 0;
-    let y = 0;
-    let maxWidth = 0;
-
-    const elements = layout.flatMap((row, rowIndex) => {
-        x = 0;
-        const rowElements = row.map((cell, cellIndex) => {
-            const key = `cell-${String(rowIndex)}-${String(cellIndex)}`;
-
-            switch (cell.type) {
-                case "seat":
-                    // FIX 1: Use the 'in' operator for a more robust property check.
-                    if (!(cell.seatId in seats)) {
-                        return null;
-                    }
-                    const seatData = seats[cell.seatId];
-
-                    const isSelected = selectedSeats.some(
-                        (s) => s.id === seatData.id,
-                    );
-                    const currentX = x;
-                    x += SEAT_SIZE + SEAT_SPACING;
-                    return (
-                        <Seat
-                            key={key}
-                            x={currentX}
-                            y={y}
-                            size={SEAT_SIZE}
-                            data={seatData}
-                            isSelected={isSelected}
-                            onClick={() => {
-                                onSeatClick(seatData);
-                            }}
-                        />
-                    );
-                case "aisle":
-                    x += AISLE_SIZE;
-                    return null;
-                case "stage":
-                case "lectern":
-                    const stageX = x;
-                    x += SEAT_SIZE + SEAT_SPACING;
-                    return (
-                        <rect
-                            key={key}
-                            x={stageX}
-                            y={y}
-                            width={SEAT_SIZE}
-                            height={SEAT_SIZE / 2}
-                            fill="#888"
-                            rx="3"
-                        />
-                    );
-                case "empty":
-                default:
-                    x += SEAT_SIZE + SEAT_SPACING;
-                    return null;
-            }
-        });
-        if (x > maxWidth) maxWidth = x;
-        y += SEAT_SIZE + SEAT_SPACING;
-        return rowElements;
-    });
+    const selectedSeatIds = useMemo(
+        () => new Set(selectedSeats.map((seat) => seat.id)),
+        [selectedSeats],
+    );
 
     return (
-        <div className="w-full overflow-x-auto">
-            <svg
-                width={maxWidth}
-                height={y}
-                viewBox={`0 0 ${String(maxWidth)} ${String(y)}`}
-                aria-label="Venue Seat Map"
-            >
-                {elements}
-            </svg>
+        <div className="flex flex-col items-center space-y-2">
+            <div className="w-full bg-gray-300 text-center py-2 mb-8 font-bold rounded">
+                STAGE
+            </div>
+            {layout.rows.map((row, rowIndex) => (
+                <div
+                    key={`row-${rowIndex.toString()}`}
+                    className="flex items-center justify-center space-x-1"
+                >
+                    {row.map((item, itemIndex) => {
+                        const key = `${rowIndex.toString()}-${itemIndex.toString()}`;
+
+                        if (item.type === "seat" && item.seatId) {
+                            const ticket = ticketMap.get(item.seatId);
+                            if (!ticket) {
+                                return (
+                                    <Seat
+                                        key={key}
+                                        status="UNAVAILABLE"
+                                        isSelected={false}
+                                        onClick={() => {}}
+                                    />
+                                );
+                            }
+
+                            return (
+                                <Seat
+                                    key={ticket.id}
+                                    seatId={ticket.seat}
+                                    status={ticket.status}
+                                    color={ticket.classColor}
+                                    isSelected={selectedSeatIds.has(ticket.id)}
+                                    onClick={() => {
+                                        onSeatSelect(ticket);
+                                    }}
+                                />
+                            );
+                        }
+                        if (item.type === "aisle") {
+                            return <div key={key} className="w-8 h-8"></div>;
+                        }
+                        if (item.type === "empty") {
+                            return <div key={key} className="w-8 h-8"></div>;
+                        }
+                        return null;
+                    })}
+                </div>
+            ))}
         </div>
     );
-};
-
-export default VenueMap;
+}

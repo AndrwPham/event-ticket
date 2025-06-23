@@ -132,3 +132,16 @@ export interface LiveEvent {
     images: { url: string }[];
     // Add any other fields you need for the event card
 }
+export enum TicketStatus {
+    AVAILABLE = "AVAILABLE",
+    HELD = "HELD",
+    SOLD = "SOLD",
+    RESERVED = "RESERVED",
+}
+
+export enum OrderStatus {
+    PENDING = "PENDING",
+    COMPLETED = "COMPLETED",
+    CANCELLED = "CANCELLED",
+    EXPIRED = "EXPIRED",
+}

@@ -1,55 +1,58 @@
 import { FC } from "react";
-import { ISeat } from "../../../types";
 
 interface SeatProps {
-    x: number;
-    y: number;
-    size: number;
-    data: ISeat;
+    seatId?: string;
+    status: "UNAVAILABLE" | "AVAILABLE" | "HELD" | "PAID" | "SOLD";
+    color?: string;
     isSelected: boolean;
     onClick: () => void;
 }
 
-const Seat: FC<SeatProps> = ({ x, y, size, data, isSelected, onClick }) => {
-    const getFillColor = () => {
-        if (data.status === "sold") return "#A0AEC0"; // Gray for sold
-        if (isSelected) return "#4299E1"; // Blue for selected
-        if (data.tier === "Seated VIP") return "#C53030"; // Red for VIP
-        if (data.tier === "Seated A") return "#2F855A"; // Green for Standard
-        return "#CBD5E0";
+const Seat: FC<SeatProps> = ({
+    status,
+    color,
+    isSelected,
+    onClick,
+    seatId,
+}) => {
+    const getSeatClasses = () => {
+        const baseClasses =
+            "w-8 h-8 flex items-center justify-center rounded font-bold text-white text-xs transition-all duration-200";
+
+        if (
+            status === "UNAVAILABLE" ||
+            status === "SOLD" ||
+            status === "PAID" ||
+            status === "HELD"
+        ) {
+            return `${baseClasses} bg-gray-400 cursor-not-allowed`;
+        }
+
+        if (isSelected) {
+            return `${baseClasses} bg-blue-500 ring-2 ring-blue-300 cursor-pointer`;
+        }
+
+        return `${baseClasses} cursor-pointer hover:opacity-80`;
+    };
+
+    const getSeatStyle = () => {
+        if (status === "AVAILABLE" && !isSelected) {
+            return { backgroundColor: color || "#A0AEC0" };
+        }
+        return {};
     };
 
     return (
-        <g
-            onClick={data.status === "available" ? onClick : undefined}
-            className={
-                data.status === "available"
-                    ? "cursor-pointer"
-                    : "cursor-not-allowed"
-            }
+        <button
+            type="button"
+            disabled={status !== "AVAILABLE"}
+            onClick={onClick}
+            className={getSeatClasses()}
+            style={getSeatStyle()}
+            title={`Seat ${String(seatId)} - Status: ${status}`}
         >
-            <rect
-                x={x}
-                y={y}
-                width={size}
-                height={size}
-                fill={getFillColor()}
-                rx="4"
-                className="transition-all duration-200 hover:opacity-80"
-            />
-            <text
-                x={x + size / 2}
-                y={y + size / 2}
-                textAnchor="middle"
-                dy=".3em"
-                fill="white"
-                fontSize="10"
-                className="pointer-events-none font-semibold"
-            >
-                {data.id}
-            </text>
-            <title>{`${data.tier} - Seat ${data.id} - ${data.price.toLocaleString()}đ - ${data.status}`}</title>
-        </g>
+            {seatId}
+        </button>
     );
 };
 

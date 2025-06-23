@@ -1,109 +1,197 @@
-import { FC, useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { allEvents } from "../../data/_mock_db";
-import { allVenues } from "../../data/_mock_venues";
-import { ISeat } from "../../types";
-
 import VenueMap from "./components/VenueMap";
-import SeatMapOrderSummary from "./components/SeatMapOrderSummary";
 import SeatMapLegend from "./components/SeatMapLegend";
+import SeatMapOrderSummary from "./components/SeatMapOrderSummary";
+import BuyerInfoForm from "../payment/components/BuyerInfoForm";
+import { EventData, IssuedTicket } from "../../types"; // Ensure all needed types are imported
 
-const SeatMapPage: FC = () => {
+export default function SeatMap() {
+    const { eventId } = useParams<{ eventId: string }>();
     const navigate = useNavigate();
-    const { id: eventId } = useParams<{ id: string }>();
 
-    const event = useMemo(
-        () => allEvents.find((e) => String(e.id) === eventId),
-        [eventId],
-    );
-    const venue = useMemo(
-        () => allVenues.find((v) => v.id === event?.venueId),
-        [event],
-    );
-    const initialSeatData = useMemo(() => event?.seats || {}, [event]);
+    const [event, setEvent] = useState<EventData | null>(null);
+    const [selectedSeats, setSelectedSeats] = useState<IssuedTicket[]>([]);
+    const [attendeeInfo, setAttendeeInfo] = useState({
+        first_name: "",
+        last_name: "",
+        email: "",
+    });
+    const [loading, setLoading] = useState<boolean>(true);
+    const [isProcessing, setIsProcessing] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
 
-    const [selectedSeats, setSelectedSeats] = useState<ISeat[]>([]);
+    useEffect(() => {
+        void (async () => {
+            if (!eventId) {
+                setError("Event ID is missing from URL.");
+                setLoading(false);
+                return;
+            }
+            try {
+                const response = await fetch(
+                    `http://localhost:5000/events/${eventId}`,
+                );
+                if (!response.ok)
+                    throw new Error(
+                        `HTTP error! status: ${String(response.status)}`,
+                    );
+                const data = (await response.json()) as EventData;
+                setEvent(data);
+            } catch (err: unknown) {
+                setError(
+                    err instanceof Error
+                        ? err.message
+                        : "An unknown error occurred",
+                );
+            } finally {
+                setLoading(false);
+            }
+        })();
+    }, [eventId]);
 
-    if (!event || !venue) {
-        return (
-            <div className="text-center p-12">
-                Event or venue layout not found.
-            </div>
+    const handleSeatSelect = (ticket: IssuedTicket) => {
+        if (ticket.status !== "AVAILABLE") return;
+        setSelectedSeats((prev) =>
+            prev.some((s) => s.id === ticket.id)
+                ? prev.filter((s) => s.id !== ticket.id)
+                : [...prev, ticket],
         );
-    }
+    };
 
-    const handleSeatClick = (seat: ISeat) => {
-        if (seat.status === "sold") return; // Cannot select sold seats
-
-        const isSelected = selectedSeats.some((s) => s.id === seat.id);
-
-        if (isSelected) {
-            // Deselect the seat
-            setSelectedSeats((currentSeats) =>
-                currentSeats.filter((s) => s.id !== seat.id),
-            );
+    const handleAttendeeInfoChange = (
+        e: React.ChangeEvent<HTMLInputElement>,
+    ) => {
+        const { name, value } = e.target;
+        if (name === "fullName") {
+            const parts = value.split(" ");
+            setAttendeeInfo((prev) => ({
+                ...prev,
+                first_name: parts[0] || "",
+                last_name: parts.slice(1).join(" "),
+            }));
         } else {
-            // Select the seat
-            setSelectedSeats((currentSeats) => [...currentSeats, seat]);
+            setAttendeeInfo((prev) => ({ ...prev, [name]: value }));
         }
     };
 
-    const handleProceedToPayment = () => {
+    const handleProceedToPayment = async () => {
         if (selectedSeats.length === 0) {
             alert("Please select at least one seat.");
             return;
         }
+        if (!attendeeInfo.email || !attendeeInfo.first_name) {
+            alert("Please fill in your name and email.");
+            return;
+        }
 
-        // Navigate to the payment page with the selected seats
-        navigate(`/event/${String(eventId)}/payment`, {
-            state: {
-                eventDetails: event,
-                orderDetails: {
-                    tickets: selectedSeats.map((seat) => ({
-                        name: `Seat ${seat.id} (${seat.tier})`,
-                        quantity: 1,
-                        price: seat.price,
-                    })),
+        setIsProcessing(true);
+        setError(null);
+
+        const payload = {
+            ticketIds: selectedSeats.map((seat) => seat.id),
+            attendee: attendeeInfo,
+        };
+
+        try {
+            const response = await fetch("http://localhost:5000/orders", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) {
+                const errorData = (await response.json()) as {
+                    message?: string;
+                };
+                throw new Error(errorData.message || "Failed to create order.");
+            }
+
+            const newOrder = await response.json();
+
+            navigate(`/payment`, {
+                state: {
+                    order: newOrder,
+                    eventDetails: event,
+                    orderDetails: { tickets: selectedSeats },
                 },
-            },
-        });
+            });
+        } catch (err: unknown) {
+            setError(
+                err instanceof Error
+                    ? err.message
+                    : "An unknown error occurred.",
+            );
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
+    if (loading)
+        return <div className="text-center py-20">Loading seat map...</div>;
+    if (error && !isProcessing)
+        return <div className="text-center py-20 text-red-500">{error}</div>;
+    if (!event)
+        return <div className="text-center py-20">Event not found.</div>;
+
+    const uniqueTicketClasses = Array.from(
+        new Map(
+            event.tickets.map((t) => [
+                t.class,
+                { name: t.class, color: t.classColor || "#CCCCCC" },
+            ]),
+        ).values(),
+    );
+
     return (
-        <div className="bg-gray-100 min-h-screen p-4 sm:p-6 lg:p-8">
-            <div className="max-w-7xl mx-auto">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
-                    {event.title}
-                </h1>
-                <h2 className="text-md sm:text-lg text-gray-600 mb-6">
-                    {venue.name}
-                </h2>
+        <div className="container mx-auto p-4 md:p-8">
+            <h1 className="text-3xl font-bold mb-2">{event.title}</h1>
+            <p className="text-lg text-gray-600 mb-8">{event.venue.name}</p>
 
-                <div className="flex flex-col lg:flex-row gap-8">
-                    {/* Left side: The Seat Map and Legend */}
-                    <div className="w-full lg:w-2/3">
-                        <div className="bg-white p-4 rounded-lg shadow-md">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 space-y-6">
+                    <div className="bg-gray-100 p-4 rounded-lg">
+                        {event.venue.layout && (
                             <VenueMap
-                                layout={venue.layout}
-                                seats={initialSeatData}
+                                layout={event.venue.layout}
+                                tickets={event.tickets}
                                 selectedSeats={selectedSeats}
-                                onSeatClick={handleSeatClick}
+                                onSeatSelect={handleSeatSelect}
                             />
-                        </div>
-                        <SeatMapLegend />
+                        )}
                     </div>
-
-                    {/* Right side: The Order Summary */}
-                    <div className="w-full lg:w-1/3">
-                        <SeatMapOrderSummary
-                            selectedSeats={selectedSeats}
-                            onProceed={handleProceedToPayment}
+                    <SeatMapLegend seatClasses={uniqueTicketClasses} />
+                    <div className="bg-white p-6 rounded-lg shadow">
+                        <h3 className="text-xl font-bold mb-4">
+                            Your Information
+                        </h3>
+                        <BuyerInfoForm
+                            buyerInfo={{
+                                fullName:
+                                    `${attendeeInfo.first_name} ${attendeeInfo.last_name}`.trim(),
+                                email: attendeeInfo.email,
+                                phone: "",
+                            }}
+                            onInfoChange={handleAttendeeInfoChange}
                         />
                     </div>
+                </div>
+
+                <div className="lg:col-span-1">
+                    <SeatMapOrderSummary
+                        selectedSeats={selectedSeats}
+                        isProcessing={isProcessing}
+                        onProceed={() => {
+                            void handleProceedToPayment();
+                        }}
+                    />
+                    {error && isProcessing && (
+                        <p className="text-red-500 text-sm mt-2 text-center">
+                            {error}
+                        </p>
+                    )}
                 </div>
             </div>
         </div>
     );
-};
-
-export default SeatMapPage;
+}

@@ -130,7 +130,7 @@ export class IssuedTicketService {
         if (ticketClass.seats && ticketClass.seats.length > 0) {
           for (const seat of ticketClass.seats) {
             ticketsToCreate.push({
-              price: seat.price,
+              price: seat?.price ?? ticketClass.price, // TODO: dirty fix
               class: ticketClass.label,
               seat: seat.seatNumber,
               status: TicketStatus.UNAVAILABLE,

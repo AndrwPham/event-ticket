@@ -17,6 +17,7 @@ import SeatMap from "./pages/seatMap/SeatMap";
 import SuccessPage from "./pages/payment/SuccessPage";
 import CancelPage from "./pages/payment/CancelPage";
 import MyProfile from "./pages/myProfile/page";
+import OrganizerDashboard from "./pages/organizer/Dashboard";
 
 function App() {
     const [isSignUpOpen, setIsSignUpOpen] = useState(false);
@@ -66,6 +67,8 @@ function App() {
                             element={<SeatMap />}
                         />
                         <Route path="/profile" element={<MyProfile />} />
+
+                        <Route path="/organizer/dashboard" element={<OrganizerDashboard />} />
                     </Routes>
                 </main>
                 {isSignUpOpen && (

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import {Injectable, NotFoundException} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
@@ -68,27 +68,42 @@ export class EventService {
     return event;
   }
 
-  findAll() {
+  async findAll() {
+    const now = new Date();
     return this.prisma.event.findMany({
+      where: {
+        // Find events where the sale period is still active
+        sale_start_date: { lte: now },
+        sale_end_date: { gte: now },
+      },
       include: {
-        images: true,
-        tickets: true,
-        tags: true,
-        organization: true,
+        images: {
+          where: { type: 'banner' },
+          take: 1,
+        },
+        venue: true,
+      },
+      orderBy: {
+        active_start_date: 'asc',
       },
     });
   }
 
-  findOne(id: string) {
-    return this.prisma.event.findUnique({
+  async findOne(id: string) {
+    const event = await this.prisma.event.findUnique({
       where: { id },
       include: {
-        images: true,
-        tickets: true,
-        tags: true,
+        tickets: { orderBy: { price: 'asc' } },
+        venue: true,
+        images: { where: { type: 'banner' } },
         organization: true,
       },
     });
+
+    if (!event) {
+      throw new NotFoundException(`Event with ID ${id} not found`);
+    }
+    return event;
   }
 
   async findByTag(tagId: string) {

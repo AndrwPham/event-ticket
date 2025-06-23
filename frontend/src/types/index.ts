@@ -99,3 +99,36 @@ export interface User {
 export function isApiError(data: unknown): data is ApiError {
     return typeof data === "object" && data !== null && "message" in data;
 }
+export interface IssuedTicket {
+    id: string;
+    price: number;
+    class: string;
+    seat: string;
+    status: "UNAVAILABLE" | "AVAILABLE" | "HELD" | "PAID";
+    classColor?: string;
+    [key: string]: unknown;
+}
+
+export interface Venue {
+    id: string;
+    name: string;
+    layout: {
+        rows: { type: string; seatId?: string }[][];
+    };
+}
+
+export interface EventData {
+    id: string;
+    title: string;
+    tickets: IssuedTicket[];
+    venue: Venue;
+}
+
+export interface LiveEvent {
+    id: string;
+    title: string;
+    active_start_date: string;
+    venue: { name: string } | null;
+    images: { url: string }[];
+    // Add any other fields you need for the event card
+}

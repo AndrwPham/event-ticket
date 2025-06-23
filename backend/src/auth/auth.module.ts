@@ -36,6 +36,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     JwtModule,
     JwtStrategy,
     JwtAuthGuard,
+    AuthService, // <-- Export AuthService so it can be injected elsewhere
   ],
 })
 export class AuthModule { }

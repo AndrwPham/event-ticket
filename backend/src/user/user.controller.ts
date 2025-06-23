@@ -15,7 +15,7 @@ export class UserController {
 
   @Get('me')
   async getMe(@Req() req) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const user = await this.userService.getById(userId);
     const attendeeInfo = await this.attendeeInfoService.getByUserId(userId);
     return { user, attendeeInfo };
@@ -23,19 +23,20 @@ export class UserController {
 
   @Patch('me')
   async updateMe(@Req() req, @Body() dto: UpdateUserDto) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     return this.userService.updateById(userId, dto);
   }
 
   @Get('attendee')
   async getAttendeeInfo(@Req() req) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     return this.attendeeInfoService.getByUserId(userId);
   }
 
   @Patch('attendee')
   async updateAttendeeInfo(@Req() req, @Body() dto: UpdateAttendeeInfoDto) {
-    const userId = req.user.id;
+    console.log('PATCH /user/attendee called. Body:', dto, 'User:', req.user);
+    const userId = req.user.userId;
     return this.attendeeInfoService.updateByUserId(userId, dto);
   }
 }

@@ -15,6 +15,7 @@ import { SharedModule } from './common/shared.module';
 import { RedisModule, RedisModuleOptions } from '@nestjs-modules/ioredis';
 import { PaymentModule } from './payment/payment.module';
 import { NotificationModule } from './notification/notification.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { NotificationModule } from './notification/notification.module';
     }),
     PaymentModule,
     NotificationModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService],

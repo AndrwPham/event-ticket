@@ -118,7 +118,7 @@ export default function LogIn({ onClose, onSwitchToSignUp }: LogInProps) {
                             Username or Email
                         </label>
                         <input
-                            id="email"
+                            id="credential"
                             type="text"
                             placeholder="Email Address"
                             value={credential}

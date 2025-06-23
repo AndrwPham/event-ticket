@@ -131,11 +131,12 @@ model Event {
 }
 
 model IssuedTicket {
-  id     String       @id @default(auto()) @map("_id") @db.ObjectId
-  price  Float
-  class  String
-  seat   String
-  status TicketStatus
+  id         String       @id @default(auto()) @map("_id") @db.ObjectId
+  price      Float
+  class      String
+  classColor String?
+  seat       String
+  status     TicketStatus
 
   holdExpiresAt DateTime?
 

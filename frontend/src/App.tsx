@@ -35,7 +35,10 @@ function App() {
                 <main className="flex-grow">
                     <Routes>
                         <Route path="/" element={<Home />} />
-                        <Route path="/event/:id" element={<TicketDetails />} />
+                        <Route
+                            path="/event/:eventId"
+                            element={<TicketDetails />}
+                        />
                         <Route
                             path="/event/:id/payment"
                             element={<Payment />}
@@ -62,7 +65,7 @@ function App() {
                             element={<CancelPage />}
                         />
                         <Route
-                            path="/event/:id/select-seats"
+                            path="/event/:eventId/seats"
                             element={<SeatMap />}
                         />
                         <Route path="/profile" element={<MyProfile />} />

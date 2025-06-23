@@ -87,6 +87,14 @@ model Organization {
   updatedAt DateTime @updatedAt
 }
 
+model Venue {
+  id      String  @id @default(auto()) @map("_id") @db.ObjectId
+  name    String
+  address String?
+  layout  Json?
+  events  Event[]
+}
+
 model Event {
   id                String   @id @default(auto()) @map("_id") @db.ObjectId
   title             String
@@ -104,6 +112,11 @@ model Event {
   organizationId String       @db.ObjectId
   organization   Organization @relation("OrganizationEvents", fields: [organizationId], references: [id], onDelete: Cascade)
 
+  ticketConfiguration Json?
+
+  venueId String? @db.ObjectId
+  venue   Venue?  @relation(fields: [venueId], references: [id])
+
   tagIds String[] @db.ObjectId
   tags   Tag[]    @relation("EventsTags", fields: [tagIds], references: [id])
 
@@ -118,7 +131,7 @@ model Event {
 }
 
 model IssuedTicket {
-  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  id     String       @id @default(auto()) @map("_id") @db.ObjectId
   price  Float
   class  String
   seat   String
@@ -136,7 +149,7 @@ model IssuedTicket {
   currency   Currency @relation("TicketCurrency", fields: [currencyId], references: [id], onDelete: Restrict)
 
   claimedTicket ClaimedTicket?
-  images Image[]        @relation("TicketImages")
+  images        Image[]        @relation("TicketImages")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -147,26 +160,26 @@ model IssuedTicket {
 }
 
 model ClaimedTicket {
-  id     String       @id @map("_id") @db.ObjectId
+  id           String       @id @map("_id") @db.ObjectId
   issuedTicket IssuedTicket @relation(fields: [id], references: [id])
 
   attendeeId String       @db.ObjectId
   attendee   AttendeeInfo @relation("AttendeeClaimedTickets", fields: [attendeeId], references: [id], onDelete: Cascade)
 
-  orderId    String       @db.ObjectId
-  order      Order        @relation("OrderClaimedTickets", fields: [orderId], references: [id], onDelete: Cascade)
+  orderId String @db.ObjectId
+  order   Order  @relation("OrderClaimedTickets", fields: [orderId], references: [id], onDelete: Cascade)
 
-  status    ClaimedTicketStatus
+  status ClaimedTicketStatus
 
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([orderId])
   @@index([attendeeId])
 }
 
 model Order {
-  id         String @id @default(auto()) @map("_id") @db.ObjectId
+  id         String      @id @default(auto()) @map("_id") @db.ObjectId
   totalPrice Float
   status     OrderStatus
   method     String

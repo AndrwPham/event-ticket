@@ -12,12 +12,26 @@ export class PaymentService {
         const clientId = this.configService.get<string>('PAYOS_CLIENT_ID');
         const apiKey = this.configService.get<string>('PAYOS_API_KEY');
         const checksumKey = this.configService.get<string>('PAYOS_CHECKSUM_KEY');
+        const webhookUrl = this.configService.get<string>('PAYOS_WEBHOOK_URL');
 
         if (!clientId || !apiKey || !checksumKey) {
             throw new InternalServerErrorException('Missing PayOS configuration');
         }
 
         this.payOS = new PayOS(clientId, apiKey, checksumKey);
+
+        // Confirm webhook URL with PayOS
+        if (webhookUrl) {
+            this.payOS.confirmWebhook(webhookUrl)
+                .then(() => {
+                    this.logger.log(`Webhook URL confirmed with PayOS: ${webhookUrl}`);
+                })
+                .catch((err) => {
+                    this.logger.error('Failed to confirm webhook URL with PayOS', err);
+                });
+        } else {
+            this.logger.warn('PAYOS_WEBHOOK_URL is not set. Webhook confirmation skipped.');
+        }
     }
 
     async createPaymentLink(

@@ -1,54 +1,31 @@
 import { Injectable, BadRequestException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { IssuedTicketService } from '../issuedticket/issuedticket.service';
-import { CreateEventDto } from './dto/create-event.dto';
-import { UpdateEventDto } from './dto/update-event.dto';
+import { ImageService } from '../image/image.service';
 import { Prisma, Tag, Currency } from '@prisma/client';
 import { GenerateIssuedTicketsDto } from '../issuedticket/dto/generate-issued-tickets.dto';
+import { plainToInstance } from 'class-transformer';
+import { CreateEventDto } from './dto/create-event.dto';
+import { UpdateEventDto } from './dto/update-event.dto';
+import { CreateImageDto } from '../image/dto/create-image.dto';
 
 @Injectable()
 export class EventService {
     constructor(
         private prisma: PrismaService,
         private issuedTicketService: IssuedTicketService,
+        private imageService: ImageService,
     ) {}
 
     async create(dto: CreateEventDto) {
-        const { currency, ticketSchema, organizationId, tagIds, ...eventData } = dto;
+        const { currency, ticketSchema, organizationId, tagIds, images, ...eventData } = dto;
 
-        let resolvedTagIds: string[] = [];
         try {
-            if (tagIds?.length) {
-                const existingTags = await this.prisma.tag.findMany({
-                    where: { id: { in: tagIds } },
-                    select: { id: true }
-                });
-
-                // use all tagIds or valid ids only
-                if (tagIds.length != existingTags.length) {
-                    resolvedTagIds.push(...existingTags.map(tag => tag.id)); 
-                    throw new BadRequestException("One or more tagIds are invalid or not found");
-                } else {
-                    resolvedTagIds.push(...tagIds);
-                }
-            }
-
-            // Start a transaction for event creation and related operations
-            let currencyRecord: Currency | null = null;
-            try {
-                currencyRecord = await this.prisma.currency.findFirst({
-                    where: { symbol: currency ? currency.toUpperCase() : "VND" },
-                }); //could be wrong currency
-
-                if (!currencyRecord) {
-                    currencyRecord = await this.prisma.currency.findFirst({
-                        where: { symbol: "VND" }
-                    });
-                    throw new BadRequestException('Unsupported currency');
-                }
-            } catch (err) {
-                console.error(err.message);
-            }
+            const [resolvedTagIds, imageIds, currencyRecord] = await Promise.all([
+                tagIds?.length ? this.validateTagIds(tagIds) : [],
+                images?.length ? this.saveImages(images) : [],
+                this.resolveCurrency(currency),
+            ]);
 
             const event = await this.prisma.$transaction(async (prisma) => {
                 // Create the event
@@ -57,16 +34,14 @@ export class EventService {
                         ...eventData,
                         organization: { connect: { id: organizationId } },
                         tagIds: resolvedTagIds,
-                        // images: {
-                        //   connect: imageIds?.map((id) => ({ id })) || [],
-                        // },
+                        imageIds,
                     }
                 });
 
                 const ticketDto: GenerateIssuedTicketsDto = {
                     eventId: createdEvent.id,
                     organizationId,
-                    currencyId: currencyRecord?.id ?? "VND", // Assuming all tickets use the same currency
+                    currencyId: currencyRecord.id, // Assuming all tickets use the same currency
                     schema: ticketSchema
                 };
 
@@ -85,111 +60,143 @@ export class EventService {
         }
     }
 
-    //TODO:fix all related tagIds and imageIds relation
-    async findAll() {
-        try {
-            return await this.prisma.event.findMany({
-                include: {
-                    images: true,
-                    tickets: true,
-                    organization: true,
-                },
-            });
-        } catch (error) {
-            throw new InternalServerErrorException('Failed to fetch events.');
+    private async validateTagIds(tagIds: string[]): Promise<string[]> {
+        const existingTags = await this.prisma.tag.findMany({
+            where: { id: { in: tagIds } },
+            select: { id: true }
+        });
+
+        if (existingTags.length !== tagIds.length) {
+            throw new BadRequestException("One or more tagIds are invalid or not found");
         }
+
+        return existingTags.map(tag => tag.id);
     }
 
-    async findOne(id: string) {
-        try {
-            const event = await this.prisma.event.findUnique({
-                where: { id },
-                include: {
-                    images: true,
-                    tickets: true,
-                    organization: true,
-                },
-            });
-            if (!event) throw new NotFoundException('Event not found.');
-            return event;
-        } catch (error) {
-            if (error instanceof NotFoundException) throw error;
-            throw new InternalServerErrorException('Failed to fetch event.');
-        }
+    // images must allow direct mapping to CreateImageDto
+    private async saveImages(images: any[]): Promise<string[]> {
+        const dtos = images.map((img) => plainToInstance(CreateImageDto, img));
+        const saved = await this.imageService.createMany(dtos);
+        return saved.map(img => img.id);
     }
 
-    async findByTag(tagId: string) {
-        try {
-            return await this.prisma.event.findMany({
-                where: { tagIds: { has: tagId } },
-                include: {
-                    images: true,
-                    tickets: true,
-                    organization: true,
-                },
-            });
-        } catch (error) {
-            throw new InternalServerErrorException('Failed to fetch events by tag.');
-        }
-    }
+    private async resolveCurrency(symbol?: string): Promise<Currency> {
+        const resolvedSymbol = symbol?.toUpperCase() ?? "VND";
+        const currency = await this.prisma.currency.findFirst({ where: { symbol: resolvedSymbol } });
 
-    async findByCity(city: string) {
-        try {
-            return await this.prisma.event.findMany({
-                where: { city },
-                include: {
-                    images: true,
-                    tickets: true,
-                    organization: true,
-                },
-            });
-        } catch (error) {
-            throw new InternalServerErrorException('Failed to fetch events by city.');
+        if (!currency) {
+            throw new BadRequestException(`Unsupported currency: ${resolvedSymbol}`);
         }
-    }
 
-    async findByDistrict(district: string) {
-        try {
-            return await this.prisma.event.findMany({
-                where: { district },
-                include: {
-                    images: true,
-                    tickets: true,
-                    organization: true,
-                },
-            });
-        } catch (error) {
-            throw new InternalServerErrorException('Failed to fetch events by district.');
-        }
-    }
-
-    async findByWard(ward: string) {
-        try {
-            return await this.prisma.event.findMany({
-                where: { ward },
-                include: {
-                    images: true,
-                    tickets: true,
-                    organization: true,
-                },
-            });
-        } catch (error) {
-            throw new InternalServerErrorException('Failed to fetch events by ward.');
-        }
-    }
-
-    //update event
-
-    async remove(id: string) {
-        try {
-            return await this.prisma.event.delete({
-                where: { id },
-            });
-        } catch (error) {
-            if (error.code === 'P2025') {
-                throw new NotFoundException('Event not found.');
-            }
-            throw new BadRequestException(error.message || 'Failed to delete event.');
-        }
+        return currency;
     }
 }
+
+//TODO:fix all related tagIds and imageIds relation
+
+// async findAll() {
+//     try {
+//         return await this.prisma.event.findMany({
+//             include: {
+//                 images: true,
+//                 tickets: true,
+//                 organization: true,
+//             },
+//         });
+//     } catch (error) {
+//         throw new InternalServerErrorException('Failed to fetch events.');
+//     }
+// }
+//
+// async findOne(id: string) {
+//     try {
+//         const event = await this.prisma.event.findUnique({
+//             where: { id },
+//             include: {
+//                 images: true,
+//                 tickets: true,
+//                 organization: true,
+//             },
+//         });
+//         if (!event) throw new NotFoundException('Event not found.');
+//         return event;
+//     } catch (error) {
+//         if (error instanceof NotFoundException) throw error;
+//         throw new InternalServerErrorException('Failed to fetch event.');
+//     }
+// }
+//
+// async findByTag(tagId: string) {
+//     try {
+//         return await this.prisma.event.findMany({
+//             where: { tagIds: { has: tagId } },
+//             include: {
+//                 images: true,
+//                 tickets: true,
+//                 organization: true,
+//             },
+//         });
+//     } catch (error) {
+//         throw new InternalServerErrorException('Failed to fetch events by tag.');
+//     }
+// }
+//
+// async findByCity(city: string) {
+//     try {
+//         return await this.prisma.event.findMany({
+//             where: { city },
+//             include: {
+//                 images: true,
+//                 tickets: true,
+//                 organization: true,
+//             },
+//         });
+//     } catch (error) {
+//         throw new InternalServerErrorException('Failed to fetch events by city.');
+//     }
+// }
+//
+// async findByDistrict(district: string) {
+//     try {
+//         return await this.prisma.event.findMany({
+//             where: { district },
+//             include: {
+//                 images: true,
+//                 tickets: true,
+//                 organization: true,
+//             },
+//         });
+//     } catch (error) {
+//         throw new InternalServerErrorException('Failed to fetch events by district.');
+//     }
+// }
+//
+// async findByWard(ward: string) {
+//     try {
+//         return await this.prisma.event.findMany({
+//             where: { ward },
+//             include: {
+//                 images: true,
+//                 tickets: true,
+//                 organization: true,
+//             },
+//         });
+//     } catch (error) {
+//         throw new InternalServerErrorException('Failed to fetch events by ward.');
+//     }
+// }
+//
+// //update event
+//
+// async remove(id: string) {
+//     try {
+//         return await this.prisma.event.delete({
+//             where: { id },
+//         });
+//     } catch (error) {
+//         if (error.code === 'P2025') {
+//             throw new NotFoundException('Event not found.');
+//         }
+//         throw new BadRequestException(error.message || 'Failed to delete event.');
+//     }
+// }

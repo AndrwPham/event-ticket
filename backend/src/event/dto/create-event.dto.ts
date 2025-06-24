@@ -1,6 +1,7 @@
-import { TicketSchemaDto } from './ticket-schema.dto';
-import { IsMongoId, IsDate, IsEnum, IsNotEmpty, IsArray, IsOptional, IsString } from 'class-validator';
+import { IsMongoId, IsDate, IsEnum, IsNotEmpty, IsArray, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
+import { TicketSchemaDto } from './ticket-schema.dto';
+import { CreateImageDto } from '../../image/dto/create-image.dto';
 
 export enum EventType {
   ONLINE = 'online',
@@ -65,8 +66,9 @@ export class CreateEventDto {
 
     @IsOptional()
     @IsArray()
-    @IsString({ each: true })
-    imageIds?: string[];
+    @ValidateNested({ each: true })
+    @Type(() => CreateImageDto)
+    images?: CreateImageDto[];
 
     @IsNotEmpty()
     @Type(() => TicketSchemaDto)

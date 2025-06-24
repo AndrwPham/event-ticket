@@ -104,8 +104,7 @@ model Event {
     organizationId String       @db.ObjectId
     organization   Organization @relation("OrganizationEvents", fields: [organizationId], references: [id], onDelete: Cascade)
 
-  tagIds String[] @db.ObjectId
-  tags   Tag[]    @relation("EventsTags", fields: [tagIds], references: [id])
+    tagIds            String[]  @db.ObjectId
 
     images  Image[]        @relation("EventImages")
     tickets IssuedTicket[] @relation("EventIssuedTickets")
@@ -211,11 +210,8 @@ model Review {
 }
 
 model Tag {
-  id   String @id @default(auto()) @map("_id") @db.ObjectId
-  name String @unique
-
-  eventIds String[] @db.ObjectId
-  events   Event[]  @relation("EventsTags", fields: [eventIds], references: [id])
+    id     String   @id @default(auto()) @map("_id") @db.ObjectId
+    name   String   @unique
 }
 
 model Image {

@@ -14,18 +14,26 @@ export class EventService {
     ) {}
 
     async create(dto: CreateEventDto) {
-        const { currency, ticketSchema, organizationId, ...eventData } = dto;
+        const { currency, ticketSchema, organizationId, tagIds, ...eventData } = dto;
 
+        let resolvedTagIds: string[] = [];
         try {
-            // // Handle tags: create new ones or connect existing
-            // let resolvedTagIds: string[] = [];
-            // if (tagNames?.length) {
-            //   const createdTags = await this.createOrGetTags(tagNames);
-            //   resolvedTagIds = createdTags.map(tag => tag.id);
-            // }
+            if (tagIds?.length) {
+                const existingTags = await this.prisma.tag.findMany({
+                    where: { id: { in: tagIds } },
+                    select: { id: true }
+                });
+
+                // use all tagIds or valid ids only
+                if (tagIds.length != existingTags.length) {
+                    resolvedTagIds.push(...existingTags.map(tag => tag.id)); 
+                    throw new BadRequestException("One or more tagIds are invalid or not found");
+                } else {
+                    resolvedTagIds.push(...tagIds);
+                }
+            }
 
             // Start a transaction for event creation and related operations
-
             let currencyRecord: Currency | null = null;
             try {
                 currencyRecord = await this.prisma.currency.findFirst({
@@ -48,9 +56,7 @@ export class EventService {
                     data: {
                         ...eventData,
                         organization: { connect: { id: organizationId } },
-                        // tags: {
-                        //   connect: resolvedTagIds.map((id) => ({ id })),
-                        // },
+                        tagIds: resolvedTagIds,
                         // images: {
                         //   connect: imageIds?.map((id) => ({ id })) || [],
                         // },
@@ -74,35 +80,18 @@ export class EventService {
             if (error.code === 'P2025') {
                 throw new NotFoundException('Related record not found (organization, tags, or images).');
             }
+            console.error(error.message);
             throw new BadRequestException(error.message || 'Failed to create event.');
         }
     }
 
-    async createOrGetTags(tagNames: string[]): Promise<Tag[]> {
-        const tags: Tag[] = [];
-
-        for (const name of tagNames) {
-            const existingTag = await this.prisma.tag.findUnique({ where: { name } });
-            if (existingTag) {
-                tags.push(existingTag);
-            } else {
-                const newTag = await this.prisma.tag.create({
-                    data: { name },
-                });
-                tags.push(newTag);
-            }
-        }
-
-        return tags;
-    }
-
+    //TODO:fix all related tagIds and imageIds relation
     async findAll() {
         try {
             return await this.prisma.event.findMany({
                 include: {
                     images: true,
                     tickets: true,
-                    tags: true,
                     organization: true,
                 },
             });
@@ -118,7 +107,6 @@ export class EventService {
                 include: {
                     images: true,
                     tickets: true,
-                    tags: true,
                     organization: true,
                 },
             });
@@ -137,7 +125,6 @@ export class EventService {
                 include: {
                     images: true,
                     tickets: true,
-                    tags: true,
                     organization: true,
                 },
             });
@@ -153,7 +140,6 @@ export class EventService {
                 include: {
                     images: true,
                     tickets: true,
-                    tags: true,
                     organization: true,
                 },
             });
@@ -169,7 +155,6 @@ export class EventService {
                 include: {
                     images: true,
                     tickets: true,
-                    tags: true,
                     organization: true,
                 },
             });
@@ -185,7 +170,6 @@ export class EventService {
                 include: {
                     images: true,
                     tickets: true,
-                    tags: true,
                     organization: true,
                 },
             });

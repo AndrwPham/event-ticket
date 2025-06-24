@@ -1,5 +1,5 @@
 import { TicketSchemaDto } from './ticket-schema.dto';
-import { IsDate, IsEnum, IsNotEmpty, IsArray, IsOptional, IsString } from 'class-validator';
+import { IsMongoId, IsDate, IsEnum, IsNotEmpty, IsArray, IsOptional, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export enum EventType {
@@ -60,8 +60,8 @@ export class CreateEventDto {
 
     @IsOptional()
     @IsArray()
-    @IsString({ each: true })
-    tagNames?: string[];
+    @IsMongoId({ each: true })
+    tagIds?: string[];
 
     @IsOptional()
     @IsArray()

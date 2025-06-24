@@ -135,12 +135,45 @@ export class OrderService {
 
     // payment
     try {
-      // DB order id = orderCode for PayOS
-      // Create a unique numerical code from the database Order ID string.
-      // PayOS requires a number, so we take the last 6 hex chars from the
-      // ID and convert them to an integer. This links the two IDs.
+      const orderId = createdOrder.id;
 
-      const orderCode = parseInt(createdOrder.id.slice(-6), 16);
+      // generate unique integer order code
+      const numericString = orderId.replace(/\D/g, "");
+      const orderCode = Number("1" + numericString.padEnd(15, "0").slice(0, 15));
+      let updated = false;
+      let attempts = 0;
+      let finalOrderCode = orderCode;
+      while (!updated && attempts < 5) {
+        try {
+          await this.prisma.order.update({
+        where: { id: orderId },
+        data: { paymentRefCode: finalOrderCode },
+          });
+          updated = true;
+        } catch (err) {
+          if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === "P2002"
+          ) {
+        finalOrderCode = Number(
+          "1" +
+            Math.floor(Math.random() * 1e14)
+          .toString()
+          .padEnd(15, "0")
+          .slice(0, 15)
+        );
+        attempts++;
+          } else {
+        throw err;
+          }
+        }
+      }
+      if (!updated) {
+        throw new InternalServerErrorException(
+          "Failed to generate a unique payment reference code"
+        );
+      }
+      
       const paymentItems = ticketDetails
           .filter((ticket) => ticket !== null)
           .map((ticket) => ({
@@ -156,11 +189,11 @@ export class OrderService {
       const paymentReturnPath = "/payment/return";
       const paymentDto: CreatePaymentDto = {
         orderCode,
-        description: `Order #${orderCode}`,
+        description: `REF#${orderId}`,
         amount: totalPrice,
         items: paymentItems,
-        returnUrl: "http://localhost:5173/payment/return",
-        cancelUrl: "http://localhost:5173/payment/return",
+        returnUrl: `${frontendBaseUrl}${paymentReturnPath}`,
+        cancelUrl: `${frontendBaseUrl}${paymentReturnPath}`,
       };
       const paymentLink = await this.paymentService.createPaymentLink(paymentDto);
       return {
@@ -211,11 +244,17 @@ export class OrderService {
             "Only pending or failed orders can be cancelled",
         );
       }
+      if (!order.paymentRefCode) {
+        throw new BadRequestException("Order does not have a payment reference code");
+      }
       const ticketItems = order.ticketItems;
       await this.prisma.$transaction(async (tx: PrismaClient) => {
         await tx.order.update({
           where: { id },
-          data: { status: OrderStatus.CANCELLED },
+          data: { 
+            status: OrderStatus.CANCELLED,
+            paymentRefCode: null,
+          },
         });
         if (ticketItems && ticketItems.length > 0) {
           await Promise.all(
@@ -230,6 +269,8 @@ export class OrderService {
           await this.holdService.releaseTickets(ticketItems);
         }
       });
+      await this.paymentService.cancelPaymentLink(order.paymentRefCode.toString(), "Order cancelled");
+
       return await this.prisma.order.findUnique({ where: { id } });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -237,6 +278,27 @@ export class OrderService {
       }
       throw error;
     }
+  }
+
+  /**
+   * Get the internal order id from a paymentRefCode (orderCode)
+   */
+  async getOrderIdFromPaymentCode(orderCode: string): Promise<string> {
+    const order = await this.prisma.order.findUnique({ where: { paymentRefCode: Number(orderCode) } });
+    if (!order) {
+      throw new NotFoundException('Order not found for given orderCode');
+    }
+    return order.id;
+  }
+
+  /**
+   * Confirm payment by orderCode (paymentRefCode) instead of internal id.
+   * This is intended for use by the controller/webhook, which should look up by orderCode.
+   */
+  async confirmPaymentByOrderCode(orderCode: string) {
+    // Use the new helper to get the order id
+    const orderId = await this.getOrderIdFromPaymentCode(orderCode);
+    return this.confirmPayment(orderId);
   }
 
   async confirmPayment(id: string) {

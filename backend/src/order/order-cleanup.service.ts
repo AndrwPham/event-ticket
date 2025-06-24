@@ -3,6 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { OrderStatus } from './order-status.enum';
 import { PaymentService } from '../payment/payment.service';
+import { OrderService } from './order.service';
 
 @Injectable()
 export class OrderCleanupService {
@@ -11,6 +12,7 @@ export class OrderCleanupService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly paymentService: PaymentService,
+    private readonly orderService: OrderService,
   ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
@@ -32,7 +34,7 @@ export class OrderCleanupService {
     });
     for (const order of expiredOrders) {
       try {
-        await this.paymentService.cancelPaymentLink(order.id, "Expired order"); // call payment cancel logic
+        this.orderService.cancel(order.id);
         this.logger.log(`Cancelled expired order ${order.id}`);
       } catch (err) {
         this.logger.error(`Failed to cancel order ${order.id}: ${err.message}`);

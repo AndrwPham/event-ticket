@@ -49,7 +49,9 @@ export class PaymentsController {
       }
 
       // idempotency check
-      const orderId = String(webhookData.orderCode);
+      const orderCode = String(webhookData.orderCode);
+      const orderId = await this.orderService.getOrderIdFromPaymentCode(orderCode);
+
       const order = await this.orderService.findOne(orderId);
       if (order && order.status === 'PAID') {
         this.logger.log(`Order ${orderId} already processed.`);

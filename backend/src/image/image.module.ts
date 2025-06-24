@@ -7,8 +7,9 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [JwtModule.register({}),AuthModule, PrismaModule],
-  controllers: [ImageController],
-  providers: [ImageService]
+    imports: [JwtModule.register({}),AuthModule, PrismaModule],
+    controllers: [ImageController],
+    providers: [ImageService],
+    exports: [ImageService]
 })
 export class ImageModule {}

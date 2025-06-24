@@ -1,13 +1,13 @@
 import { FC, useState, useEffect } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { FaCheckCircle, FaSpinner, FaTimesCircle } from "react-icons/fa";
-import { IApiResponse, IEvent } from "../../types";
+import { ApiResponse, Event } from "../../types";
 import { allEvents } from "../../data/_mock_db";
 
 const SuccessPage: FC = () => {
     const { id: eventId } = useParams<{ id: string }>();
     const [searchParams] = useSearchParams();
-    const [eventDetails, setEventDetails] = useState<IEvent | null>(null);
+    const [eventDetails, setEventDetails] = useState<Event | null>(null);
     const [verificationStatus, setVerificationStatus] = useState<
         "VERIFYING" | "SUCCESS" | "FAILED"
     >("VERIFYING");
@@ -36,7 +36,7 @@ const SuccessPage: FC = () => {
                 const response = await fetch(
                     `http://localhost:5000/api/payment/order/${orderCode}`,
                 );
-                const result = (await response.json()) as IApiResponse;
+                const result = (await response.json()) as ApiResponse;
 
                 if (
                     !response.ok ||

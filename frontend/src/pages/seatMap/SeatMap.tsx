@@ -3,8 +3,15 @@ import { useParams, useNavigate } from "react-router-dom";
 import VenueMap from "./components/VenueMap";
 import SeatMapLegend from "./components/SeatMapLegend";
 import SeatMapOrderSummary from "./components/SeatMapOrderSummary";
-import BuyerInfoForm from "../payment/components/BuyerInfoForm";
-import { EventData, IssuedTicket } from "../../types"; // Ensure all needed types are imported
+import BuyerInfoForm from "./components/BuyerInfoForm";
+import {
+    EventData,
+    IssuedTicket,
+    BuyerInfo,
+    OrderDetails,
+    LocationState,
+    Event,
+} from "../../types";
 
 export default function SeatMap() {
     const { eventId } = useParams<{ eventId: string }>();
@@ -13,41 +20,36 @@ export default function SeatMap() {
     const [event, setEvent] = useState<EventData | null>(null);
     const [selectedSeats, setSelectedSeats] = useState<IssuedTicket[]>([]);
     const [attendeeInfo, setAttendeeInfo] = useState({
-        first_name: "",
-        last_name: "",
+        firstName: "",
+        lastName: "",
         email: "",
     });
     const [loading, setLoading] = useState<boolean>(true);
     const [isProcessing, setIsProcessing] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
+    // This useEffect hook fetches the event data and remains unchanged.
     useEffect(() => {
-        void (async () => {
+        const fetchEventData = async () => {
             if (!eventId) {
                 setError("Event ID is missing from URL.");
                 setLoading(false);
                 return;
             }
             try {
-                const response = await fetch(
-                    `http://localhost:5000/events/${eventId}`,
-                );
-                if (!response.ok)
-                    throw new Error(
-                        `HTTP error! status: ${String(response.status)}`,
-                    );
+                const response = await fetch(`http://localhost:5000/events/${eventId}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 const data = (await response.json()) as EventData;
                 setEvent(data);
             } catch (err: unknown) {
-                setError(
-                    err instanceof Error
-                        ? err.message
-                        : "An unknown error occurred",
-                );
+                setError(err instanceof Error ? err.message : "An unknown error occurred");
             } finally {
                 setLoading(false);
             }
-        })();
+        };
+        void fetchEventData();
     }, [eventId]);
 
     const handleSeatSelect = (ticket: IssuedTicket) => {
@@ -55,24 +57,13 @@ export default function SeatMap() {
         setSelectedSeats((prev) =>
             prev.some((s) => s.id === ticket.id)
                 ? prev.filter((s) => s.id !== ticket.id)
-                : [...prev, ticket],
+                : [...prev, ticket]
         );
     };
 
-    const handleAttendeeInfoChange = (
-        e: React.ChangeEvent<HTMLInputElement>,
-    ) => {
+    const handleAttendeeInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        if (name === "fullName") {
-            const parts = value.split(" ");
-            setAttendeeInfo((prev) => ({
-                ...prev,
-                first_name: parts[0] || "",
-                last_name: parts.slice(1).join(" "),
-            }));
-        } else {
-            setAttendeeInfo((prev) => ({ ...prev, [name]: value }));
-        }
+        setAttendeeInfo((prev) => ({ ...prev, [name]: value }));
     };
 
     const handleProceedToPayment = async () => {
@@ -80,67 +71,84 @@ export default function SeatMap() {
             alert("Please select at least one seat.");
             return;
         }
-        if (!attendeeInfo.email || !attendeeInfo.first_name) {
-            alert("Please fill in your name and email.");
+        if (!attendeeInfo.email || !attendeeInfo.firstName || !attendeeInfo.lastName) {
+            alert("Please fill in your first name, last name, and email.");
             return;
         }
 
         setIsProcessing(true);
         setError(null);
 
+        // CORRECTED: Reverting to the nested payload structure as it aligns
+        // with the backend's DTO and the latest error messages.
         const payload = {
-            ticketIds: selectedSeats.map((seat) => seat.id),
-            attendee: attendeeInfo,
+            ticketItems: selectedSeats.map((seat) => seat.id),
+            method: "PAYOS",
+            guestName: `${attendeeInfo.firstName} ${attendeeInfo.lastName}`.trim(),
+            guestEmail: attendeeInfo.email,
         };
 
         try {
             const response = await fetch("http://localhost:5000/orders", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                },
                 body: JSON.stringify(payload),
             });
 
             if (!response.ok) {
-                const errorData = (await response.json()) as {
-                    message?: string;
-                };
-                throw new Error(errorData.message || "Failed to create order.");
+                const errorData = (await response.json()) as { message?: string | string[] };
+                const errorMessage = Array.isArray(errorData.message) ? errorData.message.join(", ") : errorData.message;
+                throw new Error(errorMessage || "Failed to create the order.");
             }
 
             const newOrder = await response.json();
 
-            navigate(`/payment`, {
+            const buyerInfo: BuyerInfo = {
+                fullName: `${attendeeInfo.firstName} ${attendeeInfo.lastName}`.trim(),
+                email: attendeeInfo.email,
+                phone: "",
+            };
+
+            const orderDetails: OrderDetails = {
+                tickets: selectedSeats.map((ticket) => ({
+                    name: `Seat ${ticket.seat} (${ticket.class})`,
+                    quantity: 1,
+                    price: ticket.price,
+                })),
+            };
+
+            const eventDetails: Event = event as unknown as Event;
+
+            const locationState: Partial<LocationState> = {
+                eventDetails,
+                orderDetails,
+                buyerInfo,
+            };
+
+            navigate(`/event/${String(eventId)}/payment`, {
                 state: {
+                    ...locationState,
                     order: newOrder,
-                    eventDetails: event,
-                    orderDetails: { tickets: selectedSeats },
                 },
             });
+
         } catch (err: unknown) {
-            setError(
-                err instanceof Error
-                    ? err.message
-                    : "An unknown error occurred.",
-            );
+            setError(err instanceof Error ? err.message : "An unknown error occurred.");
         } finally {
             setIsProcessing(false);
         }
     };
 
-    if (loading)
-        return <div className="text-center py-20">Loading seat map...</div>;
-    if (error && !isProcessing)
-        return <div className="text-center py-20 text-red-500">{error}</div>;
-    if (!event)
-        return <div className="text-center py-20">Event not found.</div>;
+    if (loading) return <div className="text-center py-20">Loading seat map...</div>;
+
+    if (error && !isProcessing) return <div className="text-center py-20 text-red-500">{error}</div>;
+
+    if (!event) return <div className="text-center py-20">Event not found.</div>;
 
     const uniqueTicketClasses = Array.from(
-        new Map(
-            event.tickets.map((t) => [
-                t.class,
-                { name: t.class, color: t.classColor || "#CCCCCC" },
-            ]),
-        ).values(),
+        new Map(event.tickets.map((t) => [t.class, { name: t.class, color: t.classColor || "#CCCCCC" }])).values()
     );
 
     return (
@@ -162,15 +170,12 @@ export default function SeatMap() {
                     </div>
                     <SeatMapLegend seatClasses={uniqueTicketClasses} />
                     <div className="bg-white p-6 rounded-lg shadow">
-                        <h3 className="text-xl font-bold mb-4">
-                            Your Information
-                        </h3>
+                        <h3 className="text-xl font-bold mb-4">Your Information</h3>
                         <BuyerInfoForm
                             buyerInfo={{
-                                fullName:
-                                    `${attendeeInfo.first_name} ${attendeeInfo.last_name}`.trim(),
+                                firstName: attendeeInfo.firstName,
+                                lastName: attendeeInfo.lastName,
                                 email: attendeeInfo.email,
-                                phone: "",
                             }}
                             onInfoChange={handleAttendeeInfoChange}
                         />
@@ -181,14 +186,10 @@ export default function SeatMap() {
                     <SeatMapOrderSummary
                         selectedSeats={selectedSeats}
                         isProcessing={isProcessing}
-                        onProceed={() => {
-                            void handleProceedToPayment();
-                        }}
+                        onProceed={handleProceedToPayment}
                     />
-                    {error && isProcessing && (
-                        <p className="text-red-500 text-sm mt-2 text-center">
-                            {error}
-                        </p>
+                    {error && (
+                        <p className="text-red-500 text-sm mt-2 text-center">{error}</p>
                     )}
                 </div>
             </div>

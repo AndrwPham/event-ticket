@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { IEvent, IOrderDetails } from "../../../types";
+import { Event, OrderDetails } from "../../../types";
 
 interface GroupedTicket {
     name: string;
@@ -8,27 +8,27 @@ interface GroupedTicket {
 }
 
 interface OrderSummaryProps {
-    eventDetails: IEvent;
-    orderDetails: IOrderDetails;
+    eventDetails: Event;
+    orderDetails: OrderDetails;
 }
 
 const OrderSummary: FC<OrderSummaryProps> = ({
-    eventDetails,
-    orderDetails,
-}) => {
+                                                 eventDetails,
+                                                 orderDetails,
+                                             }) => {
+    // This function groups tickets by name and price for a cleaner display.
     const groupedTickets = orderDetails.tickets.reduce<{
         [key: string]: GroupedTicket;
     }>((acc, ticket) => {
         const key = `${ticket.name}-${String(ticket.price)}`;
-
         if (!(key in acc)) {
             acc[key] = { ...ticket, quantity: 0 };
         }
-
         acc[key].quantity += ticket.quantity;
         return acc;
     }, {});
 
+    // This function calculates the total amount of the order.
     const totalAmount = orderDetails.tickets.reduce(
         (acc, ticket) => acc + ticket.price * ticket.quantity,
         0,
@@ -40,20 +40,34 @@ const OrderSummary: FC<OrderSummaryProps> = ({
                 Order Summary
             </h2>
             <div className="space-y-2 mb-4">
-                <h3 className="font-semibold">{eventDetails.title}</h3>
-                <p className="text-sm text-gray-600">
-                    {new Date(
-                        eventDetails.schedule[0].datetime,
-                    ).toLocaleDateString("vi-VN", {
-                        weekday: "long",
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                    })}
-                </p>
-                <p className="text-sm text-gray-600">
-                    {eventDetails.location.name}
-                </p>
+                {/* Ensure eventDetails exists before trying to access its properties */}
+                {eventDetails && (
+                    <>
+                        <h3 className="font-semibold">{eventDetails.title}</h3>
+
+                        {/* FIXED: Added optional chaining to 'schedule' and 'location'.
+                          This safely checks if these properties exist before trying to display them,
+                          which prevents the application from crashing.
+                        */}
+                        {eventDetails.schedule?.[0]?.datetime && (
+                            <p className="text-sm text-gray-600">
+                                {new Date(
+                                    eventDetails.schedule[0].datetime,
+                                ).toLocaleDateString("vi-VN", {
+                                    weekday: "long",
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                })}
+                            </p>
+                        )}
+                        {eventDetails.location?.name && (
+                            <p className="text-sm text-gray-600">
+                                {eventDetails.location.name}
+                            </p>
+                        )}
+                    </>
+                )}
             </div>
             <div className="border-t border-b border-gray-200 py-4 space-y-2">
                 {Object.values(groupedTickets).map((ticket) => (
@@ -68,7 +82,6 @@ const OrderSummary: FC<OrderSummaryProps> = ({
                             {new Intl.NumberFormat("vi-VN").format(
                                 ticket.price * ticket.quantity,
                             )}
-                            đ
                         </span>
                     </div>
                 ))}

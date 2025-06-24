@@ -57,52 +57,90 @@ export class AWSService {
     }
 
     //key = public|private + /folder/ + name. Could be changed in the future.
-    async generateSignedPutUrl(dto: UploadFileDto): Promise<{ presignedUrl: string; key: string }> {
-        const { isPublic, contentType, folder } = dto;
-        const key = `${isPublic ? 'public' : 'private'}/${folder}/${Date.now()}-${crypto.randomBytes(32).toString('hex')}`;
+    async generateSignedPutUrl(dtos: UploadFileDto[]): Promise<{ presignedUrl: string; key: string }[]> {
 
-        const command = new PutObjectCommand({
-            Bucket: this.bucketName,
-            Key: key,
-            ContentType: contentType,
-        });
+        return Promise.all(
 
-        const presignedUrl = await getSignedUrl(this.s3Client, command, { expiresIn: 60 }); // 5 min
+            dtos.map(async (dto) => {
+                const { isPublic, contentType, folder } = dto;
+                const key = `${isPublic ? 'public' : 'private'}/${folder}/${Date.now()}-${crypto.randomBytes(32).toString('hex')}`;
 
-        return { presignedUrl, key };
-    }
-
-    async getFileUrl(dto: GetFileDto): Promise<string> {
-        const { key, isPublic, ...privateParams } = dto;
-        try {
-            await this.s3Client.send(
-                new HeadObjectCommand({
+                const command = new PutObjectCommand({
                     Bucket: this.bucketName,
                     Key: key,
-                }),
-            );
-        } catch (err) {
-            if (err.name === 'Not Found') {
-                throw new NotFoundException(`Object not found: ${key}`);
-            }
-            throw err;
-        }
+                    ContentType: contentType,
+                });
 
-        if (!isPublic) {
-            const expiresInSeconds: number = privateParams?.expiresInSeconds ?? 60;
+                const presignedUrl = await getSignedUrl(this.s3Client, command, { expiresIn: 60 });
 
-            // Create the signed URL
-            const command = new GetObjectCommand({
-                Bucket: this.bucketName,
-                Key: key,
-            });
+                return { presignedUrl, key };
+            })
+        )
+    }
 
-            return getSignedUrl(this.s3Client, command, { expiresIn: expiresInSeconds });
+    async getFileUrl(dtos: GetFileDto[]): Promise<{
+        key: string,
+        url: string | null,
+        status: 'ok' | 'error',
+        message?: string,
+    }[]> {
+        const results = await Promise.allSettled(
+            dtos.map( async (dto) => {
 
-        } else {
+                try {
 
-            return this.baseUrl + key;
-        }
+                    const { key, isPublic, ...privateParams } = dto;
+                    await this.s3Client.send(
+                        new HeadObjectCommand({
+                            Bucket: this.bucketName,
+                            Key: key,
+                        }),
+                    );
 
+                    let url: string;
+
+                    if (!isPublic) {
+                        const expiresInSeconds: number = privateParams?.expiresInSeconds ?? 60;
+
+                        // Create the signed URL
+                        const command = new GetObjectCommand({
+                            Bucket: this.bucketName,
+                            Key: key,
+                        });
+
+                        url = await getSignedUrl(this.s3Client, command, { expiresIn: expiresInSeconds });
+                    } else {
+                        url =  this.baseUrl + key;
+                    }
+
+                    return {
+                        key,
+                        url,
+                        status: 'ok' as const,
+                    };
+
+                } catch (err: any) {
+                    const isNotFound = err?.$metadata?.httpStatusCode === 404 || err?.name === 'Not Found';
+
+                    return {
+                        key: dto.key,
+                        url: null,
+                        status: 'error' as const,
+                        message: isNotFound ? 'File not found.' : err.message,
+                    };
+                }
+            })
+        )
+
+        return results.map((result, i) => {
+            if (result.status === 'fulfilled') return result.value;
+
+            return {
+                key: dtos[i].key,
+                url: null,
+                status: 'error' as const,
+                message: result.reason?.message ?? 'Unknown error',
+            };
+        });
     }
 }

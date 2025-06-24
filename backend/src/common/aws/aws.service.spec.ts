@@ -44,15 +44,15 @@ describe('AWSService', () => {
         it('should return signed PUT URL and key', async () => {
             (getSignedUrl as jest.Mock).mockResolvedValue('https://signed.put.url');
 
-            const dto = {
+            const dto = [{
                 folder: 'events',
                 contentType: 'image/jpeg',
                 isPublic: true,
-            };
+            }];
 
             const result = await service.generateSignedPutUrl(dto);
-            expect(result.presignedUrl).toBe('https://signed.put.url');
-            expect(result.key).toContain('public/events');
+            expect(result[0].presignedUrl).toBe('https://signed.put.url');
+            expect(result[0].key).toContain('public/events');
         });
     });
 
@@ -61,34 +61,46 @@ describe('AWSService', () => {
             s3Mock.on(HeadObjectCommand).resolves({});
             (getSignedUrl as jest.Mock).mockResolvedValue('https://signed.get.url');
 
-            const dto = {
+            const dto = [{
                 key: 'private/tickets/sample.png',
                 isPublic: false,
                 expiresInSeconds: 100,
-            };
+            }];
 
-            const url = await service.getFileUrl(dto);
-            expect(url).toBe('https://signed.get.url');
+            const result = await service.getFileUrl(dto);
+            expect(result[0].url).toBe('https://signed.get.url');
         });
 
         it('should return public URL for public files', async () => {
             s3Mock.on(HeadObjectCommand).resolves({});
 
-            const dto = {
+            const dto = [{
                 key: '/public/events/test.jpg',
                 isPublic: true,
-            };
+            }];
 
-            const url = await service.getFileUrl(dto);
-            expect(url).toBe('https://ticketweb-assets.s3.ap-southeast-1.amazonaws.com/public/events/test.jpg');
+            const result = await service.getFileUrl(dto);
+            expect(result[0].url).toBe('https://ticketweb-assets.s3.ap-southeast-1.amazonaws.com/public/events/test.jpg');
         });
 
         it('should throw NotFoundException for missing files', async () => {
+            // TODO:check the error name
             s3Mock.on(HeadObjectCommand).rejects({ name: 'Not Found' });
 
-            await expect(
-                service.getFileUrl({ key: 'x', isPublic: true }),
-            ).rejects.toThrow('Object not found: x');
+            const dto = [{
+                key: 'x',
+                isPublic: true
+            }];
+            const result = await service.getFileUrl(dto);
+
+            expect(result[0]).toEqual(
+                {
+                    key: 'x',
+                    url: null,
+                    status: 'error',
+                    message: 'File not found.'
+                }
+            )
         });
     });
 });

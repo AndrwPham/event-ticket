@@ -302,8 +302,9 @@ export class OrderService {
   }
 
   async confirmPayment(id: string) {
+    let order;
     try {
-      const order = await this.prisma.order.findUnique({ where: { id } });
+      order = await this.prisma.order.findUnique({ where: { id } });
       if (!order) {
         throw new NotFoundException("Order not found");
       }
@@ -314,52 +315,70 @@ export class OrderService {
       if (!ticketItems || ticketItems.length === 0) {
         throw new BadRequestException("No ticket items found for this order");
       }
-      let transactionError;
-      await this.prisma.$transaction(async (tx: PrismaClient) => {
-        try {
-          await this.claimedTicketService.createClaimedTickets(
-              order.id,
-              order.attendeeId,
-              ticketItems,
-              ClaimedTicketStatus.READY,
-              tx,
-          );
-        } catch (err) {
-          transactionError = new InternalServerErrorException(
-              "Failed to claim tickets",
-          );
-          throw transactionError;
-        }
-        await Promise.all(
-            ticketItems.map((ticketId) =>
-                this.issuedTicketService.update(
-                    ticketId,
-                    { status: TicketStatus.CLAIMED },
-                    tx,
-                ),
-            ),
-        );
-        await tx.order.update({
-          where: { id },
-          data: { 
-            status: OrderStatus.PAID,
-            paymentRefCode: null, // Clear paymentRefCode after confirmation
-           },
-        });
-        await this.holdService.releaseTickets(ticketItems);
-      });
-      if (transactionError) throw transactionError;
 
-      // emit event for order completion
+      try {
+        await this.prisma.$transaction(async (tx: PrismaClient) => {
+          await this.claimedTicketService.createClaimedTickets(
+            order.id,
+            order.attendeeId,
+            ticketItems,
+            ClaimedTicketStatus.READY,
+            tx,
+          );
+        }, { timeout: 5000 });
+      } catch (err) {
+        this.logger.error('Failed to claim tickets', err);
+        throw new InternalServerErrorException("Failed to claim tickets");
+      }
+
+      try {
+        await this.prisma.$transaction(async (tx: PrismaClient) => {
+          await Promise.all(
+            ticketItems.map((ticketId) =>
+              this.issuedTicketService.update(
+                ticketId,
+                { status: TicketStatus.CLAIMED },
+                tx,
+              ),
+            ),
+          );
+        }, { timeout: 5000 });
+      } catch (err) {
+        this.logger.error('Failed to update ticket statuses', err);
+        throw new InternalServerErrorException("Failed to update ticket statuses");
+      }
+
+      try {
+        await this.prisma.$transaction(async (tx: PrismaClient) => {
+          await tx.order.update({
+            where: { id },
+            data: {
+              status: OrderStatus.PAID,
+              paymentRefCode: null, // Clear paymentRefCode after confirmation
+            },
+          });
+        }, { timeout: 5000 });
+      } catch (err) {
+        this.logger.error('Failed to update order status', err);
+        throw new InternalServerErrorException("Failed to update order status");
+      }
+
+      await this.holdService.releaseTickets(ticketItems);
+
       this.eventEmitter.emit(
-          "order.completed",
-          new OrderCompletedEvent(order.id, order.attendeeId),
+        "order.completed",
+        new OrderCompletedEvent(order.id, order.attendeeId),
       );
       return await this.prisma.order.findUnique({ where: { id } });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        throw new ConflictException("Database error during payment confirmation");
+        this.logger.error(
+          `Prisma error during payment confirmation: code=${error.code}, meta=${JSON.stringify(error.meta)}, message=${error.message}`,
+          error.stack
+        );
+        throw new ConflictException(`Database error during payment confirmation: ${error.code} ${error.message}`);
       }
+      this.logger.error('Unknown error during payment confirmation', error);
       throw error;
     }
   }

@@ -341,7 +341,10 @@ export class OrderService {
         );
         await tx.order.update({
           where: { id },
-          data: { status: OrderStatus.PAID },
+          data: { 
+            status: OrderStatus.PAID,
+            paymentRefCode: null, // Clear paymentRefCode after confirmation
+           },
         });
         await this.holdService.releaseTickets(ticketItems);
       });

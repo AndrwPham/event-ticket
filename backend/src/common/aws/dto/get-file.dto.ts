@@ -3,5 +3,5 @@ import { IsNotEmpty, IsString, IsBoolean, IsOptional, IsNumber } from 'class-val
 export class GetFileDto {
     @IsString() @IsNotEmpty() key: string;
     @IsBoolean() isPublic: boolean;
-    @IsOptional() @IsNumber() expiresInSeconds?: int;
+    @IsOptional() @IsNumber() expiresInSeconds?: number;
 }

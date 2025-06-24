@@ -159,8 +159,8 @@ export class OrderService {
         description: `Order #${orderCode}`,
         amount: totalPrice,
         items: paymentItems,
-        returnUrl: `${frontendBaseUrl}${paymentReturnPath}`,
-        cancelUrl: `${frontendBaseUrl}${paymentReturnPath}`,
+        returnUrl: "http://localhost:5173/payment/return",
+        cancelUrl: "http://localhost:5173/payment/return",
       };
       const paymentLink = await this.paymentService.createPaymentLink(paymentDto);
       return {

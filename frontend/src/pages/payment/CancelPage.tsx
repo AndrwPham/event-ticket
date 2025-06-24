@@ -1,35 +1,38 @@
-import { FC } from "react";
-import { Link } from "react-router-dom";
-import { FaTimesCircle } from "react-icons/fa";
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { XCircle } from "lucide-react";
 
-const CancelPage: FC = () => {
+const PaymentFail: React.FC = () => {
+    const navigate = useNavigate();
+
     return (
-        <div className="max-w-2xl mx-auto my-12 p-8 bg-white rounded-lg shadow-lg border text-center">
-            <FaTimesCircle className="text-6xl text-red-500 mx-auto mb-4" />
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                Payment Canceled
-            </h1>
-            <p className="text-gray-600 mb-6">
-                Your payment was not completed. You can try again or return to
-                the homepage.
-            </p>
+        <div className="min-h-screen flex items-center justify-center bg-red-50 px-4">
+            <div className="bg-white shadow-md rounded-2xl p-8 max-w-md w-full text-center">
+                <XCircle className="text-red-500 w-16 h-16 mx-auto mb-4" />
+                <h1 className="text-2xl font-bold text-gray-800 mb-2">
+                    Payment Failed
+                </h1>
+                <p className="text-gray-600 mb-6">
+                    Unfortunately, your payment could not be processed.
+                </p>
 
-            <div className="flex justify-center gap-4">
-                <Link
-                    to="/payment"
-                    className="inline-block mt-6 bg-gray-600 text-white px-8 py-3 rounded-md font-semibold hover:bg-gray-700 transition"
-                >
-                    Try Again
-                </Link>
-                <Link
-                    to="/"
-                    className="inline-block mt-6 bg-indigo-600 text-white px-8 py-3 rounded-md font-semibold hover:bg-indigo-700 transition"
-                >
-                    Back to Home
-                </Link>
+                <div className="flex justify-center gap-4">
+                    <button
+                        onClick={() => navigate("/events")}
+                        className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition"
+                    >
+                        Try Again
+                    </button>
+                    <button
+                        onClick={() => navigate("/")}
+                        className="bg-gray-100 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-200 transition"
+                    >
+                        Go to Home
+                    </button>
+                </div>
             </div>
         </div>
     );
 };
 
-export default CancelPage;
+export default PaymentFail;

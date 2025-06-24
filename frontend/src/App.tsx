@@ -14,9 +14,10 @@ import Payment from "./pages/payment/Payment";
 import TicketDetails from "./pages/ticket/TicketDetails";
 import CardPaymentPage from "./pages/payment/CardPaymentPage";
 import SeatMap from "./pages/seatMap/SeatMap";
-import SuccessPage from "./pages/payment/SuccessPage";
 import CancelPage from "./pages/payment/CancelPage";
+import PaymentPage from "./pages/payment/PaymentSuccess";
 import MyProfile from "./pages/myProfile/page";
+import PaymentSuccess from "./pages/payment/PaymentSuccess";
 
 function App() {
     const [isSignUpOpen, setIsSignUpOpen] = useState(false);
@@ -53,16 +54,16 @@ function App() {
 
                         <Route path="/search" element={<SearchPage />} />
                         <Route
-                            path="/event/:id/payment/card"
+                            path="/event/:eventId/payment/card"
                             element={<CardPaymentPage />}
                         />
                         <Route
-                            path="/event/:id/payment/success"
-                            element={<SuccessPage />}
+                            path="/events/:eventId/payment/cancel"
+                            element={<CancelPage />}
                         />
                         <Route
-                            path="/event/:id/payment/cancel"
-                            element={<CancelPage />}
+                            path="/events/:eventid/payment/success"
+                            element={<PaymentSuccess />}
                         />
                         <Route
                             path="/event/:eventId/seats"

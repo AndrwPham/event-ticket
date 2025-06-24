@@ -5,6 +5,18 @@ import { LiveEvent } from "../types";
 
 interface EventCardProps {
     event: LiveEvent;
+    onClick?: (event: LiveEvent) => void;
+}
+
+export interface Event {
+    id: number;
+    title: string;
+    date: string;
+    location: string;
+    price: string;
+    followers: string;
+    image: string;
+    category: string;
 }
 
 const EventCard: FC<EventCardProps> = ({ event }) => {

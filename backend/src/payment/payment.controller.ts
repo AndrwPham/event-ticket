@@ -42,6 +42,7 @@ export class PaymentsController {
     try {
       // parse webhook data
       const webhookData = await this.paymentService.verifyWebhook(body);
+      this.logger.log(webhookData);
       if (!webhookData || webhookData.code !== '00') {
         this.logger.warn(`Payment failed or not successful for order: ${webhookData?.orderCode}`);
         return { received: true };

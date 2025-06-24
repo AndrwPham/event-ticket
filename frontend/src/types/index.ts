@@ -1,4 +1,3 @@
-
 export type TicketStatus = "AVAILABLE" | "UNAVAILABLE" | "HELD" | "PAID";
 
 export interface IssuedTicket {
@@ -63,8 +62,8 @@ export interface OrderDetails {
 export interface Order {
     id: string;
     totalPrice: number;
-    status: 'PENDING' | 'PAID' | 'FAILED' | 'CANCELLED';
-    method: 'PAYOS' | string;
+    status: "PENDING" | "PAID" | "FAILED" | "CANCELLED";
+    method: "PAYOS" | string;
     attendeeId: string;
     ticketItems: string[];
     createdAt: string;
@@ -108,4 +107,18 @@ export interface ApiError {
 
 export function isApiError(data: unknown): data is ApiError {
     return typeof data === "object" && data !== null && "message" in data;
+}
+
+export interface LiveEvent {
+    id: string;
+    title: string;
+    active_start_date: string;
+    venue: { name: string } | null;
+    images: { url: string }[];
+    // Add any other fields you need for the event card
+}
+export interface User {
+    id: string;
+    email: string;
+    username: string;
 }

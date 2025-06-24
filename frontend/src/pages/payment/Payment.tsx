@@ -20,61 +20,75 @@ interface PaymentLocationState {
 const PaymentPage: FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
-
-    // Safely destructure state, providing a fallback to prevent runtime errors
     const state = location.state as PaymentLocationState | null;
     const { order, eventDetails, orderDetails } = state || {};
     const checkoutUrl = order?.paymentLink?.checkoutUrl;
+    const qrCode = order?.paymentLink?.qrCode;
 
     const [error, setError] = useState<string | null>(null);
 
-    // Configure the PayOS hook with all required properties.
+    // Console logs for debugging
+    useEffect(() => {
+        console.log("PaymentPage mounted");
+        console.log("State:", state);
+        console.log("checkoutUrl:", checkoutUrl);
+        console.log("qrCode:", qrCode);
+    }, [state, checkoutUrl, qrCode]);
+
     const { open, exit } = usePayOS({
-        CHECKOUT_URL: checkoutUrl || '',
+        CHECKOUT_URL: checkoutUrl || "",
         ELEMENT_ID: "payos-container",
         embedded: true,
-        // --- FIX: Added the missing RETURN_URL and CANCEL_URL properties ---
-        // These are required by the PayOS library, even in embedded mode.
-        RETURN_URL: `http://localhost:5173/payment/success`,
-        CANCEL_URL: `http://localhost:5173/payment/cancel`,
-        // --- End of Fix ---
+        RETURN_URL: "http://localhost:5173/payment/return",
+        CANCEL_URL: "http://localhost:5173/payment/return",
         onExit: () => {
             if (eventDetails?.id) {
                 navigate(`/events/${String(eventDetails.id)}`);
             } else {
-                navigate('/');
+                navigate("/");
             }
         },
         onSuccess: () => {
-            navigate(`/payment/success`);
+            navigate(`/events/${String(eventDetails?.id)}/payment/success`);
         },
         onCancel: () => {
             if (eventDetails?.id) {
                 navigate(`/events/${String(eventDetails.id)}`);
             } else {
-                navigate('/');
+                navigate("/");
             }
-        }
+        },
     } as PayOSConfig);
 
     useEffect(() => {
-        if (checkoutUrl) {
-            open();
-        } else if (!state) {
-            setError("Payment information is missing or the session has expired. Please try again.");
-        }
+        const timeout = setTimeout(() => {
+            const containerExists = document.getElementById("payos-container");
+            if (checkoutUrl && containerExists) {
+                open();
+            } else if (!containerExists) {
+                console.error("Element ID: payos-container not found in DOM");
+                setError(
+                    "Không thể hiển thị giao diện thanh toán. Vui lòng tải lại trang.",
+                );
+            } else {
+                setError(
+                    "Thông tin thanh toán không hợp lệ hoặc phiên giao dịch đã hết hạn. Vui lòng thử lại.",
+                );
+            }
+        }, 100); // Wait 100ms to ensure DOM is painted
 
         return () => {
+            clearTimeout(timeout);
             exit();
         };
-    }, [checkoutUrl, state, open, exit]);
+    }, [checkoutUrl, open, exit]);
 
-
-    // Handle the case where essential data is missing
     if (!order || !eventDetails || !orderDetails) {
         return (
             <div className="text-gray-800 text-center py-20 max-w-2xl mx-auto">
-                <h1 className="text-3xl font-bold">Your session has expired.</h1>
+                <h1 className="text-3xl font-bold">
+                    Your session has expired.
+                </h1>
                 <p className="mt-2 text-gray-600">
                     Please select tickets for an event to proceed.
                 </p>
@@ -88,10 +102,6 @@ const PaymentPage: FC = () => {
         );
     }
 
-    if (error) {
-        return <div className="text-center py-20 text-red-500">{error}</div>;
-    }
-
     return (
         <div className="bg-gray-100 py-8 min-h-screen">
             <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -99,7 +109,7 @@ const PaymentPage: FC = () => {
                     <CountdownTimer
                         initialSeconds={900}
                         onTimerEnd={() => {
-                            if(eventDetails?.id) {
+                            if (eventDetails?.id) {
                                 navigate(`/events/${String(eventDetails.id)}`);
                             }
                         }}
@@ -108,9 +118,35 @@ const PaymentPage: FC = () => {
                         <h2 className="text-xl font-bold text-gray-800 mb-4">
                             Complete Your Payment
                         </h2>
-                        <div id="payos-container" className="w-full h-[500px]">
-                            {/* The PayOS UI will be injected here. */}
+
+                        {/* Error message */}
+                        {error && (
+                            <div className="text-red-500 text-center mb-4">
+                                {error}
+                            </div>
+                        )}
+
+                        {/* PayOS Embedded Container */}
+                        <div className="relative w-full max-w-full overflow-hidden">
+                            <div
+                                id="payos-container"
+                                className="w-full h-[500px]"
+                            />
                         </div>
+
+                        {/* Fallback QR Code */}
+                        {!checkoutUrl && qrCode && (
+                            <div className="mt-6 text-center">
+                                <p className="mb-2 text-gray-600">
+                                    Scan this QR code to pay:
+                                </p>
+                                <img
+                                    src={qrCode}
+                                    alt="QR Code"
+                                    className="mx-auto w-64 h-64"
+                                />
+                            </div>
+                        )}
                     </div>
                 </div>
                 <div className="lg:col-span-1">

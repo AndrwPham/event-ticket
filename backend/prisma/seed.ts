@@ -60,8 +60,8 @@ async function main() {
     // 5. Define the ticket configuration
     const ticketConfig = {
         seatClasses: [
-            { id: "premium", name: "Premium Test Seating", price: 250000, color: "#8b5cf6" },
-            { id: "standard", name: "Standard Seating", price: 120000, color: "#7DDA58" },
+            { id: "premium", name: "Premium Test Seating", price: 2000, color: "#8b5cf6" },
+            { id: "standard", name: "Standard Seating", price: 1000, color: "#7DDA58" },
             { id: "unavailable", name: "Unavailable", price: 0, color: "#D1D5DB" },
         ],
         seatAssignments: {

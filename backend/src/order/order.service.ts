@@ -189,7 +189,7 @@ export class OrderService {
       const paymentReturnPath = "/payment/return";
       const paymentDto: CreatePaymentDto = {
         orderCode,
-        description: `REF#${orderId}`,
+        description: `REF#${orderCode}`,
         amount: totalPrice,
         items: paymentItems,
         returnUrl: `${frontendBaseUrl}${paymentReturnPath}`,

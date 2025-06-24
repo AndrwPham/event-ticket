@@ -2,6 +2,8 @@ import { Injectable, InternalServerErrorException, NotFoundException } from '@ne
 import { ConfigService } from '@nestjs/config';
 import { S3Client, PutObjectCommand, HeadObjectCommand, GetObjectCommand,} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { UploadFileDto } from './dto/upload-file.dto';
+import { GetFileDto } from './dto/get-file.dto';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -54,32 +56,24 @@ export class AWSService {
         return url;
     }
 
-    async generateSignedUrl(key: string, expiresInSeconds = 60): Promise<string> {
-        // Check if the object exists
-        try {
-            await this.s3Client.send(
-                new HeadObjectCommand({
-                    Bucket: this.bucketName,
-                    Key: key,
-                }),
-            );
-        } catch (err) {
-            if (err.name === 'Not Found') {
-                throw new NotFoundException(`Object not found: ${key}`);
-            }
-            throw err;
-        }
+    //key = public|private + /folder/ + name. Could be changed in the future.
+    async generateSignedPutUrl(dto: UploadFileDto): Promise<{ presignedUrl: string; key: string }> {
+        const { isPublic, contentType, folder } = dto;
+        const key = `${isPublic ? 'public' : 'private'}/${folder}/${Date.now()}-${crypto.randomBytes(32).toString('hex')}`;
 
-        // Create the signed URL
-        const command = new GetObjectCommand({
+        const command = new PutObjectCommand({
             Bucket: this.bucketName,
             Key: key,
+            ContentType: contentType,
         });
 
-        return getSignedUrl(this.s3Client, command, { expiresIn: expiresInSeconds });
+        const presignedUrl = await getSignedUrl(this.s3Client, command, { expiresIn: 60 }); // 5 min
+
+        return { presignedUrl, key };
     }
 
-    async getPublicUrl(key: string): Promise<string> {
+    async getFileUrl(dto: GetFileDto): Promise<string> {
+        const { key, isPublic, ...privateParams } = dto;
         try {
             await this.s3Client.send(
                 new HeadObjectCommand({
@@ -94,6 +88,21 @@ export class AWSService {
             throw err;
         }
 
-        return this.baseUrl + key;
+        if (!isPublic) {
+            const expiresInSeconds: number = privateParams?.expiresInSeconds ?? 60;
+
+            // Create the signed URL
+            const command = new GetObjectCommand({
+                Bucket: this.bucketName,
+                Key: key,
+            });
+
+            return getSignedUrl(this.s3Client, command, { expiresIn: expiresInSeconds });
+
+        } else {
+
+            return this.baseUrl + key;
+        }
+
     }
 }

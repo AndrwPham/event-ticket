@@ -16,7 +16,6 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Post()
   create(@Body() dto: CreateOrderDto) {
     return this.orderService.create(dto);

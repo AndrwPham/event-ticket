@@ -64,13 +64,25 @@ export default function CreateEvent() {
 
         // --- Step 1: Handle File Uploads ---
         setSubmissionMessage('Preparing images...');
-        const filesToUpload = [formData.eventPoster, ...formData.eventCovers, formData.organizer.logo].filter((file): file is File => file !== null);
-        let uploadedImagesData: UploadedImage[] = [];
 
-        if (filesToUpload.length > 0) {
+        const posterFile = formData.eventPoster;
+        if (!posterFile) {
+            alert("An event poster is required.");
+            setIsSubmitting(false);
+            return;
+        }
+
+        // WARN: skipping the organizer logo
+        const otherFiles = formData.eventCovers.filter((file): file is File => file !== null);
+        const allFilesToUpload = [posterFile, ...otherFiles];
+
+        let posterImageData: UploadedImage | null = null;
+        let otherImagesData: UploadedImage[] = [];
+
+        if (allFilesToUpload.length > 0) {
             try {
                 setSubmissionMessage('Requesting upload permissions...');
-                const presignedUrlPayload = filesToUpload.map(file => ({
+                const presignedUrlPayload = allFilesToUpload.map(file => ({
                     contentType: file.type,
                     isPublic: true,
                     folder: 'events'
@@ -88,7 +100,7 @@ export default function CreateEvent() {
                 setSubmissionMessage('Uploading images...');
                 await Promise.all(
                     presignedData.map((data: { presignedUrl: string }, index: number) => {
-                        const file = filesToUpload[index];
+                        const file = allFilesToUpload[index];
                         return fetch(data.presignedUrl, {
                             method: 'PUT',
                             headers: { 'Content-Type': file.type },
@@ -97,11 +109,13 @@ export default function CreateEvent() {
                     })
                 );
 
-                uploadedImagesData = presignedData.map((data: { key: string }, index: number) => ({
+                const allUploadedImages: UploadedImage[] = presignedData.map((data: { key: string }, index: number) => ({
                     key: data.key,
                     isPublic: true,
-                    contentType: filesToUpload[index].type,
+                    contentType: allFilesToUpload[index].type,
                 }));
+                posterImageData = allUploadedImages[0]; // The first image is the poster
+                otherImagesData = allUploadedImages.slice(1); // The rest images
 
             } catch (error: any) {
                 console.error('File upload process failed:', error);
@@ -138,7 +152,8 @@ export default function CreateEvent() {
                         currency: ticket.currency,
                     })),
                 },
-                images: uploadedImagesData,
+                posterImage: posterImageData,
+                images: otherImagesData,
             };
 
             const finalResponse = await fetch(`${API_BASE_URL}/events`, {

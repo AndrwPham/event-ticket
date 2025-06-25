@@ -22,8 +22,15 @@ export class HoldService {
     for (const ticketId of ticketIds) {
       // check DB holdExpiresAt
       const ticket = await this.prisma.issuedTicket.findUnique({ where: { id: ticketId } });
-      if (ticket?.holdExpiresAt && ticket.holdExpiresAt > now) {
-        throw new ConflictException(`Ticket ${ticketId} is currently held (DB).`);
+      if (ticket?.holdExpiresAt) {
+        if (ticket.holdExpiresAt > now) {
+          throw new ConflictException(`Ticket ${ticketId} is currently held (DB).`);
+        } else {
+          await this.prisma.issuedTicket.update({
+            where: { id: ticketId },
+            data: { holdExpiresAt: null },
+          });
+        }
       }
       // set Redis hold
       const key = `hold:${ticketId}`;
@@ -56,6 +63,9 @@ export class HoldService {
 
   /**
    * Check if a ticket is currently held (Redis or DB).
+   * Currently the holdTickets method already checks Redis and DB,
+   * so this is primarily for external checks.
+   * Returns true if held, false otherwise.
    */
   async isHeld(ticketId: string): Promise<boolean> {
     const key = `hold:${ticketId}`;

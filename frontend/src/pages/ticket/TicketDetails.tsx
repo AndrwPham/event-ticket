@@ -1,42 +1,108 @@
-import { FC, useState } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom"; // Import useNavigate
+import { FC, useState, useEffect } from "react";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { FaCalendarAlt, FaMapMarkerAlt } from "react-icons/fa";
 import { IoChevronDown } from "react-icons/io5";
-import { allEvents } from "../../data/_mock_db";
 
-// Helper to format dates
-const formatEventDate = (
-    isoString: string,
-    options: Intl.DateTimeFormatOptions,
-) => {
-    return new Intl.DateTimeFormat("en-GB", options).format(
-        new Date(isoString),
-    );
-};
+// Define a more detailed type for the event data we expect
+interface DetailedEvent {
+    id: string;
+    title: string;
+    description: string;
+    active_start_date: string;
+    images: { url: string }[];
+    venue: {
+        name: string;
+        address?: string;
+    } | null;
+    organization: {
+        name: string;
+        logoUrl?: string;
+    } | null;
+    tickets: {
+        class: string;
+        price: number;
+    }[];
+}
 
-const TicketDetails: FC = () => {
-    const { id } = useParams<{ id: string }>();
+const EventDetails: FC = () => {
+    const { eventId } = useParams<{ eventId: string }>();
     const navigate = useNavigate();
-    const eventData = allEvents.find(
-        (event) => event.id === parseInt(id || ""),
-    );
 
-    // State to manage the collapsible "About" section
+    const [eventData, setEventData] = useState<DetailedEvent | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [isAboutExpanded, setIsAboutExpanded] = useState(false);
 
+    // This useEffect hook is now safe from memory leaks.
+    useEffect(() => {
+        // Use AbortController to cancel fetch on component unmount
+        const controller = new AbortController();
+        const signal = controller.signal;
+
+        const fetchEvent = async () => {
+            if (!eventId) {
+                setError("Event ID is missing.");
+                setLoading(false);
+                return;
+            }
+
+            // Reset state for new fetches
+            setLoading(true);
+            setError(null);
+            setEventData(null);
+
+            try {
+                const response = await fetch(
+                    `http://localhost:5000/events/${eventId}`,
+                    { signal },
+                );
+                if (!response.ok) {
+                    throw new Error("Failed to fetch event details.");
+                }
+                const data = (await response.json()) as DetailedEvent;
+                setEventData(data);
+            } catch (err) {
+                if (err instanceof DOMException && err.name === "AbortError") {
+                    return;
+                }
+                setError(
+                    err instanceof Error
+                        ? err.message
+                        : "An unknown error occurred.",
+                );
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        void fetchEvent();
+
+        return () => {
+            controller.abort();
+        };
+    }, [eventId]);
+
     const handleBooking = () => {
-        // Check if the event has a seat map configured
-
-        if (!eventData) {
-            console.error("Booking failed: Event data is not available.");
-            return;
-        }
-
-        if (eventData.venueId) {
-            navigate(`/event/${String(eventData.id)}/select-seats`);
+        if (eventData) {
+            navigate(`/event/${eventData.id}/seats`);
         }
     };
 
+    const formatEventDate = (
+        isoString: string,
+        options: Intl.DateTimeFormatOptions,
+    ) => {
+        return new Intl.DateTimeFormat("en-GB", options).format(
+            new Date(isoString),
+        );
+    };
+
+    if (loading)
+        return (
+            <div className="text-center py-20">Loading Event Details...</div>
+        );
+    if (error)
+        return <div className="text-center py-20 text-red-500">{error}</div>;
     if (!eventData) {
         return (
             <div className="text-gray-800 text-center py-20">
@@ -51,9 +117,16 @@ const TicketDetails: FC = () => {
         );
     }
 
+    const ticketTiers = Array.from(
+        new Map(eventData.tickets.map((t) => [t.class, t])).values(),
+    );
+    const bannerImage =
+        eventData.images[0]?.url ||
+        "https://placehold.co/800x400/cccccc/ffffff?text=Event+Banner";
+
     return (
         <div className="bg-gray-50">
-            {/*Banner Section */}
+            {/* Banner Section */}
             <section className="bg-white py-8 shadow-sm">
                 <div className="max-w-7xl mx-auto px-4">
                     <div className="bg-white rounded-lg p-6 flex flex-col md:flex-row items-center gap-8 shadow-lg border border-gray-200">
@@ -66,7 +139,7 @@ const TicketDetails: FC = () => {
                                     <FaCalendarAlt className="text-indigo-600" />
                                     <span>
                                         {formatEventDate(
-                                            eventData.schedule[0].datetime,
+                                            eventData.active_start_date,
                                             {
                                                 day: "numeric",
                                                 month: "short",
@@ -75,14 +148,16 @@ const TicketDetails: FC = () => {
                                         )}
                                     </span>
                                 </div>
-                                <div className="flex items-start gap-3">
-                                    <FaMapMarkerAlt className="text-indigo-600 mt-1" />
-                                    <span>
-                                        {eventData.location.name}
-                                        <br />
-                                        {eventData.location.address}
-                                    </span>
-                                </div>
+                                {eventData.venue && (
+                                    <div className="flex items-start gap-3">
+                                        <FaMapMarkerAlt className="text-indigo-600 mt-1" />
+                                        <span>
+                                            {eventData.venue.name}
+                                            <br />
+                                            {eventData.venue.address}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
                             <button
                                 onClick={handleBooking}
@@ -92,11 +167,11 @@ const TicketDetails: FC = () => {
                             </button>
                         </div>
                         <div className="w-full md:w-2/3">
-                            <div className="bg-gray-200 h-64 rounded-lg flex items-center justify-center">
-                                <span className="text-gray-500">
-                                    Event Banner Image
-                                </span>
-                            </div>
+                            <img
+                                src={bannerImage}
+                                alt={`${eventData.title} banner`}
+                                className="bg-gray-200 h-64 w-full object-cover rounded-lg"
+                            />
                         </div>
                     </div>
                 </div>
@@ -109,7 +184,7 @@ const TicketDetails: FC = () => {
                             About
                         </h2>
                         <div
-                            className={`text-gray-600 space-y-2 transition-all duration-500 ease-in-out overflow-hidden ${isAboutExpanded ? "max-h-full" : "max-h-48"}`}
+                            className={`text-gray-600 space-y-2 transition-all duration-500 ease-in-out overflow-hidden ${isAboutExpanded ? "max-h-full" : "max-h-96"}`}
                         >
                             {eventData.description
                                 .split("\n")
@@ -132,72 +207,69 @@ const TicketDetails: FC = () => {
                     </div>
                 </section>
 
-                {/* Ticket Information Section */}
                 <section id="ticket-info">
                     <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
                         <h2 className="text-2xl font-bold text-gray-800 mb-4">
                             Ticket Information
                         </h2>
-                        {eventData.schedule.map((item) => (
-                            <div key={item.datetime}>
-                                <div className="flex justify-between items-center py-4 border-b-2 border-gray-200">
-                                    <h3 className="font-semibold text-lg">
-                                        {formatEventDate(item.datetime, {
+                        <div>
+                            <div className="flex justify-between items-center py-4 border-b-2 border-gray-200">
+                                <h3 className="font-semibold text-lg">
+                                    {formatEventDate(
+                                        eventData.active_start_date,
+                                        {
                                             hour: "2-digit",
                                             minute: "2-digit",
                                             hour12: false,
-                                        })}
-                                        ,{" "}
-                                        {formatEventDate(item.datetime, {
+                                        },
+                                    )}
+                                    ,{" "}
+                                    {formatEventDate(
+                                        eventData.active_start_date,
+                                        {
                                             day: "numeric",
                                             month: "short",
                                             year: "numeric",
-                                        })}
-                                    </h3>
-                                    <button
-                                        onClick={handleBooking}
-                                        className="bg-indigo-500 text-white px-6 py-2 rounded-md font-bold hover:bg-indigo-600 transition text-sm"
-                                    >
-                                        Book now
-                                    </button>
-                                </div>
-                                <div className="mt-4 space-y-3">
-                                    {item.tiers.map((tier) => (
-                                        <div
-                                            key={tier.name}
-                                            className="flex justify-between items-center"
-                                        >
-                                            <p className="font-semibold">
-                                                {tier.name}
-                                            </p>
-                                            <p className="font-bold text-gray-800">
-                                                {new Intl.NumberFormat(
-                                                    "vi-VN",
-                                                ).format(tier.price)}{" "}
-                                                đ
-                                            </p>
-                                        </div>
-                                    ))}
-                                </div>
+                                        },
+                                    )}
+                                </h3>
+                                <button
+                                    onClick={handleBooking}
+                                    className="bg-indigo-500 text-white px-6 py-2 rounded-md font-bold hover:bg-indigo-600 transition text-sm"
+                                >
+                                    Book now
+                                </button>
                             </div>
-                        ))}
+                            <div className="mt-4 space-y-3">
+                                {ticketTiers.map((tier) => (
+                                    <div
+                                        key={tier.class}
+                                        className="flex justify-between items-center"
+                                    >
+                                        <p className="font-semibold">
+                                            {tier.class}
+                                        </p>
+                                        <p className="font-bold text-gray-800">
+                                            {new Intl.NumberFormat(
+                                                "vi-VN",
+                                            ).format(tier.price)}{" "}
+                                            đ
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </section>
 
-                {/* Organizer Section */}
                 <section>
                     <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
                         <h2 className="text-2xl font-bold text-gray-800 mb-4">
                             Organizer
                         </h2>
                         <div className="flex items-center gap-6">
-                            <img
-                                src={eventData.organizer.logoUrl}
-                                alt={eventData.organizer.name}
-                                className="h-20 w-auto object-contain"
-                            />
                             <p className="text-xl font-semibold text-gray-700">
-                                {eventData.organizer.name}
+                                {eventData.organization?.name}
                             </p>
                         </div>
                     </div>
@@ -207,4 +279,4 @@ const TicketDetails: FC = () => {
     );
 };
 
-export default TicketDetails;
+export default EventDetails;

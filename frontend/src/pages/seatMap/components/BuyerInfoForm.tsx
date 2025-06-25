@@ -3,9 +3,9 @@ import { FaUser, FaEnvelope, FaPhone } from "react-icons/fa";
 
 interface BuyerInfoFormProps {
     buyerInfo: {
-        fullName: string;
+        firstName: string;
+        lastName: string;
         email: string;
-        phone: string;
     };
     onInfoChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
@@ -18,34 +18,34 @@ const BuyerInfoForm: FC<BuyerInfoFormProps> = ({ buyerInfo, onInfoChange }) => {
             </h2>
             <form className="space-y-4">
                 <div className="relative">
-                    <FaUser className="absolute top-3 left-3 text-gray-400" />
+                    <FaUser className="absolute top-3 left-3 text-gray-400"/>
                     <input
                         type="text"
-                        name="fullName"
-                        placeholder="Your Full Name"
-                        value={buyerInfo.fullName}
+                        name="firstName"
+                        placeholder="Your First Name"
+                        value={buyerInfo.firstName}
                         onChange={onInfoChange}
                         className="w-full pl-10 p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
                     />
                 </div>
                 <div className="relative">
-                    <FaEnvelope className="absolute top-3 left-3 text-gray-400" />
+                    <FaUser className="absolute top-3 left-3 text-gray-400"/>
+                    <input
+                        type="text"
+                        name="lastName"
+                        placeholder="Your Last Name"
+                        value={buyerInfo.lastName}
+                        onChange={onInfoChange}
+                        className="w-full pl-10 p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
+                    />
+                </div>
+                <div className="relative">
+                    <FaEnvelope className="absolute top-3 left-3 text-gray-400"/>
                     <input
                         type="email"
                         name="email"
                         placeholder="Email"
                         value={buyerInfo.email}
-                        onChange={onInfoChange}
-                        className="w-full pl-10 p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
-                    />
-                </div>
-                <div className="relative">
-                    <FaPhone className="absolute top-3 left-3 text-gray-400" />
-                    <input
-                        type="tel"
-                        name="phone"
-                        placeholder="Phone Number"
-                        value={buyerInfo.phone}
                         onChange={onInfoChange}
                         className="w-full pl-10 p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
                     />

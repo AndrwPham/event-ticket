@@ -222,7 +222,7 @@ describe('IssuedTicketService', () => {
           {
             price: 50,
             class: 'General',
-            seat: '',
+            seat: '#0',
             status: TicketStatus.UNAVAILABLE,
             eventId: '2',
             organizationId: '2',
@@ -231,7 +231,7 @@ describe('IssuedTicketService', () => {
           {
             price: 50,
             class: 'General',
-            seat: '',
+            seat: '#1',
             status: TicketStatus.UNAVAILABLE,
             eventId: '2',
             organizationId: '2',
@@ -240,7 +240,7 @@ describe('IssuedTicketService', () => {
           {
             price: 50,
             class: 'General',
-            seat: '',
+            seat: '#2',
             status: TicketStatus.UNAVAILABLE,
             eventId: '2',
             organizationId: '2',
@@ -325,7 +325,7 @@ describe('IssuedTicketService', () => {
           {
             price: 50,
             class: 'General',
-            seat: '',
+            seat: '#0',
             status: TicketStatus.UNAVAILABLE,
             eventId: '5',
             organizationId: '5',
@@ -334,7 +334,7 @@ describe('IssuedTicketService', () => {
           {
             price: 50,
             class: 'General',
-            seat: '',
+            seat: '#1',
             status: TicketStatus.UNAVAILABLE,
             eventId: '5',
             organizationId: '5',
@@ -363,6 +363,350 @@ describe('IssuedTicketService', () => {
       expect(prisma.issuedTicket.updateMany).toHaveBeenCalledWith({
         where: { eventId: 'event999', status: TicketStatus.UNAVAILABLE },
         data: { status: TicketStatus.AVAILABLE },
+      });
+    });
+  });
+
+  describe('IssuedTicketService.updateTicketsFromSchema', () => {
+    let service: IssuedTicketService;
+    let prisma: any;
+    const eventId = 'event1';
+    const organizationId = 'org1';
+    const currencyId = 'cur1';
+
+    beforeEach(() => {
+      prisma = {
+        issuedTicket: {
+          findMany: jest.fn(),
+          update: jest.fn(),
+          create: jest.fn(),
+          delete: jest.fn(),
+        },
+      };
+      service = new IssuedTicketService(prisma);
+    });
+
+    describe('General Admission (single class, no seats)', () => {
+      it('should add tickets when increasing quantity', async () => {
+        prisma.issuedTicket.findMany.mockResolvedValue(
+          Array.from({ length: 10 }, (_, i) => ({
+            id: `t${i}`,
+            class: 'GA',
+            seat: `#${i}`,
+            status: TicketStatus.UNAVAILABLE,
+          }))
+        );
+        prisma.issuedTicket.create.mockResolvedValue({});
+        const dto = {
+          eventId,
+          organizationId,
+          currencyId,
+          schema: { eventId, classes: [{ label: 'GA', quantity: 15, price: 100 }] },
+        };
+        await service.updateTicketsFromSchema(dto);
+        expect(prisma.issuedTicket.create).toHaveBeenCalledTimes(5);
+      });
+
+      it('should delete tickets when decreasing quantity (no tickets sold)', async () => {
+        prisma.issuedTicket.findMany.mockResolvedValue(
+          Array.from({ length: 10 }, (_, i) => ({
+            id: `t${i}`,
+            class: 'GA',
+            seat: `#${i}`,
+            status: TicketStatus.UNAVAILABLE,
+          }))
+        );
+        prisma.issuedTicket.delete.mockResolvedValue({});
+        const dto = {
+          eventId,
+          organizationId,
+          currencyId,
+          schema: { eventId, classes: [{ label: 'GA', quantity: 5, price: 100 }] },
+        };
+        await service.updateTicketsFromSchema(dto);
+        expect(prisma.issuedTicket.delete).toHaveBeenCalledTimes(5);
+      });
+
+      it('should preserve sold tickets when decreasing quantity', async () => {
+        const tickets = [
+          ...Array.from({ length: 7 }, (_, i) => ({
+            id: `sold${i}`,
+            class: 'GA',
+            seat: `#${i}`,
+            status: TicketStatus.PAID,
+          })),
+          ...Array.from({ length: 3 }, (_, i) => ({
+            id: `unsold${i}`,
+            class: 'GA',
+            seat: `#${i+7}`,
+            status: TicketStatus.UNAVAILABLE,
+          })),
+        ];
+        prisma.issuedTicket.findMany.mockResolvedValue(tickets);
+        prisma.issuedTicket.delete.mockResolvedValue({});
+        const dto = {
+          eventId,
+          organizationId,
+          currencyId,
+          schema: { eventId, classes: [{ label: 'GA', quantity: 5, price: 100 }] },
+        };
+        await service.updateTicketsFromSchema(dto);
+        // Only unsold tickets above 5 should be deleted
+        expect(prisma.issuedTicket.delete).toHaveBeenCalledTimes(3);
+      });
+
+      it('should not change tickets when quantity is unchanged', async () => {
+        prisma.issuedTicket.findMany.mockResolvedValue(
+          Array.from({ length: 10 }, (_, i) => ({
+            id: `t${i}`,
+            class: 'GA',
+            seat: `#${i}`,
+            status: TicketStatus.UNAVAILABLE,
+          }))
+        );
+        const dto = {
+          eventId,
+          organizationId,
+          currencyId,
+          schema: { eventId, classes: [{ label: 'GA', quantity: 10, price: 100 }] },
+        };
+        await service.updateTicketsFromSchema(dto);
+        expect(prisma.issuedTicket.create).not.toHaveBeenCalled();
+        expect(prisma.issuedTicket.delete).not.toHaveBeenCalled();
+      });
+
+      it('should update price for all unsold tickets', async () => {
+        prisma.issuedTicket.findMany.mockResolvedValue(
+          Array.from({ length: 10 }, (_, i) => ({
+            id: `t${i}`,
+            class: 'GA',
+            seat: `#${i}`,
+            status: TicketStatus.UNAVAILABLE,
+          }))
+        );
+        prisma.issuedTicket.update.mockResolvedValue({});
+        const dto = {
+          eventId,
+          organizationId,
+          currencyId,
+          schema: { eventId, classes: [{ label: 'GA', quantity: 10, price: 200 }] },
+        };
+        await service.updateTicketsFromSchema(dto);
+        expect(prisma.issuedTicket.update).toHaveBeenCalledTimes(10);
+      });
+    });
+
+    describe('Multiple Classes (no seats)', () => {
+      it('should add tickets for increased quantity in one class', async () => {
+        prisma.issuedTicket.findMany.mockResolvedValue([
+          ...Array.from({ length: 10 }, (_, i) => ({ id: `a${i}`, class: 'A', seat: `#${i}`, status: TicketStatus.UNAVAILABLE })),
+          ...Array.from({ length: 5 }, (_, i) => ({ id: `b${i}`, class: 'B', seat: `#${i}`, status: TicketStatus.UNAVAILABLE })),
+        ]);
+        prisma.issuedTicket.create.mockResolvedValue({});
+        const dto = {
+          eventId,
+          organizationId,
+          currencyId,
+          schema: { eventId, classes: [
+            { label: 'A', quantity: 15, price: 100 },
+            { label: 'B', quantity: 5, price: 100 },
+          ] },
+        };
+        await service.updateTicketsFromSchema(dto);
+        expect(prisma.issuedTicket.create).toHaveBeenCalledTimes(5);
+      });
+
+      it('should delete tickets for decreased quantity in one class', async () => {
+        prisma.issuedTicket.findMany.mockResolvedValue([
+          ...Array.from({ length: 10 }, (_, i) => ({ id: `a${i}`, class: 'A', seat: `#${i}`, status: TicketStatus.UNAVAILABLE })),
+          ...Array.from({ length: 5 }, (_, i) => ({ id: `b${i}`, class: 'B', seat: `#${i}`, status: TicketStatus.UNAVAILABLE })),
+        ]);
+        prisma.issuedTicket.delete.mockResolvedValue({});
+        const dto = {
+          eventId,
+          organizationId,
+          currencyId,
+          schema: { eventId, classes: [
+            { label: 'A', quantity: 5, price: 100 },
+            { label: 'B', quantity: 5, price: 100 },
+          ] },
+        };
+        await service.updateTicketsFromSchema(dto);
+        expect(prisma.issuedTicket.delete).toHaveBeenCalledTimes(5);
+      });
+
+      it('should preserve sold tickets when decreasing quantity in one class', async () => {
+        const tickets = [
+          ...Array.from({ length: 7 }, (_, i) => ({ id: `soldA${i}`, class: 'A', seat: `#${i}`, status: TicketStatus.PAID })),
+          ...Array.from({ length: 3 }, (_, i) => ({ id: `unsoldA${i}`, class: 'A', seat: `#${i+7}`, status: TicketStatus.UNAVAILABLE })),
+          ...Array.from({ length: 5 }, (_, i) => ({ id: `b${i}`, class: 'B', seat: `#${i}`, status: TicketStatus.UNAVAILABLE })),
+        ];
+        prisma.issuedTicket.findMany.mockResolvedValue(tickets);
+        prisma.issuedTicket.delete.mockResolvedValue({});
+        const dto = {
+          eventId,
+          organizationId,
+          currencyId,
+          schema: { eventId, classes: [
+            { label: 'A', quantity: 5, price: 100 },
+            { label: 'B', quantity: 5, price: 100 },
+          ] },
+        };
+        await service.updateTicketsFromSchema(dto);
+        // Only unsold tickets above 5 for class A should be deleted
+        expect(prisma.issuedTicket.delete).toHaveBeenCalledTimes(3);
+      });
+
+      it('should not change tickets when quantities are unchanged', async () => {
+        prisma.issuedTicket.findMany.mockResolvedValue([
+          ...Array.from({ length: 10 }, (_, i) => ({ id: `a${i}`, class: 'A', seat: `#${i}`, status: TicketStatus.UNAVAILABLE })),
+          ...Array.from({ length: 5 }, (_, i) => ({ id: `b${i}`, class: 'B', seat: `#${i}`, status: TicketStatus.UNAVAILABLE })),
+        ]);
+        const dto = {
+          eventId,
+          organizationId,
+          currencyId,
+          schema: { eventId, classes: [
+            { label: 'A', quantity: 10, price: 100 },
+            { label: 'B', quantity: 5, price: 100 },
+          ] },
+        };
+        await service.updateTicketsFromSchema(dto);
+        expect(prisma.issuedTicket.create).not.toHaveBeenCalled();
+        expect(prisma.issuedTicket.delete).not.toHaveBeenCalled();
+      });
+
+      it('should update price for all unsold tickets in one class', async () => {
+        prisma.issuedTicket.findMany.mockResolvedValue([
+          ...Array.from({ length: 10 }, (_, i) => ({ id: `a${i}`, class: 'A', seat: `#${i}`, status: TicketStatus.UNAVAILABLE })),
+          ...Array.from({ length: 5 }, (_, i) => ({ id: `b${i}`, class: 'B', seat: `#${i}`, status: TicketStatus.UNAVAILABLE })),
+        ]);
+        prisma.issuedTicket.update.mockResolvedValue({});
+        const dto = {
+          eventId,
+          organizationId,
+          currencyId,
+          schema: { eventId, classes: [
+            { label: 'A', quantity: 10, price: 300 },
+            { label: 'B', quantity: 5, price: 100 },
+          ] },
+        };
+        await service.updateTicketsFromSchema(dto);
+        expect(prisma.issuedTicket.update).toHaveBeenCalledTimes(15);
+      });
+    });
+
+    describe('Seat Map (classes with seats)', () => {
+      it('should add new seats', async () => {
+        prisma.issuedTicket.findMany.mockResolvedValue([
+          { id: 'A1', class: 'VIP', seat: 'A1', status: TicketStatus.UNAVAILABLE },
+          { id: 'A2', class: 'VIP', seat: 'A2', status: TicketStatus.UNAVAILABLE },
+        ]);
+        prisma.issuedTicket.create.mockResolvedValue({});
+        const dto = {
+          eventId,
+          organizationId,
+          currencyId,
+          schema: { eventId, classes: [
+            { label: 'VIP', price: 500, quantity: 0, seats: [
+              { seatNumber: 'A1', price: 500 },
+              { seatNumber: 'A2', price: 500 },
+              { seatNumber: 'A3', price: 500 },
+            ] },
+          ] },
+        };
+        await service.updateTicketsFromSchema(dto);
+        expect(prisma.issuedTicket.create).toHaveBeenCalledTimes(1);
+      });
+
+      it('should delete removed seats (no tickets sold)', async () => {
+        prisma.issuedTicket.findMany.mockResolvedValue([
+          { id: 'A1', class: 'VIP', seat: 'A1', status: TicketStatus.UNAVAILABLE },
+          { id: 'A2', class: 'VIP', seat: 'A2', status: TicketStatus.UNAVAILABLE },
+          { id: 'A3', class: 'VIP', seat: 'A3', status: TicketStatus.UNAVAILABLE },
+        ]);
+        prisma.issuedTicket.delete.mockResolvedValue({});
+        const dto = {
+          eventId,
+          organizationId,
+          currencyId,
+          schema: { eventId, classes: [
+            { label: 'VIP', price: 500, quantity: 0, seats: [
+              { seatNumber: 'A1', price: 500 },
+              { seatNumber: 'A2', price: 500 },
+            ] },
+          ] },
+        };
+        await service.updateTicketsFromSchema(dto);
+        expect(prisma.issuedTicket.delete).toHaveBeenCalledTimes(1);
+      });
+
+      it('should preserve sold tickets when removing seats', async () => {
+        prisma.issuedTicket.findMany.mockResolvedValue([
+          { id: 'A1', class: 'VIP', seat: 'A1', status: TicketStatus.PAID },
+          { id: 'A2', class: 'VIP', seat: 'A2', status: TicketStatus.UNAVAILABLE },
+          { id: 'A3', class: 'VIP', seat: 'A3', status: TicketStatus.UNAVAILABLE },
+        ]);
+        prisma.issuedTicket.delete.mockResolvedValue({});
+        const dto = {
+          eventId,
+          organizationId,
+          currencyId,
+          schema: { eventId, classes: [
+            { label: 'VIP', price: 500, quantity: 0, seats: [
+              { seatNumber: 'A1', price: 500 },
+              { seatNumber: 'A2', price: 500 },
+            ] },
+          ] },
+        };
+        await service.updateTicketsFromSchema(dto);
+        // Only A3 (unsold) should be deleted
+        expect(prisma.issuedTicket.delete).toHaveBeenCalledTimes(1);
+      });
+
+      it('should update price for changed seats', async () => {
+        prisma.issuedTicket.findMany.mockResolvedValue([
+          { id: 'A1', class: 'VIP', seat: 'A1', status: TicketStatus.UNAVAILABLE },
+          { id: 'A2', class: 'VIP', seat: 'A2', status: TicketStatus.UNAVAILABLE },
+        ]);
+        prisma.issuedTicket.update.mockResolvedValue({});
+        const dto = {
+          eventId,
+          organizationId,
+          currencyId,
+          schema: { eventId, classes: [
+            { label: 'VIP', price: 500, quantity: 0, seats: [
+              { seatNumber: 'A1', price: 600 },
+              { seatNumber: 'A2', price: 700 },
+            ] },
+          ] },
+        };
+        await service.updateTicketsFromSchema(dto);
+        expect(prisma.issuedTicket.update).toHaveBeenCalledTimes(2);
+      });
+
+      it('should handle seat renaming (delete old, add new)', async () => {
+        prisma.issuedTicket.findMany.mockResolvedValue([
+          { id: 'A1', class: 'VIP', seat: 'A1', status: TicketStatus.UNAVAILABLE },
+          { id: 'A2', class: 'VIP', seat: 'A2', status: TicketStatus.UNAVAILABLE },
+        ]);
+        prisma.issuedTicket.create.mockResolvedValue({});
+        prisma.issuedTicket.delete.mockResolvedValue({});
+        const dto = {
+          eventId,
+          organizationId,
+          currencyId,
+          schema: { eventId, classes: [
+            { label: 'VIP', price: 500, quantity: 0, seats: [
+              { seatNumber: 'A01', price: 500 },
+              { seatNumber: 'A2', price: 500 },
+            ] },
+          ] },
+        };
+        await service.updateTicketsFromSchema(dto);
+        // A1 deleted, A01 created
+        expect(prisma.issuedTicket.create).toHaveBeenCalledTimes(1);
+        expect(prisma.issuedTicket.delete).toHaveBeenCalledTimes(1);
       });
     });
   });

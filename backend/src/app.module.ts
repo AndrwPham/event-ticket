@@ -14,6 +14,10 @@ import { ReviewModule } from './review/review.module';
 import { SharedModule } from './common/shared.module';
 import { RedisModule, RedisModuleOptions } from '@nestjs-modules/ioredis';
 import { PaymentModule } from './payment/payment.module';
+import { NotificationModule } from './notification/notification.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { TicketCleanupService } from './issuedticket/ticket-cleanup.service';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -46,8 +50,11 @@ import { PaymentModule } from './payment/payment.module';
       inject: [ConfigService],
     }),
     PaymentModule,
+    NotificationModule,
+    ScheduleModule.forRoot(),
+    UserModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, TicketCleanupService],
 })
 export class AppModule { }

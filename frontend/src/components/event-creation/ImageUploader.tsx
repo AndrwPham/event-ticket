@@ -4,7 +4,7 @@ interface ImageUploaderProps {
     id: string;
     previewUrl: string | null;
     onFileChange: (file: File | null) => void;
-    label: string; // The persistent label
+    label: string;
     dimensions: string;
 }
 

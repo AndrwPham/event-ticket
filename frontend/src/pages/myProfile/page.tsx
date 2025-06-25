@@ -1,6 +1,137 @@
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
+// Define the user profile type based on your backend response
+type UserProfile = {
+    username: string;
+    // Add other fields if needed
+};
+
+// Add response types
+// For attendee info GET
+interface AttendeeInfoResponse {
+    first_name?: string;
+    last_name?: string;
+    phone?: string;
+}
+// For error responses
+interface ErrorResponse {
+    message: string | string[];
+}
+
 const MyProfile = () => {
+    const [profile, setProfile] = useState<UserProfile | null>(null);
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
+    const [phone, setPhone] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const [success, setSuccess] = useState(false); // For success message
+    const [error, setError] = useState<string | null>(null); // For error feedback
+
+    const isFormValid = Boolean(firstName && lastName && phone);
+
+    useEffect(() => {
+        // No need to get token from localStorage
+        const fetchProfile = async () => {
+            try {
+                const response = await fetch(
+                    `${import.meta.env.VITE_API_URL}/auth/me`,
+                    {
+                        method: "GET",
+                        credentials: "include", // Send cookies
+                    },
+                );
+
+                if (!response.ok) throw new Error("Failed to fetch profile");
+
+                const data = (await response.json()) as UserProfile;
+
+                setProfile(data);
+                console.log("Fetched profile:", data); // Log fetched profile
+            } catch (err) {
+                console.error("Failed to fetch profile:", err);
+            }
+        };
+
+        void fetchProfile();
+    }, []);
+
+    useEffect(() => {
+        const fetchInfo = async () => {
+            try {
+                const response = await fetch(
+                    `${import.meta.env.VITE_API_URL}/user/attendee`,
+                    {
+                        method: "GET",
+                        credentials: "include", // Send cookies
+                    },
+                );
+
+                if (!response.ok)
+                    throw new Error("Failed to fetch personal info");
+
+                const data = (await response.json()) as AttendeeInfoResponse;
+                setFirstName(data.first_name ?? "");
+                setLastName(data.last_name ?? "");
+                setPhone(data.phone ?? "");
+                console.log("Fetched personal info:", data); // Log fetched personal info
+            } catch (err) {
+                console.error("Failed to fetch personal info:", err);
+            }
+        };
+
+        void fetchInfo();
+    }, []);
+
+    async function handleSubmit(e: React.FormEvent) {
+        e.preventDefault();
+        setIsLoading(true);
+        setSuccess(false);
+        setError(null);
+        console.log("Submitting PATCH /user/attendee", {
+            firstName,
+            lastName,
+            phone,
+        });
+        try {
+            const response = await fetch(
+                `${import.meta.env.VITE_API_URL}/user/attendee`,
+                {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    credentials: "include",
+                    body: JSON.stringify({
+                        first_name: firstName,
+                        last_name: lastName,
+                        phone: phone,
+                    }),
+                },
+            );
+            console.log("PATCH response status:", response.status);
+            if (!response.ok) {
+                const errorData = (await response.json()) as ErrorResponse;
+                setError(
+                    Array.isArray(errorData.message)
+                        ? errorData.message.join(", ")
+                        : errorData.message,
+                );
+                throw new Error(
+                    Array.isArray(errorData.message)
+                        ? errorData.message.join(", ")
+                        : errorData.message,
+                );
+            }
+            setSuccess(true);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : String(err));
+            console.error("Failed to update personal info:", err);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
     return (
         <div className="bg-white">
             {/* This container is restored to its original size */}
@@ -14,7 +145,7 @@ const MyProfile = () => {
                                     Account of
                                 </h3>
                                 <p className="font-bold text-lg">
-                                    Nguyen Van A
+                                    {profile ? profile.username : "Loading..."}
                                 </p>
                             </div>
                             <nav className="space-y-2 text-gray-600">
@@ -46,21 +177,57 @@ const MyProfile = () => {
                             Providing accurate info will support you in ticket
                             booking or verification
                         </p>
-
-                        <form className="space-y-6">
+                        {success && (
+                            <div className="mb-4 text-green-600 font-semibold">
+                                Profile updated!
+                            </div>
+                        )}
+                        {error && (
+                            <div className="mb-4 text-red-600 font-semibold">
+                                {error}
+                            </div>
+                        )}
+                        <form
+                            onSubmit={(e) => {
+                                void handleSubmit(e);
+                            }}
+                            className="space-y-6"
+                        >
                             <div>
                                 <label
-                                    htmlFor="fullName"
+                                    htmlFor="firstName"
                                     className="block text-sm font-medium text-gray-700"
                                 >
-                                    Full Name
+                                    First Name
                                 </label>
                                 <input
                                     type="text"
-                                    id="fullName"
-                                    name="fullName"
-                                    defaultValue="Nguyen Van A"
+                                    id="firstName"
+                                    name="firstName"
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    value={firstName}
+                                    onChange={(e) => {
+                                        setFirstName(e.target.value);
+                                    }}
+                                />
+                            </div>
+
+                            <div>
+                                <label
+                                    htmlFor="lastName"
+                                    className="block text-sm font-medium text-gray-700"
+                                >
+                                    Last Name
+                                </label>
+                                <input
+                                    type="text"
+                                    id="lastName"
+                                    name="lastName"
+                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    value={lastName}
+                                    onChange={(e) => {
+                                        setLastName(e.target.value);
+                                    }}
                                 />
                             </div>
 
@@ -75,24 +242,12 @@ const MyProfile = () => {
                                     type="tel"
                                     id="phone"
                                     name="phone"
-                                    defaultValue="0123456789"
+                                    placeholder="0123456789"
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                />
-                            </div>
-
-                            <div>
-                                <label
-                                    htmlFor="email"
-                                    className="block text-sm font-medium text-gray-700"
-                                >
-                                    Email
-                                </label>
-                                <input
-                                    type="email"
-                                    id="email"
-                                    name="email"
-                                    defaultValue="nguyenvana1234@gmail.com"
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    value={phone}
+                                    onChange={(e) => {
+                                        setPhone(e.target.value);
+                                    }}
                                 />
                             </div>
 
@@ -100,8 +255,11 @@ const MyProfile = () => {
                                 <button
                                     type="submit"
                                     className="bg-[#1A0B49] text-white font-semibold py-2 px-6 rounded-md hover:bg-opacity-90"
+                                    disabled={!isFormValid || isLoading}
                                 >
-                                    Complete
+                                    {isLoading
+                                        ? "Changing Info..."
+                                        : "Change Info"}
                                 </button>
                             </div>
                         </form>

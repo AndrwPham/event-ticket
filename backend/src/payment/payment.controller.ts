@@ -42,13 +42,16 @@ export class PaymentsController {
     try {
       // parse webhook data
       const webhookData = await this.paymentService.verifyWebhook(body);
+      this.logger.log(webhookData);
       if (!webhookData || webhookData.code !== '00') {
         this.logger.warn(`Payment failed or not successful for order: ${webhookData?.orderCode}`);
         return { received: true };
       }
 
       // idempotency check
-      const orderId = String(webhookData.orderCode);
+      const orderCode = String(webhookData.orderCode);
+      const orderId = await this.orderService.getOrderIdFromPaymentCode(orderCode);
+
       const order = await this.orderService.findOne(orderId);
       if (order && order.status === 'PAID') {
         this.logger.log(`Order ${orderId} already processed.`);

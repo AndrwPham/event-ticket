@@ -14,9 +14,17 @@ import Payment from "./pages/payment/Payment";
 import TicketDetails from "./pages/ticket/TicketDetails";
 import CardPaymentPage from "./pages/payment/CardPaymentPage";
 import SeatMap from "./pages/seatMap/SeatMap";
-import SuccessPage from "./pages/payment/SuccessPage";
 import CancelPage from "./pages/payment/CancelPage";
 import MyProfile from "./pages/myProfile/page";
+import AboutUsPage from "./pages/footer/AboutUsPage";
+import CustomerTermsPage from "./pages/footer/CustomerTermsPage";
+import HelpCenterPage from "./pages/footer/HelpCenterPage";
+import HowItWorksPage from "./pages/footer/HowItWorksPage";
+import OrganizerTermsPage from "./pages/footer/OrganizerTermsPage";
+import PressPage from "./pages/footer/PressPage";
+import PrivacyPage from "./pages/footer/PrivacyPage";
+import TermsPage from "./pages/footer/TermsPage";
+import PaymentSuccess from "./pages/payment/PaymentSuccess";
 
 function App() {
     const [isSignUpOpen, setIsSignUpOpen] = useState(false);
@@ -35,7 +43,10 @@ function App() {
                 <main className="flex-grow">
                     <Routes>
                         <Route path="/" element={<Home />} />
-                        <Route path="/event/:id" element={<TicketDetails />} />
+                        <Route
+                            path="/event/:eventId"
+                            element={<TicketDetails />}
+                        />
                         <Route
                             path="/event/:id/payment"
                             element={<Payment />}
@@ -50,22 +61,30 @@ function App() {
 
                         <Route path="/search" element={<SearchPage />} />
                         <Route
-                            path="/event/:id/payment/card"
+                            path="/event/:eventId/payment/card"
                             element={<CardPaymentPage />}
                         />
                         <Route
-                            path="/event/:id/payment/success"
-                            element={<SuccessPage />}
-                        />
-                        <Route
-                            path="/event/:id/payment/cancel"
+                            path="/event/:eventId/payment/cancel"
                             element={<CancelPage />}
                         />
                         <Route
-                            path="/event/:id/select-seats"
+                            path="/event/:eventid/payment/success/:orderId"
+                            element={<PaymentSuccess />}
+                        />
+                        <Route
+                            path="/event/:eventId/seats"
                             element={<SeatMap />}
                         />
                         <Route path="/profile" element={<MyProfile />} />
+                        <Route path="/about-us" element={<AboutUsPage />} />
+                        <Route path="/customer-terms" element={<CustomerTermsPage />} />
+                        <Route path="/help-center" element={<HelpCenterPage />} />
+                        <Route path="/how-it-works" element={<HowItWorksPage />} />
+                        <Route path="/organizer-terms" element={<OrganizerTermsPage />} />
+                        <Route path="/press" element={<PressPage />} />
+                        <Route path="/privacy" element={<PrivacyPage />} />
+                        <Route path="/terms" element={<TermsPage />} />
                     </Routes>
                 </main>
                 {isSignUpOpen && (

@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { OrderStatus } from './order/order-status.enum';
 import { TicketStatus } from './issuedticket/ticket-status.enum';
 import { ClaimedTicketStatus } from './claimedticket/claimedticket-status.enum';
+import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 
 // Mock PayOS SDK
 const mockPayOS = {
@@ -72,6 +73,7 @@ describe('Full Buy Flow Integration', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
+      imports: [EventEmitterModule.forRoot()],
       providers: [
         OrderService,
         PaymentService,
@@ -80,6 +82,7 @@ describe('Full Buy Flow Integration', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: HoldService, useValue: mockHoldService },
         { provide: ConfigService, useValue: configService },
+        { provide: EventEmitter2, useValue: { emit: jest.fn(), on: jest.fn() } },
       ],
     }).compile();
     orderService = module.get<OrderService>(OrderService);

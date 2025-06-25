@@ -42,4 +42,9 @@ export class IssuedTicketController {
   generateFromSchema(@Body() dto: GenerateIssuedTicketsDto) {
     return this.ticketService.generateTicketsFromSchema(dto);
   }
+
+  @Post('update')
+  updateFromSchema(@Body() dto: GenerateIssuedTicketsDto) {
+    return this.ticketService.updateTicketsFromSchema(dto);
+  }
 }

@@ -1,0 +1,2 @@
+Hello{{#if name}} {{name}}{{/if}},
+Please confirm your account: {{confirmationLink}}

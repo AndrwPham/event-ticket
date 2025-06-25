@@ -9,6 +9,9 @@ import { SwitchRoleDto } from './dto/switch-role.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { log } from 'console';
 import { JwtPayload } from './types/jwt-payload.type';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { UserCreatedEvent } from '../notification/events/user-created.event';
+import { UserConfirmedEvent } from '../notification/events/user-confirmed.event';
 
 @Injectable()
 export class AuthService {
@@ -16,7 +19,8 @@ export class AuthService {
 
   constructor(
     private prisma: PrismaService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
+    private eventEmitter: EventEmitter2,
   ) { }
 
   private async hash(data: string) {
@@ -63,7 +67,12 @@ export class AuthService {
     });
 
     this.logger.debug(`User registered: ${user.username} (${user.id}) with token ${confirmToken}`);
-    // TODO: call email service to send confirmation email. api: auth/confirm?token=$confirmToken
+    this.eventEmitter.emit(
+      'user.created',
+      new UserCreatedEvent(user.id, email, username, confirmToken)
+    );
+    const { ...name } = user;
+    return { message: 'Registration successful', user: name };
   }
 
   async confirmEmail(token: string): Promise<{ message: string }> {
@@ -74,10 +83,21 @@ export class AuthService {
           gt: new Date(),
         },
       },
+      include: { attendeeInfo: true },
     });
 
     if (!user) {
       throw new BadRequestException('Invalid or expired confirmation token');
+    }
+
+    if (user.pendingEmail) {
+      if (!user.attendeeInfo || user.attendeeInfo.length === 0) {
+        throw new BadRequestException('Attendee info not found for user');
+      }
+      await this.prisma.attendeeInfo.update({
+        where: { id: user.attendeeInfo[0].id },
+        data: { email: user.pendingEmail },
+      });
     }
 
     await this.prisma.user.update({
@@ -86,16 +106,41 @@ export class AuthService {
         confirmed: true,
         confirmToken: null,
         confirmTokenExpiresAt: null,
+        pendingEmail: null,
       },
     });
 
+    // fetch info to send welcome email after confirmation
+    const attendeeInfo = await this.prisma.attendeeInfo.findFirst({ where: { userId: user.id } });
+    if (!attendeeInfo || !attendeeInfo.email) {
+      throw new BadRequestException('User email not found for welcome notification');
+    }
     this.logger.debug(`Email confirmed for user: ${user.username} (${user.id})`);
+    this.eventEmitter.emit(
+      'user.confirmed',
+      new UserConfirmedEvent(user.id, attendeeInfo.email, user.username, new Date())
+    );
     return { message: 'Email confirmed successfully' };
   }
 
   async login(dto: LoginDto) {
-    const { username, password, activeRole } = dto;
-    const user = await this.prisma.user.findUnique({ where: { username } });
+    const { credential, password, activeRole } = dto;
+
+    if (!credential) {
+      throw new BadRequestException('Credential (username or email) must be provided');
+    }
+
+    let user;
+    if (credential.includes('@')) {
+      const userInfo = await this.prisma.attendeeInfo.findUnique({ where: { email: credential } });
+      if (!userInfo || !userInfo.userId) {
+        throw new UnauthorizedException('Invalid credentials or email not confirmed');
+      }
+      user = await this.prisma.user.findUnique({ where: { id: userInfo.userId } });
+    } else {
+      user = await this.prisma.user.findUnique({ where: { username: credential } });
+    }
+
     if (
       !user ||
       !await this.compare(password, user.password)
@@ -103,9 +148,9 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials or email not confirmed');
     }
 
-    // if (!user.confirmed) {
-    //   throw new UnauthorizedException('Email not confirmed');
-    // }
+    if (!user.confirmed) {
+      throw new UnauthorizedException('Email not confirmed');
+    }
 
     if (!user.roles.includes(activeRole)) {
       throw new UnauthorizedException(`You don't have ${activeRole} role`);
@@ -195,5 +240,25 @@ export class AuthService {
 
   async getCurrentUser(userId: string) {
     return this.prisma.user.findUnique({ where: { id: userId } });
+  }
+
+  async sendConfirmationEmail(user: any, newEmail?: string) {
+    // If newEmail is provided, store it as pendingEmail and send confirmation to that address
+    const token = uuidv4();
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // Token valid for 60 minutes
+    let updateData: any = {
+      confirmToken: token,
+      confirmTokenExpiresAt: expiresAt,
+    };
+    if (newEmail) {
+      updateData.pendingEmail = newEmail;
+    }
+    const updatedUser = await this.prisma.user.update({
+      where: { id: user.id },
+      data: updateData,
+    });
+    // TODO: Actually send the email (use a mailer service)
+    this.logger.debug(`Confirmation email sent to ${newEmail || user.attendeeInfo?.email || user.username} with token: ${token}`);
+    return updatedUser;
   }
 }

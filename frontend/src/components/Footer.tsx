@@ -1,6 +1,7 @@
 import { FC } from "react";
 import { FaFacebookF, FaLinkedinIn, FaInstagram } from "react-icons/fa";
 import { MdEmail } from "react-icons/md";
+import { Link } from "react-router-dom";
 
 const Footer: FC = () => {
     return (
@@ -10,22 +11,28 @@ const Footer: FC = () => {
                 <div>
                     <h4 className="font-semibold mb-4">Let’s connect</h4>
                     <div className="flex space-x-4 text-white text-xl">
-                        <FaFacebookF />
-                        <FaLinkedinIn />
-                        <FaInstagram />
+                         <a href="https://www.facebook.com/Fuisloy" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="hover:text-gray-300 transition-colors">
+                            <FaFacebookF />
+                        </a>
+                        <a href="https://www.linkedin.com/in/fuisloy/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="hover:text-gray-300 transition-colors">
+                            <FaLinkedinIn />
+                        </a>
+                        <a href="https://www.instagram.com/fuisloy/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="hover:text-gray-300 transition-colors">
+                            <FaInstagram />
+                        </a>
                     </div>
                 </div>
 
                 {/* For Customer */}
                 <div>
                     <h4 className="font-semibold mb-2">For Customer</h4>
-                    <p className="text-sm text-gray-300 hover:text-white cursor-pointer">
+                    <Link to="/customer-terms" className="text-sm text-gray-300 hover:text-white cursor-pointer">
                         Customer terms of use
-                    </p>
+                    </Link>
                     <h4 className="font-semibold mt-4 mb-2">For Organizer</h4>
-                    <p className="text-sm text-gray-300 hover:text-white cursor-pointer">
+                    <Link to="/organizer-terms" className="text-sm text-gray-300 hover:text-white cursor-pointer">
                         Organizer terms of use
-                    </p>
+                    </Link>
                 </div>
 
                 {/* Subscribe */}
@@ -55,26 +62,26 @@ const Footer: FC = () => {
                 <div>
                     <h4 className="font-semibold mb-2">Our Company</h4>
                     <ul className="text-sm space-y-1 text-gray-300">
-                        <li className="hover:text-white cursor-pointer">
-                            About Us
+                        <li className="hover:text-white">
+                            <Link to="/about-us">About Us</Link>
                         </li>
-                        <li className="hover:text-white cursor-pointer">
-                            Press
+                        <li className="hover:text-white">
+                            <Link to="/press">Press</Link>
                         </li>
-                        <li className="hover:text-white cursor-pointer">
-                            Contact Us
+                        <li className="hover:text-white">
+                            <Link to="/contact-sales">Contact Us</Link>
                         </li>
-                        <li className="hover:text-white cursor-pointer">
-                            Help Center
+                        <li className="hover:text-white">
+                            <Link to="/help-center">Help Center</Link>
                         </li>
-                        <li className="hover:text-white cursor-pointer">
-                            How it Works
+                        <li className="hover:text-white">
+                            <Link to="/how-it-works">How it Works</Link>
                         </li>
-                        <li className="hover:text-white cursor-pointer">
-                            Privacy
+                        <li className="hover:text-white">
+                            <Link to="/privacy">Privacy</Link>
                         </li>
-                        <li className="hover:text-white cursor-pointer">
-                            Terms
+                        <li className="hover:text-white">
+                            <Link to="/terms">Terms</Link>
                         </li>
                     </ul>
                 </div>

@@ -142,10 +142,11 @@ export class IssuedTicketService {
           }
         } else {
           for (let i = 0; i < ticketClass.quantity; i++) {
+            const seatId = `#${i}`;
             ticketsToCreate.push({
               price: ticketClass.price,
               class: ticketClass.label,
-              seat: '',
+              seat: seatId,
               status: TicketStatus.UNAVAILABLE,
               eventId,
               organizationId,
@@ -175,5 +176,74 @@ export class IssuedTicketService {
     } catch (error) {
       throw new BadRequestException(error.message || 'Failed to update ticket status to AVAILABLE.');
     }
+  }
+
+  /**
+   * Update issued tickets for an event to match a new schema.
+   * Preserves tickets that are already sold/claimed.
+   */
+  async updateTicketsFromSchema(dto: GenerateIssuedTicketsDto) {
+    const { eventId, organizationId, currencyId, schema } = dto;
+    const existingTickets = await this.prisma.issuedTicket.findMany({ where: { eventId } });
+    const existingMap = new Map<string, any>();
+    for (const t of existingTickets) {
+      const key = `${t.class}:${t.seat}`;
+      existingMap.set(key, t);
+    }
+
+    // look up
+    const newMap = new Map<string, any>();
+    for (const ticketClass of schema.classes) {
+      if (ticketClass.seats && ticketClass.seats.length > 0) {
+        for (const seat of ticketClass.seats) {
+          const key = `${ticketClass.label}:${seat.seatNumber}`;
+          newMap.set(key, {
+            price: seat.price,
+            class: ticketClass.label,
+            seat: seat.seatNumber,
+            status: TicketStatus.UNAVAILABLE,
+            eventId,
+            organizationId,
+            currencyId,
+          });
+        }
+      } else {
+        for (let i = 0; i < ticketClass.quantity; i++) {
+          const seatId = `#${i}`;
+          const key = `${ticketClass.label}:${seatId}`;
+          newMap.set(key, {
+            price: ticketClass.price,
+            class: ticketClass.label,
+            seat: seatId,
+            status: TicketStatus.UNAVAILABLE,
+            eventId,
+            organizationId,
+            currencyId,
+          });
+        }
+      }
+    }
+
+    for (const [key, newTicket] of newMap.entries()) {
+      if (existingMap.has(key)) {
+        const existing = existingMap.get(key);
+        if (existing.status === TicketStatus.UNAVAILABLE || existing.status === TicketStatus.AVAILABLE) {
+          await this.prisma.issuedTicket.update({
+            where: { id: existing.id },
+            data: { price: newTicket.price, class: newTicket.class, seat: newTicket.seat },
+          });
+        }
+        existingMap.delete(key);
+      } else {
+        await this.prisma.issuedTicket.create({ data: newTicket });
+      }
+    }
+
+    for (const [key, ticket] of existingMap.entries()) {
+      if (ticket.status === TicketStatus.UNAVAILABLE || ticket.status === TicketStatus.AVAILABLE) {
+        await this.prisma.issuedTicket.delete({ where: { id: ticket.id } });
+      }
+    }
+    return { message: 'Tickets updated to match new schema.' };
   }
 }

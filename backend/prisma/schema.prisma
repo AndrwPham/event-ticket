@@ -13,6 +13,12 @@ enum Role {
     Admin
 }
 
+enum EventStatus {
+    PENDING
+    APPROVED
+    REJECTED
+}
+
 enum TicketStatus {
     UNAVAILABLE
     AVAILABLE
@@ -92,8 +98,16 @@ model Organization {
     updatedAt DateTime @updatedAt
 }
 
+model Venue {
+    id      String  @id @default(auto()) @map("_id") @db.ObjectId
+    name    String
+    address String?
+    layout  Json?
+    events  Event[]
+}
+
 model Event {
-    id                String    @id @default(auto()) @map("_id") @db.ObjectId
+    id                String      @id @default(auto()) @map("_id") @db.ObjectId
     title             String
     description       String
     active_start_date DateTime
@@ -105,13 +119,19 @@ model Event {
     ward              String?
     street            String?
     type              EventType
+    status            EventStatus @default(PENDING)
 
     organizationId String       @db.ObjectId
     organization   Organization @relation("OrganizationEvents", fields: [organizationId], references: [id], onDelete: Cascade)
 
+    ticketConfiguration Json?
+
     tagIds   String[] @db.ObjectId
     posterId String   @db.ObjectId
     imageIds String[] @db.ObjectId
+
+    venueId String? @db.ObjectId
+    venue   Venue?  @relation(fields: [venueId], references: [id])
 
     tickets IssuedTicket[] @relation("EventIssuedTickets")
     reviews Review[]       @relation("EventReviews")
@@ -123,11 +143,12 @@ model Event {
 }
 
 model IssuedTicket {
-    id     String       @id @default(auto()) @map("_id") @db.ObjectId
-    price  Float
-    class  String
-    seat   String
-    status TicketStatus
+    id         String       @id @default(auto()) @map("_id") @db.ObjectId
+    price      Float
+    class      String
+    classColor String?
+    seat       String
+    status     TicketStatus
 
     holdExpiresAt DateTime?
 
@@ -184,6 +205,8 @@ model Order {
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+
+    paymentRefCode Int? @unique
 
     @@index([attendeeId])
 }

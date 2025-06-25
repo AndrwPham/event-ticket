@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { usePayOS, PayOSConfig } from "@payos/payos-checkout";
 import CountdownTimer from "./components/CountdownTimer";
@@ -22,8 +22,9 @@ const PaymentPage: FC = () => {
     const location = useLocation();
     const state = location.state as PaymentLocationState | null;
     const { order, eventDetails, orderDetails } = state || {};
-    const checkoutUrl = order?.paymentLink?.checkoutUrl;
-    const qrCode = order?.paymentLink?.qrCode;
+    const checkoutUrl = order?.paymentLink.checkoutUrl;
+    const qrCode = order?.paymentLink.qrCode;
+    const iframeOpenedRef = useRef(false);
 
     const [error, setError] = useState<string | null>(null);
 
@@ -39,8 +40,8 @@ const PaymentPage: FC = () => {
         CHECKOUT_URL: checkoutUrl || "",
         ELEMENT_ID: "payos-container",
         embedded: true,
-        RETURN_URL: "http://localhost:5173/payment/return",
-        CANCEL_URL: "http://localhost:5173/payment/return",
+        RETURN_URL: "YourHttpInNgrok/payment/return",
+        CANCEL_URL: "YourHttpInNgrok/payment/return",
         onExit: () => {
             if (eventDetails?.id) {
                 navigate(`/events/${String(eventDetails.id)}`);
@@ -61,27 +62,29 @@ const PaymentPage: FC = () => {
     } as PayOSConfig);
 
     useEffect(() => {
+        if (!checkoutUrl) {
+            return;
+        }
         const timeout = setTimeout(() => {
             const containerExists = document.getElementById("payos-container");
-            if (checkoutUrl && containerExists) {
+            if (containerExists) {
                 open();
-            } else if (!containerExists) {
+            } else {
                 console.error("Element ID: payos-container not found in DOM");
                 setError(
                     "Không thể hiển thị giao diện thanh toán. Vui lòng tải lại trang.",
                 );
-            } else {
-                setError(
-                    "Thông tin thanh toán không hợp lệ hoặc phiên giao dịch đã hết hạn. Vui lòng thử lại.",
-                );
             }
-        }, 100); // Wait 100ms to ensure DOM is painted
+        }, 100);
 
         return () => {
             clearTimeout(timeout);
-            exit();
+            // If you are using the fix from the previous step, keep this logic:
+            if (iframeOpenedRef.current) {
+                exit();
+            }
         };
-    }, [checkoutUrl, open, exit]);
+    }, [checkoutUrl, open, exit]); // The dependency array is correct
 
     if (!order || !eventDetails || !orderDetails) {
         return (
@@ -109,7 +112,7 @@ const PaymentPage: FC = () => {
                     <CountdownTimer
                         initialSeconds={900}
                         onTimerEnd={() => {
-                            if (eventDetails?.id) {
+                            if (eventDetails.id) {
                                 navigate(`/events/${String(eventDetails.id)}`);
                             }
                         }}

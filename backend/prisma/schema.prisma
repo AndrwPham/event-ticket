@@ -19,12 +19,6 @@ enum EventStatus {
     REJECTED
 }
 
-enum EventStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
 enum TicketStatus {
     UNAVAILABLE
     AVAILABLE
@@ -66,13 +60,11 @@ model User {
     confirmToken          String?
     confirmTokenExpiresAt DateTime?
 
-  attendeeInfo AttendeeInfo? @relation("UserAttendeeInfo")
-  pendingEmail String?
+    attendeeInfo AttendeeInfo? @relation("UserAttendeeInfo")
+    pendingEmail String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  attendeeInfo AttendeeInfo[] @relation("UserAttendeeInfo")
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 model AttendeeInfo {

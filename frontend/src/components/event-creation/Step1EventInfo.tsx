@@ -13,9 +13,9 @@ import { useFilePreview } from '@/hooks/useFilePreview';
 
 // Hardcoded venues with full addresses for UI development.
 const providedVenues: ProvidedVenue[] = [
-    { id: 'venue-1', name: 'Grand Convention Center', address: { street: '123 Main St', ward: 'Ward 1', district: 'District 1', city: 'Ho Chi Minh City' } },
-    { id: 'venue-2', name: 'Riverside Exhibition Hall', address: { street: '456 Waterway Ave', ward: 'Ward 4', district: 'District 2', city: 'Ho Chi Minh City' } },
-    { id: 'venue-3', name: 'The City Auditorium', address: { street: '789 Central Square', ward: 'Ward Ben Thanh', district: 'District 1', city: 'Ho Chi Minh City' } },
+    { id: 1, name: 'Grand Convention Center', address: { street: '123 Main St', ward: 'Ward 1', district: 'District 1', city: 'Ho Chi Minh City' } },
+    { id: 2, name: 'Riverside Exhibition Hall', address: { street: '456 Waterway Ave', ward: 'Ward 4', district: 'District 2', city: 'Ho Chi Minh City' } },
+    { id: 3, name: 'The City Auditorium', address: { street: '789 Central Square', ward: 'Ward Ben Thanh', district: 'District 1', city: 'Ho Chi Minh City' } },
 ];
 
 interface Step1Props {

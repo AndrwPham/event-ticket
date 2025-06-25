@@ -45,9 +45,8 @@ export default function CreateEvent() {
 
     const isStepValid = useMemo(() => {
         switch (step) {
-            case 1:
+            case 1: {
                 const { eventName, eventType, address, tagIds, organizer, eventPoster, venueType, providedVenueId } = formData;
-
                 let isVenueDetailsValid = false;
                 if (eventType === 'online') {
                     isVenueDetailsValid = true;
@@ -56,14 +55,25 @@ export default function CreateEvent() {
                 } else { // 'custom'
                     isVenueDetailsValid = !!(address.city && address.district && address.street);
                 }
-
                 return !!(eventPoster && eventName && isVenueDetailsValid && tagIds.length > 0 && organizer.name);
-            case 2:
-                const { time, tickets } = formData;
-                return !!(time.start && time.end && new Date(time.end) > new Date(time.start) && tickets.length > 0);
-            case 3:
+            }
+            case 2: {
+                const { time, tickets, seatMapConfig, eventType, venueType } = formData;
+                const isTimeValid = time.start && time.end && new Date(time.end) > new Date(time.start);
+
+                let areTicketsValid = false;
+                if (eventType === 'onsite' && venueType === 'provided') {
+                    areTicketsValid = (seatMapConfig?.seatClasses.filter(c => c.id !== 'unavailable').length ?? 0) > 0;
+                } else {
+                    areTicketsValid = tickets.length > 0;
+                }
+
+                return isTimeValid && areTicketsValid;
+            }
+            case 3: {
                 const { payment } = formData;
                 return !!(payment.accountOwner && payment.accountNumber && payment.bank);
+            }
             default:
                 return false;
         }
@@ -164,13 +174,15 @@ export default function CreateEvent() {
                 },
                 posterImage: posterImageData,
                 images: otherImagesData,
+                seatMapConfig: formData.seatMapConfig,
             };
 
-            const finalResponse = await fetch(`${API_BASE_URL}/events`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(finalEventPayload),
-            });
+            console.log(JSON.stringify(finalEventPayload));
+            // const finalResponse = await fetch(`${API_BASE_URL}/events`, {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(finalEventPayload),
+            // });
 
             if (!finalResponse.ok) {
                 const errorData = await finalResponse.json().catch(() => ({}));

@@ -4,7 +4,7 @@ import { IVenue } from "../types";
 
 export const allVenues: IVenue[] = [
     {
-        id: 1,
+        id: '1',
         name: "Standard Auditorium",
         layout: [
             [
@@ -68,7 +68,7 @@ export const allVenues: IVenue[] = [
         ],
     },
     {
-        id: 2,
+        id: '2',
         name: "Large Stadium",
         layout: [
             [
@@ -156,7 +156,7 @@ export const allVenues: IVenue[] = [
         ],
     },
     {
-        id: 3,
+        id: '3',
         name: "Intimate Workshop Room",
         layout: [
             [{ type: "lectern" }, { type: "lectern" }, { type: "lectern" }],

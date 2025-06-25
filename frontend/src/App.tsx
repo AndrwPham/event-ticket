@@ -4,7 +4,7 @@ import { useState } from "react";
 import Navbar from "./components/navbar";
 import Footer from "./components/Footer";
 import ContactSales from "./pages/contactSales/page";
-// import CreateEvent from "./pages/createEvent/page";
+import CreateEvent from "./pages/createEvent/page";
 import Ticket from "./pages/ticket/page";
 import LogIn from "./components/log-in";
 import SignUp from "./components/sign-up";

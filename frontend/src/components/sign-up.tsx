@@ -68,9 +68,7 @@ export default function SignUp({ onClose }: SignUpProps) {
             }
 
             const registeredUser = data as User;
-            console.log("Successfully registered:", registeredUser);
-
-            alert("Registration successful! You can now log in.");
+            
             onClose();
         } catch (error) {
             if (error instanceof Error) {

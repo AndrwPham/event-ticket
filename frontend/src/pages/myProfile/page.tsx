@@ -205,6 +205,7 @@ const MyProfile = () => {
                                     id="firstName"
                                     name="firstName"
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    defaultValue={firstName}
                                     value={firstName}
                                     onChange={(e) => {
                                         setFirstName(e.target.value);
@@ -224,6 +225,7 @@ const MyProfile = () => {
                                     id="lastName"
                                     name="lastName"
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    defaultValue={lastName}
                                     value={lastName}
                                     onChange={(e) => {
                                         setLastName(e.target.value);
@@ -244,6 +246,7 @@ const MyProfile = () => {
                                     name="phone"
                                     placeholder="0123456789"
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    defaultValue={phone}
                                     value={phone}
                                     onChange={(e) => {
                                         setPhone(e.target.value);

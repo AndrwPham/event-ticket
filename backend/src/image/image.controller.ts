@@ -5,6 +5,8 @@ import {
 import { ImageService } from './image.service';
 import { CreateImageDto } from './dto/create-image.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { UploadFileDto } from '../common/aws/dto/upload-file.dto';
+import { GetFileDto } from '../common/aws/dto/get-file.dto';
 
 @Controller('images')
 export class ImageController {
@@ -16,6 +18,15 @@ export class ImageController {
         return this.imageService.create(dto);
     }
 
+    @Post('upload-urls')
+    generateUploadUrls(@Body() dtos: UploadFileDto[]) {
+        return this.imageService.generateUploadUrls(dtos);
+    }
+
+    @Post('file-urls')
+    getFileUrls(@Body() dtos: GetFileDto[]) {
+        return this.imageService.getPublicOrSignedUrls(dtos);
+    }
 //     @Get()
 //     findAll() {
 //         return this.imageService.findAll();

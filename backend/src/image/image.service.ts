@@ -1,12 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateImageDto } from './dto/create-image.dto';
+import { UploadFileDto } from '../common/aws/dto/upload-file.dto';
+import { GetFileDto } from '../common/aws/dto/get-file.dto';
+import { AWSService } from '../common/aws/aws.service';
 
 import { Image } from '@prisma/client';
 
 @Injectable()
 export class ImageService {
-    constructor(private prisma: PrismaService) {}
+    constructor(private prisma: PrismaService, private awsService: AWSService) {}
 
     async createMany(dtos: CreateImageDto[]): Promise<Image[]> {
         return Promise.all(dtos.map(dto => this.create(dto)));
@@ -16,6 +19,14 @@ export class ImageService {
         return this.prisma.image.create({ data: dto });
     }
 
+    // @UseGuards(JwtAuthGuard)
+    generateUploadUrls(dtos: UploadFileDto[]) {
+        return this.awsService.generateSignedPutUrl(dtos);
+    }
+
+    getPublicOrSignedUrls(dtos: GetFileDto[]) {
+        return this.awsService.getFileUrl(dtos);
+    }
     // findAll() {
     //     return this.prisma.image.findMany({
     //         include: {

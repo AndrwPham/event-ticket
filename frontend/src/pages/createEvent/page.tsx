@@ -12,6 +12,7 @@ import { Step3Payment } from "@/components/event-creation/Step3Payment";
 // registerLicense(import.meta.env.VITE_SYNCFUSION_LICENSE_KEY);
 registerLicense('YOUR_LICENSE');
 
+const API_ENDPOINT = 'http://localhost:5000/events';
 const STEPS = ["Event information", "Show time & Ticket", "Payment"];
 
 const initialFormData: EventFormData = {
@@ -51,6 +52,71 @@ export default function CreateEvent() {
         }
     }, [formData, step]);
 
+    const handleSubmit = async (formData, authToken) => {
+        // This function acts as the "adapter"
+        const transformDataForApi = (data: EventFormData) => {
+            const payload = {
+                title: data.eventName,
+                description: data.description,
+                active_start_date: data.time.start,
+                active_end_date: data.time.end,
+                sale_start_date: data.time.start,
+                sale_end_date: data.time.end,
+                // venue: data.venueName,
+                city: data.address.city,
+                district: data.address.district,
+                street: data.address.street,
+                // FIX: temporary fix for the unmatched type
+                type: data.eventType == 'onsite' ? 'offline' : data.eventType,
+                // WARN: using static id, need to wire to the user organizationId 
+                organizationId: "685b76539bfc4952f337313c",
+                // WARN: using static tags, need to wire to live requests
+                tagIds: ["685a09138248d45eada91c95"],
+                // category: data.category.toUpperCase(),
+                // timing: data.time,
+                ticketSchema: {
+                    classes: data.tickets.map(ticket => ({
+                        label: ticket.label,
+                        description: ticket.description,
+                        quantity: ticket.quantity,
+                        price: ticket.price,
+                    })),
+                },
+                // TODO: wire the upload request
+                // images,
+                //
+                // Files would be handled separately (uploaded first to get a URL)
+            };
+            return payload;
+        };
+
+        const apiPayload = transformDataForApi(formData);
+
+        try {
+            const response = await fetch(API_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // 'Authorization': `Bearer ${authToken}` 
+                },
+                body: JSON.stringify(apiPayload) // Convert the JS object to a JSON string
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ message: response.statusText }));
+                throw new Error(errorData.message || `Server responded with status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('Event created successfully:', result);
+            alert('Event Published!');
+            // TODO: redirect to organizer home
+
+        } catch (error) {
+            console.error('Failed to create event:', error);
+            alert(`Error: ${error.message}`);
+        }
+    };
     const handleSaveDraft = () => {
         // NOTE: Saving File objects to localStorage is not possible.
         // You would typically upload them and save the URL.
@@ -65,9 +131,10 @@ export default function CreateEvent() {
         if (isStepValid && step < 3) {
             setStep(s => s + 1);
         } else if (step === 3 && isStepValid) {
+            // TODO: add an api request
             // Final submission logic would go here
             console.log("FINAL SUBMISSION:", formData);
-            alert("Event Submitted!");
+            handleSubmit(formData, 'abc');
         }
     };
 

@@ -60,6 +60,11 @@ export class CreateEventDto {
     @IsMongoId({ each: true })
     tagIds?: string[];
 
+    @IsNotEmpty()
+    @ValidateNested()
+    @Type(() => CreateImageDto)
+    posterImage: CreateImageDto;
+
     @IsOptional()
     @IsArray()
     @ValidateNested({ each: true })

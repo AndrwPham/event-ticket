@@ -110,6 +110,7 @@ model Event {
     organization   Organization @relation("OrganizationEvents", fields: [organizationId], references: [id], onDelete: Cascade)
 
     tagIds   String[] @db.ObjectId
+    posterId String   @db.ObjectId
     imageIds String[] @db.ObjectId
 
     tickets IssuedTicket[] @relation("EventIssuedTickets")

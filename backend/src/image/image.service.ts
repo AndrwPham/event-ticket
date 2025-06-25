@@ -16,7 +16,11 @@ export class ImageService {
     }
 
     async create(dto: CreateImageDto): Promise<Image> {
-        return this.prisma.image.create({ data: dto });
+        return this.prisma.image.create({ data: {
+            key: dto.key,
+            contentType: dto.contentType,
+            isPublic: dto.isPublic
+        } });
     }
 
     // @UseGuards(JwtAuthGuard)

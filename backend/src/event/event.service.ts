@@ -18,11 +18,12 @@ export class EventService {
     ) {}
 
     async create(dto: CreateEventDto) {
-        const { currency, ticketSchema, organizationId, tagIds, images, ...eventData } = dto;
+        const { currency, ticketSchema, organizationId, tagIds, posterImage, images, ...eventData } = dto;
 
         try {
-            const [resolvedTagIds, imageIds, currencyRecord] = await Promise.all([
+            const [resolvedTagIds, posterId, imageIds, currencyRecord] = await Promise.all([
                 tagIds?.length ? this.validateTagIds(tagIds) : [],
+                this.saveOneImage(posterImage),
                 images?.length ? this.saveImages(images) : [],
                 this.resolveCurrency(currency),
             ]);
@@ -34,6 +35,7 @@ export class EventService {
                         ...eventData,
                         organization: { connect: { id: organizationId } },
                         tagIds: resolvedTagIds,
+                        posterId,
                         imageIds,
                     }
                 });
@@ -73,11 +75,16 @@ export class EventService {
         return existingTags.map(tag => tag.id);
     }
 
-    // images must allow direct mapping to CreateImageDto
     private async saveImages(images: any[]): Promise<string[]> {
         const dtos = images.map((img) => plainToInstance(CreateImageDto, img));
         const saved = await this.imageService.createMany(dtos);
         return saved.map(img => img.id);
+    }
+
+    private async saveOneImage(image): Promise<string> {
+        const dto = plainToInstance(CreateImageDto, image);
+        const saved = await this.imageService.create(dto);
+        return saved.id;
     }
 
     private async resolveCurrency(symbol?: string): Promise<Currency> {

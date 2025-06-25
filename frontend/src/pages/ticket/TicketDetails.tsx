@@ -1,7 +1,6 @@
 import { FC, useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { FaCalendarAlt, FaMapMarkerAlt } from "react-icons/fa";
-import { IoChevronDown } from "react-icons/io5";
 
 // The Skeleton component remains the same
 const EventDetailsSkeleton: FC = () => (
@@ -48,6 +47,8 @@ const EventDetailsSkeleton: FC = () => (
         </div>
     </div>
 );
+type TicketStatus = 'UNAVAILABLE' | 'AVAILABLE' | 'HELD' |  'CLAIMED';
+
 
 interface DetailedEvent {
     id: string;
@@ -57,7 +58,11 @@ interface DetailedEvent {
     images: { url: string }[];
     venue: { name: string; address?: string; } | null;
     organization: { name: string; logoUrl?: string; } | null;
-    tickets: { class: string; price: number; }[];
+    tickets: {
+        class: string;
+        price: number;
+        status: TicketStatus;
+    }[];
 }
 
 const EventDetails: FC = () => {
@@ -209,18 +214,6 @@ const EventDetails: FC = () => {
                                     <p key={index}>{line.trim()}</p>
                                 ))}
                         </div>
-                        <div className="text-center mt-4">
-                            <button
-                                onClick={() => {
-                                    setIsAboutExpanded(!isAboutExpanded);
-                                }}
-                                className="p-2 rounded-full hover:bg-gray-200 transition"
-                            >
-                                <IoChevronDown
-                                    className={`w-6 h-6 text-gray-500 transition-transform duration-300 ${isAboutExpanded ? "rotate-180" : ""}`}
-                                />
-                            </button>
-                        </div>
                     </div>
                 </section>
 
@@ -258,7 +251,7 @@ const EventDetails: FC = () => {
                                 </button>
                             </div>
                             <div className="mt-4 space-y-3">
-                                {ticketTiers.map((tier) => (
+                                {ticketTiers.filter(tier => tier.status !== 'UNAVAILABLE').map((tier) => (
                                     <div
                                         key={tier.class}
                                         className="flex justify-between items-center"

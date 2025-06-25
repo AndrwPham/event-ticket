@@ -1,51 +1,75 @@
-import { FC } from 'react';
-import { Calendar, MapPin } from 'lucide-react';
-
-export interface Event {
-  id: number;
-  title: string;
-  date: string;
-  location: string;
-  price: string;
-  followers: string;
-  image: string;
-  category: string;
-}
+import { FC } from "react";
+import { Link } from "react-router-dom";
+// Assuming you have a shared type definition like this
+import { LiveEvent } from "../types";
 
 interface EventCardProps {
-  event: Event;
-  onClick?: (event: Event) => void;
+    event: LiveEvent;
+    onClick?: (event: LiveEvent) => void;
 }
 
-const EventCard: FC<EventCardProps> = ({ event, onClick }) => {
+export interface Event {
+    id: number;
+    title: string;
+    date: string;
+    location: string;
+    price: string;
+    followers: string;
+    image: string;
+    category: string;
+}
 
-    event.image = "https://placehold.co/306x170";
+const EventCard: FC<EventCardProps> = ({ event }) => {
+    const eventDate = new Date(event.active_start_date).toLocaleDateString(
+        "en-US",
+        {
+            month: "short",
+            day: "numeric",
+        },
+    );
+
+    const eventTime = new Date(event.active_start_date).toLocaleTimeString(
+        "en-US",
+        {
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+        },
+    );
+
+    const bannerImage =
+        event.images[0]?.url ||
+        "https://placehold.co/600x400/cccccc/ffffff?text=Event";
 
     return (
-        <div 
-            className="bg-white rounded-lg overflow-hidden hover:shadow-lg transition cursor-pointer"
-            onClick={() => onClick?.(event)}
+        // The `to` prop uses a template literal (backticks ``) to correctly build the URL.
+        <Link
+            to={`/events/${event.id}/seats`}
+            className="block bg-white rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 group"
         >
-            <div className="aspect-9/5 relative">
-            <img 
-                src={event.image} 
-                alt={event.title}
-                className="w-full h-auto object-cover rounded-lg"
-            />
+            <div className="relative">
+                <img
+                    src={bannerImage}
+                    alt={event.title}
+                    className="w-full h-48 object-cover"
+                />
             </div>
-            <div className="p-4 space-y-4">
-            <h3 className="font-semibold text-gray-900 text-sm line-clamp-2 mb-2">{event.title}</h3>
-            <div className="space-y-1 text-xs text-gray-600">
-                <div className="flex items-center gap-1"><Calendar className="w-3 h-3" /><span className="text-orange-600 font-medium">{event.date}</span></div>
-                <div className="flex items-center gap-1"><MapPin className="w-3 h-3" /><span className="truncate">{event.location}</span></div>
-                <div className="text-gray-900 font-medium">{event.price}</div>
+            <div className="p-4">
+                <h3 className="text-lg font-bold truncate">{event.title}</h3>
+                <p className="text-gray-600 text-sm mt-1">
+                    {event.venue?.name || "Online Event"}
+                </p>
+                <div className="mt-4 flex justify-between items-center">
+                    <p className="text-sm font-semibold text-indigo-600">
+                        {eventDate} - {eventTime}
+                    </p>
+                    <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded-full">
+                        ON SALE
+                    </span>
+                </div>
             </div>
-            <div className="mt-3 pt-3 border-t border-gray-100">
-                <div className="text-xs text-purple-600 font-medium mb-1">{event.category.toUpperCase()}</div>
-            </div>
-            </div>
-        </div>
+        </Link>
     );
-} 
+};
 
 export default EventCard;

@@ -1,10 +1,10 @@
 import { FC } from "react";
 import { useLocation, Link } from "react-router-dom";
-import { ILocationState } from "../../types";
+import { LocationState } from "../../types";
 
 const CardPaymentPage: FC = () => {
     const location = useLocation();
-    const state = location.state as ILocationState | null;
+    const state = location.state as LocationState | null;
 
     return (
         <div className="max-w-md mx-auto my-12 p-8 bg-white rounded-lg shadow-lg border">

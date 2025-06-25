@@ -1,13 +1,15 @@
 import { FC } from "react";
-import { ISeat } from "../../../types";
+import { IssuedTicket } from "../../../types"; // Ensure you import the correct type
 
 interface SeatMapOrderSummaryProps {
-    selectedSeats: ISeat[];
+    selectedSeats: IssuedTicket[];
+    isProcessing: boolean;
     onProceed: () => void;
 }
 
 const SeatMapOrderSummary: FC<SeatMapOrderSummaryProps> = ({
     selectedSeats,
+    isProcessing,
     onProceed,
 }) => {
     const totalPrice = selectedSeats.reduce(
@@ -22,16 +24,16 @@ const SeatMapOrderSummary: FC<SeatMapOrderSummaryProps> = ({
             </h3>
             <div className="space-y-2 mb-4 min-h-[100px]">
                 {selectedSeats.length > 0 ? (
-                    selectedSeats.map((seat) => (
+                    selectedSeats.map((ticket) => (
                         <div
-                            key={seat.id}
+                            key={ticket.id}
                             className="flex justify-between text-sm"
                         >
                             <span>
-                                Seat {seat.id} ({seat.tier})
+                                Seat {ticket.seat} ({ticket.class})
                             </span>
                             <span className="font-semibold">
-                                {seat.price.toLocaleString()}đ
+                                {ticket.price.toLocaleString()}đ
                             </span>
                         </div>
                     ))
@@ -48,10 +50,10 @@ const SeatMapOrderSummary: FC<SeatMapOrderSummaryProps> = ({
                 </div>
                 <button
                     onClick={onProceed}
-                    disabled={selectedSeats.length === 0}
-                    className="w-full mt-4 py-3 bg-indigo-600 text-white font-bold rounded-lg transition hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    disabled={isProcessing || selectedSeats.length === 0}
+                    className="w-full mt-4 bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
                 >
-                    Proceed to Payment
+                    {isProcessing ? "Processing..." : "Proceed to Payment"}
                 </button>
             </div>
         </div>

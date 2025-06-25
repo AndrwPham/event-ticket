@@ -1,26 +1,43 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger, } from '@nestjs/common';
 import PayOS from '@payos/node';
 import { ConfigService } from '@nestjs/config';
+import { CreatePaymentDto } from "./dto/create-payment.dto";
 
 @Injectable()
 export class PaymentService {
+    private readonly logger = new Logger(PaymentService.name);
     private payOS: PayOS;
 
     constructor(private readonly configService: ConfigService) {
         const clientId = this.configService.get<string>('PAYOS_CLIENT_ID');
         const apiKey = this.configService.get<string>('PAYOS_API_KEY');
         const checksumKey = this.configService.get<string>('PAYOS_CHECKSUM_KEY');
+        const webhookUrl = this.configService.get<string>('PAYOS_WEBHOOK_URL');
 
         if (!clientId || !apiKey || !checksumKey) {
             throw new InternalServerErrorException('Missing PayOS configuration');
         }
 
         this.payOS = new PayOS(clientId, apiKey, checksumKey);
+
+        // Confirm webhook URL with PayOS
+        if (webhookUrl) {
+            this.payOS.confirmWebhook(webhookUrl)
+                .then(() => {
+                    this.logger.log(`Webhook URL confirmed with PayOS: ${webhookUrl}`);
+                })
+                .catch((err) => {
+                    this.logger.error('Failed to confirm webhook URL with PayOS', err);
+                });
+        } else {
+            this.logger.warn('PAYOS_WEBHOOK_URL is not set. Webhook confirmation skipped.');
+        }
     }
 
     async createPaymentLink(
         createPaymentDto
     ): Promise<any> {
+        this.logger.log(`Attempting to create payment link for order code: ${createPaymentDto.orderCode}`,);
         try {
             const paymentData: any = {
                 orderCode: createPaymentDto.orderCode,
@@ -42,8 +59,15 @@ export class PaymentService {
             if (createPaymentDto.expiredAt) paymentData.expiredAt = createPaymentDto.expiredAt;
 
             const paymentLink = await this.payOS.createPaymentLink(paymentData);
+            this.logger.log(
+                `Successfully created payment link for order code: ${createPaymentDto.orderCode}`,
+            );
             return paymentLink;
         } catch (error) {
+            this.logger.error(
+                `Failed to create payment link for order code: ${createPaymentDto.orderCode}`,
+                error instanceof Error ? error.stack : JSON.stringify(error),
+            );
             throw new InternalServerErrorException(
                 'Failed to create payment link',
             );

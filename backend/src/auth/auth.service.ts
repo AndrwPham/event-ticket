@@ -99,7 +99,7 @@ export class AuthService {
     });
 
     // fetch info to send welcome email after confirmation
-    const attendeeInfo = await this.prisma.attendeeInfo.findUnique({ where: { userId: user.id } });
+    const attendeeInfo = await this.prisma.attendeeInfo.findFirst({ where: { userId: user.id } });
     if (!attendeeInfo || !attendeeInfo.email) {
       throw new BadRequestException('User email not found for welcome notification');
     }

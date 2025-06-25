@@ -62,7 +62,7 @@ describe('AuthController (API)', () => {
     const res = await request(app.getHttpServer())
       .post('/auth/login')
       .send({
-        username: 'apitestlogin',
+        credential: 'apitestlogin',
         password: 'ApiTestPassword123',
         activeRole: 'Attendee',
       });
@@ -104,7 +104,7 @@ describe('AuthController (API)', () => {
     const loginRes = await request(app.getHttpServer())
       .post('/auth/login')
       .send({
-        username: 'switchrole',
+        credential: 'switchrole',
         password: 'ApiTestPassword123',
         activeRole: 'Attendee',
       });
@@ -131,7 +131,7 @@ describe('AuthController (API)', () => {
     const loginRes = await request(app.getHttpServer())
       .post('/auth/login')
       .send({
-        username: 'logoutuser',
+        credential: 'logoutuser',
         password: 'ApiTestPassword123',
         activeRole: 'Attendee',
       });
@@ -157,7 +157,7 @@ describe('AuthController (API)', () => {
     const loginRes = await request(app.getHttpServer())
       .post('/auth/login')
       .send({
-        username: 'meuser',
+        credential: 'meuser',
         password: 'ApiTestPassword123',
         activeRole: 'Attendee',
       });
@@ -184,7 +184,7 @@ describe('AuthController (API)', () => {
     const loginRes = await request(app.getHttpServer())
       .post('/auth/login')
       .send({
-        username: 'refreshuser',
+        credential: 'refreshuser',
         password: 'ApiTestPassword123',
         activeRole: 'Attendee',
       });
@@ -203,7 +203,7 @@ describe('AuthController (API)', () => {
     const res = await request(app.getHttpServer())
       .post('/auth/login')
       .send({
-        username: 'nonexistent',
+        credential: 'nonexistent',
         password: 'wrongpassword',
         activeRole: 'Attendee',
       });
@@ -222,7 +222,7 @@ describe('AuthController (API)', () => {
     const res = await request(app.getHttpServer())
       .post('/auth/login')
       .send({
-        username: 'wrongpw',
+        credential: 'wrongpw',
         password: 'WrongPassword',
         activeRole: 'Attendee',
       });
@@ -241,7 +241,7 @@ describe('AuthController (API)', () => {
     const res = await request(app.getHttpServer())
       .post('/auth/login')
       .send({
-        username: 'notconfirmed',
+        credential: 'notconfirmed',
         password: 'Password123',
         activeRole: 'Attendee',
       });
@@ -262,7 +262,7 @@ describe('AuthController (API)', () => {
     const loginRes = await request(app.getHttpServer())
       .post('/auth/login')
       .send({
-        username: 'refreshfail',
+        credential: 'refreshfail',
         password: 'Password123',
         activeRole: 'Attendee',
       });

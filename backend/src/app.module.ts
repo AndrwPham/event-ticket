@@ -17,6 +17,7 @@ import { PaymentModule } from './payment/payment.module';
 import { NotificationModule } from './notification/notification.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TicketCleanupService } from './issuedticket/ticket-cleanup.service';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { TicketCleanupService } from './issuedticket/ticket-cleanup.service';
     PaymentModule,
     NotificationModule,
     ScheduleModule.forRoot(),
+    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService, TicketCleanupService],

@@ -50,11 +50,11 @@ describe('AuthController (unit)', () => {
   });
 
   it('should call AuthService.login', async () => {
-    const dto: LoginDto = { username: 'u', password: 'pw', activeRole: Role.Attendee };
+    const dto: LoginDto = { credential: 'u', password: 'pw', activeRole: Role.Attendee };
     service.login.mockResolvedValue({ tokens: {}, user: {} });
-    const result = await controller.login(dto);
+    const result = await controller.login(dto, { cookie: jest.fn() });
     expect(service.login).toHaveBeenCalledWith(dto);
-    expect(result).toEqual({ tokens: {}, user: {} });
+    expect(result).toEqual({ user: {} });
   });
 
   it('should call AuthService.switchRole', async () => {

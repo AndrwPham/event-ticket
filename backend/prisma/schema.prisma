@@ -48,6 +48,7 @@ model User {
   confirmed             Boolean   @default(false)
   confirmToken          String?
   confirmTokenExpiresAt DateTime?
+  pendingEmail String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

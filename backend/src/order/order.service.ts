@@ -70,7 +70,7 @@ export class OrderService {
     }
 
     let attendeeId = userId;
-    // create AttendeeInfo if userId is not provided (guest checkout)
+    // create attendeeInfo if userId is not provided (guest checkout)
     if (!userId) {
       if (!dto.guestEmail) {
         throw new BadRequestException(

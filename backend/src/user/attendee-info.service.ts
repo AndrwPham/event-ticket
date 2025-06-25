@@ -26,18 +26,18 @@ export class AttendeeInfoService {
             include: { attendeeInfo: true },
         });
         if (!user) throw new NotFoundException('User not found');
-        if (!user.attendeeInfo) throw new NotFoundException('Attendee info not found');
-        const isEmailChanged = dto.email && dto.email !== user.attendeeInfo.email;
+        if (!user.attendeeInfo || user.attendeeInfo.length === 0) throw new NotFoundException('Attendee info not found');
+        const isEmailChanged = dto.email && dto.email !== user.attendeeInfo[0].email;
         const { email, ...otherFields } = dto;
         let updated;
         try {
             if (Object.keys(otherFields).length > 0) {
                 updated = await this.prisma.attendeeInfo.update({
-                    where: { id: user.attendeeInfo.id },
+                    where: { id: user.attendeeInfo[0].id },
                     data: { ...otherFields },
                 });
             } else {
-                updated = user.attendeeInfo;
+                updated = user.attendeeInfo[0];
             }
             if (isEmailChanged) {
                 await this.authService.sendConfirmationEmail(user, dto.email);

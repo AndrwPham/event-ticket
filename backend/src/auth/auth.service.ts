@@ -72,7 +72,7 @@ export class AuthService {
       new UserCreatedEvent(user.id, email, username, confirmToken)
     );
     const { ...name } = user;
-    return name;
+    return { message: 'Registration successful', user: name };
   }
 
   async confirmEmail(token: string): Promise<{ message: string }> {
@@ -91,11 +91,11 @@ export class AuthService {
     }
 
     if (user.pendingEmail) {
-      if (!user.attendeeInfo) {
+      if (!user.attendeeInfo || user.attendeeInfo.length === 0) {
         throw new BadRequestException('Attendee info not found for user');
       }
       await this.prisma.attendeeInfo.update({
-        where: { id: user.attendeeInfo.id },
+        where: { id: user.attendeeInfo[0].id },
         data: { email: user.pendingEmail },
       });
     }

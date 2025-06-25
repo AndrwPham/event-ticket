@@ -9,7 +9,7 @@ type UserProfile = {
 
 // Add response types
 // For attendee info GET
-interface AttendeeInfoResponse {
+interface AttendeeInfo {
     first_name?: string;
     last_name?: string;
     phone?: string;
@@ -70,18 +70,18 @@ const MyProfile = () => {
                 if (!response.ok)
                     throw new Error("Failed to fetch personal info");
 
-                const data = (await response.json()) as AttendeeInfoResponse;
-                setFirstName(data.first_name ?? "");
-                setLastName(data.last_name ?? "");
-                setPhone(data.phone ?? "");
-                console.log("Fetched personal info:", data); // Log fetched personal info
+                const dataArr = await response.json();
+                const data = Array.isArray(dataArr) ? dataArr[0] : dataArr;
+                setFirstName(data?.first_name ?? "");
+                setLastName(data?.last_name ?? "");
+                setPhone(data?.phone ?? "");
             } catch (err) {
                 console.error("Failed to fetch personal info:", err);
             }
         };
 
         void fetchInfo();
-    }, []);
+    }, []); // refetch info after successful update
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();

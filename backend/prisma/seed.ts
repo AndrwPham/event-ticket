@@ -1,4 +1,4 @@
-import {PrismaClient, Role, Prisma, EventStatus} from '@prisma/client';
+import {PrismaClient, Role, Prisma, EventStatus, ClaimedTicketStatus} from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -154,6 +154,74 @@ async function main() {
         data: ticketsToCreate,
     });
     console.log(`Created ${ticketsToCreate.length} tickets for the event.`);
+
+    // --- Tie claimed tickets to your real AttendeeInfo ---
+    // Use your provided AttendeeInfo id and userId
+    const attendeeId = '685c5748bb74c60c1d4dd6d3'; // PeppaPig's new _id
+
+    // Create an order for this attendee
+    const order = await prisma.order.create({
+        data: {
+            totalPrice: 0, // will update after tickets
+            status: 'PAID',
+            method: 'credit_card',
+            attendeeId: attendeeId,
+            ticketItems: [],
+        },
+    });
+    console.log('Created order for your attendee.');
+
+    // Fetch 10 available issued tickets
+    const issuedTickets = await prisma.issuedTicket.findMany({
+        where: { status: 'AVAILABLE' },
+        take: 10,
+    });
+
+    // Create 10 claimed tickets for your attendee with various statuses and dates
+    let totalPrice = 0;
+    const now = new Date();
+    const statusDateMap = [
+        { status: 'READY', date: new Date(now.getTime() + 24 * 60 * 60 * 1000) }, // +1 day
+        { status: 'READY', date: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000) }, // +2 days
+        { status: 'READY', date: new Date(now.getTime() + 3 * 60 * 60 * 1000) }, // +3 days
+        { status: 'USED', date: new Date(now.getTime() - 24 * 60 * 60 * 1000) }, // -1 day
+        { status: 'USED', date: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000) }, // -2 days
+        { status: 'CANCELLED', date: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000) }, // -3 days
+        { status: 'CANCELLED', date: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000) }, // -4 days
+        { status: 'EXPIRED', date: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000) }, // -5 days
+        { status: 'EXPIRED', date: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000) }, // -6 days
+        { status: 'READY', date: new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000) }, // +4 days
+    ];
+
+    for (let i = 0; i < issuedTickets.length; i++) {
+        const issued = issuedTickets[i];
+        const { status, date } = statusDateMap[i] || { status: 'READY', date: now };
+        await prisma.claimedTicket.create({
+            data: {
+                id: issued.id, // ClaimedTicket uses issuedTicket id as PK
+                attendeeId: attendeeId,
+                orderId: order.id,
+                status: ClaimedTicketStatus[status as keyof typeof ClaimedTicketStatus],
+            },
+            include: { issuedTicket: true },
+        });
+        totalPrice += issued.price;
+        // Update the issuedTicket date for demo
+        // await prisma.issuedTicket.update({
+        //     where: { id: issued.id },
+        //     data: { date: date.toISOString() },
+        // });
+    }
+
+    // Update order totalPrice and ticketItems
+    await prisma.order.update({
+        where: { id: order.id },
+        data: {
+            totalPrice,
+            ticketItems: issuedTickets.map(t => t.id),
+        },
+    });
+    console.log('Created 10 claimed tickets for your real attendee and updated order.');
 
     console.log('Seeding finished.');
 }

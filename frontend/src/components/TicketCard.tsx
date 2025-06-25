@@ -14,10 +14,17 @@ const statusStyles: Record<MyTicket["status"], string> = {
 };
 
 const TicketCard: FC<TicketCardProps> = ({ ticket }) => {
-    const formattedDate = new Intl.DateTimeFormat("en-US", {
-        dateStyle: "full",
-        timeStyle: "short",
-    }).format(new Date(ticket.date));
+    let formattedDate = "";
+    if (ticket.date) {
+        try {
+            formattedDate = new Intl.DateTimeFormat("en-US", {
+                dateStyle: "full",
+                timeStyle: "short",
+            }).format(new Date(ticket.date));
+        } catch {
+            formattedDate = "Invalid date";
+        }
+    }
 
     return (
         <div className="flex flex-col md:flex-row bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">

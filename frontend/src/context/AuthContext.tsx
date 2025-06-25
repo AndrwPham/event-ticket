@@ -27,16 +27,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     useEffect(() => {
         const checkAuthStatus = async () => {
             try {
-                // We will eventually need a backend endpoint like '/auth/profile' to verify the cookie
-                // For now, this fetch will fail, and the user will correctly be logged out.
+                // Use the user controller endpoint to verify auth status
                 const response = await fetch(
-                    `${import.meta.env.VITE_API_URL}/auth/profile`,
-                    {},
+                    `${import.meta.env.VITE_API_URL}/user/me`,
+                    { credentials: "include" },
                 );
 
                 if (response.ok) {
-                    const userData = (await response.json()) as User;
-                    login(userData);
+                    const data = await response.json();
+                    // The endpoint returns { user, attendeeInfo }
+                    login(data.user);
                 } else {
                     logout();
                 }

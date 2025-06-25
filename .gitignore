@@ -31,6 +31,5 @@ bower_components/
 *.gz
 docker-compose.override.yml
 
-
-
-.editorconfig
+# Personal File
+frontend/build.sh

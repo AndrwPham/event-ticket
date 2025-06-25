@@ -1,94 +1,120 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { useState } from "react";
-
-import Navbar from "./components/navbar";
-import Footer from "./components/Footer";
-import ContactSales from "./pages/contactSales/page";
-import CreateEvent from "./pages/createEvent/page";
-import Ticket from "./pages/ticket/page";
-import LogIn from "./components/log-in";
-import SignUp from "./components/sign-up";
-import Home from "./pages/home/page";
-import SearchPage from "./pages/search/page";
-import Payment from "./pages/payment/Payment";
-import TicketDetails from "./pages/ticket/TicketDetails";
-import CardPaymentPage from "./pages/payment/CardPaymentPage";
-import SeatMap from "./pages/seatMap/SeatMap";
-import SuccessPage from "./pages/payment/SuccessPage";
-import CancelPage from "./pages/payment/CancelPage";
-import MyProfile from "./pages/myProfile/page";
+import { VenueConfig } from "./components/VenueConfig";
 
 function App() {
-    const [isSignUpOpen, setIsSignUpOpen] = useState(false);
-    const [isLogInOpen, setIsLogInOpen] = useState(false);
     return (
-        <Router>
-            <div className="flex flex-col min-h-screen bg-gray-100">
-                <Navbar
-                    onSignUpClick={() => {
-                        setIsSignUpOpen(true);
-                    }}
-                    onLogInClick={() => {
-                        setIsLogInOpen(true);
-                    }}
-                />
-                <main className="flex-grow">
-                    <Routes>
-                        <Route path="/" element={<Home />} />
-                        <Route path="/event/:id" element={<TicketDetails />} />
-                        <Route
-                            path="/event/:id/payment"
-                            element={<Payment />}
-                        />
-                        <Route path="/home" element={<Home />} />
-                        <Route
-                            path="/contact-sales"
-                            element={<ContactSales />}
-                        />
-                        <Route path="/create-event" element={<CreateEvent />} />
-                        <Route path="/ticket" element={<Ticket />} />
-
-                        <Route path="/search" element={<SearchPage />} />
-                        <Route
-                            path="/event/:id/payment/card"
-                            element={<CardPaymentPage />}
-                        />
-                        <Route
-                            path="/event/:id/payment/success"
-                            element={<SuccessPage />}
-                        />
-                        <Route
-                            path="/event/:id/payment/cancel"
-                            element={<CancelPage />}
-                        />
-                        <Route
-                            path="/event/:id/select-seats"
-                            element={<SeatMap />}
-                        />
-                        <Route path="/profile" element={<MyProfile />} />
-                    </Routes>
-                </main>
-                {isSignUpOpen && (
-                    <SignUp
-                        onClose={() => {
-                            setIsSignUpOpen(false);
-                        }}
-                    />
-                )}
-                {isLogInOpen && (
-                    <LogIn
-                        onClose={() => {
-                            setIsLogInOpen(false);
-                        }}
-                        onSwitchToSignUp={() => {
-                            setIsLogInOpen(false);
-                            setIsSignUpOpen(true);
-                        }}
-                    />
-                )}
-                <Footer />
-            </div>
-        </Router>
+        <>
+            <VenueConfig
+                venueList={[
+                    {
+                        id: 1,
+                        name: "Standard Auditorium",
+                        layout: [
+                            [
+                                { type: "stage" },
+                                { type: "stage" },
+                                { type: "stage" },
+                                { type: "stage" },
+                                { type: "stage" },
+                                { type: "stage" },
+                                { type: "stage" },
+                            ],
+                            [
+                                { type: "empty" },
+                                { type: "empty" },
+                                { type: "empty" },
+                                { type: "empty" },
+                                { type: "empty" },
+                                { type: "empty" },
+                                { type: "empty" },
+                            ],
+                            [
+                                { type: "seat", seatId: "A1" },
+                                { type: "seat", seatId: "A2" },
+                                { type: "seat", seatId: "A3" },
+                                { type: "aisle" },
+                                { type: "seat", seatId: "A4" },
+                                { type: "seat", seatId: "A5" },
+                                { type: "seat", seatId: "A6" },
+                            ],
+                            [
+                                { type: "seat", seatId: "B1" },
+                                { type: "seat", seatId: "B2" },
+                                { type: "seat", seatId: "B3" },
+                                { type: "aisle" },
+                                { type: "seat", seatId: "B4" },
+                                { type: "seat", seatId: "B5" },
+                                { type: "seat", seatId: "B6" },
+                            ],
+                            [
+                                { type: "seat", seatId: "C1" },
+                                { type: "seat", seatId: "C2" },
+                                { type: "seat", seatId: "C3" },
+                                { type: "aisle" },
+                                { type: "seat", seatId: "C4" },
+                                { type: "seat", seatId: "C5" },
+                                { type: "seat", seatId: "C6" },
+                            ],
+                            [
+                                { type: "seat", seatId: "D1" },
+                                { type: "seat", seatId: "D2" },
+                                { type: "seat", seatId: "D3" },
+                                { type: "aisle" },
+                                { type: "seat", seatId: "D4" },
+                                { type: "seat", seatId: "D5" },
+                                { type: "seat", seatId: "D6" },
+                            ],
+                        ],
+                        seatClasses: [
+                            {
+                                id: "unavailable",
+                                name: "Unavailable",
+                                price: null,
+                                color: "#D1D5DB",
+                            },
+                            {
+                                id: "standard",
+                                name: "Standard",
+                                price: 0,
+                                color: "#8c8e91",
+                            },
+                            {
+                                id: "vip",
+                                name: "VIP",
+                                price: 50,
+                                color: "#f8e45c",
+                            },
+                            {
+                                id: "special-vip",
+                                name: "Special VIP",
+                                price: 100,
+                                color: "#22c55e",
+                            },
+                        ],
+                        seatAssignments: {
+                            B1: "vip",
+                            B2: "vip",
+                            A1: "vip",
+                            A2: "special-vip",
+                            A3: "special-vip",
+                            B3: "vip",
+                            A4: "special-vip",
+                            B4: "vip",
+                            A5: "special-vip",
+                            B5: "vip",
+                            A6: "vip",
+                            B6: "vip",
+                            D1: "unavailable",
+                            D2: "unavailable",
+                            D3: "unavailable",
+                            D4: "unavailable",
+                            D5: "unavailable",
+                            D6: "unavailable",
+                        },
+                    },
+                ]}
+            />
+        </>
     );
 }
+
 export default App;

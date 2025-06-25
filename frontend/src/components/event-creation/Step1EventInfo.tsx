@@ -1,5 +1,14 @@
 import React, { useCallback } from 'react';
-import { RichTextEditorComponent, Inject, Toolbar, Image, Link, HtmlEditor, QuickToolbar, ChangeEventArgs } from "@syncfusion/ej2-react-richtexteditor";
+import {
+    RichTextEditorComponent,
+    Inject,
+    Toolbar,
+    Image,
+    Link,
+    HtmlEditor,
+    QuickToolbar,
+    ChangeEventArgs,
+} from "@syncfusion/ej2-react-richtexteditor";
 import { EventFormData } from '@/types/event';
 import { useFilePreview } from '@/hooks/useFilePreview';
 import { ImageUploader } from './ImageUploader';
@@ -56,7 +65,6 @@ export const Step1EventInfo = ({ formData, setFormData }: Step1Props) => {
 
     return (
         <div className="space-y-8">
-            {/* The image uploader section */}
             <section className="bg-white p-6 rounded-lg shadow">
                 <div className="flex items-center gap-2 mb-4">
                     <h3 className="text-xl font-semibold text-gray-800">Event Images</h3>
@@ -83,7 +91,6 @@ export const Step1EventInfo = ({ formData, setFormData }: Step1Props) => {
                 </div>
             </section>
 
-            {/* The main form section */}
             <form className="space-y-8 bg-white p-8 rounded-lg shadow">
                 <div className="space-y-2">
                     <label htmlFor="eventName" className="text-sm font-medium text-gray-700">Event Name</label>
@@ -99,7 +106,12 @@ export const Step1EventInfo = ({ formData, setFormData }: Step1Props) => {
                     {formData.eventType === 'onsite' && (
                         <div className="space-y-4 pt-2">
                             <input name="venueName" value={formData.venueName} onChange={handleChange} type="text" placeholder="Venue Name" className="w-full border-gray-300 rounded-md shadow-sm"/>
-                            {/* ... address inputs ... */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <input name="city" value={formData.address.city} onChange={handleAddressChange} type="text" placeholder="City/Province" className="border-gray-300 rounded-md shadow-sm"/>
+                                <input name="district" value={formData.address.district} onChange={handleAddressChange} type="text" placeholder="District" className="border-gray-300 rounded-md shadow-sm"/>
+                                <input name="ward" value={formData.address.ward} onChange={handleAddressChange} type="text" placeholder="Ward" className="border-gray-300 rounded-md shadow-sm"/>
+                                <input name="street" value={formData.address.street} onChange={handleAddressChange} type="text" placeholder="Street and Number" className="border-gray-300 rounded-md shadow-sm"/>
+                            </div>
                         </div>
                     )}
                 </fieldset>
@@ -118,7 +130,14 @@ export const Step1EventInfo = ({ formData, setFormData }: Step1Props) => {
                         <ImageUploader id="organizer-logo-upload" label="Organizer Logo" dimensions="(Recommended: 1:1)" previewUrl={organizerLogoPreview} onFileChange={handleOrganizerLogoChange} />
                     </div>
                     <div className="lg:col-span-9 space-y-4">
-                        {/* ... organizer name and info inputs ... */}
+                        <div>
+                            <label htmlFor="organizer-name" className="block text-sm font-medium text-gray-700 mb-1">Organizer Name</label>
+                            <input id="organizer-name" name="name" value={formData.organizer.name} onChange={handleOrganizerChange} type="text" placeholder="Your Company or Team Name" className="w-full border-gray-300 rounded-md shadow-sm"/>
+                        </div>
+                        <div>
+                            <label htmlFor="organizer-info" className="block text-sm font-medium text-gray-700 mb-1">Organizer Information</label>
+                            <textarea id="organizer-info" name="info" value={formData.organizer.info} onChange={handleOrganizerChange} rows={4} placeholder="Briefly describe the organizer." className="w-full border-gray-300 rounded-md shadow-sm" />
+                        </div>
                     </div>
                 </div>
             </form>

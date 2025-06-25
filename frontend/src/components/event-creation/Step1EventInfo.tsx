@@ -13,6 +13,7 @@ import { EventFormData } from '@/types/event';
 import { useFilePreview } from '@/hooks/useFilePreview';
 import { ImageUploader } from './ImageUploader';
 import { Tooltip } from '@/components/ui/Tooltip';
+import { TagSelector } from '@/components/ui/TagSelector';
 
 interface Step1Props {
     formData: EventFormData;
@@ -52,6 +53,10 @@ export const Step1EventInfo = ({ formData, setFormData }: Step1Props) => {
     const handleOrganizerPosterChange = (file: File | null) => {
         setFormData(prev => ({ ...prev, organizer: { ...prev.organizer, logo: file }}));
     }
+
+    const handleTagsChange = (newTagIds: string[]) => {
+        setFormData(prev => ({ ...prev, tagIds: newTagIds }));
+    };
 
     const handleDescriptionChange = useCallback((args: ChangeEventArgs) => {
         setFormData(prev => ({...prev, description: args.value || ""}));
@@ -111,18 +116,7 @@ export const Step1EventInfo = ({ formData, setFormData }: Step1Props) => {
                     )}
                 </fieldset>
 
-                {/* TODO: change to query from database */}
-                <div>
-                    <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">Event Category</label>
-                    <select name="category" value={formData.category} onChange={handleChange} className="w-full border-gray-300 rounded-md shadow-sm">
-                        <option value="" disabled>Select a category...</option>
-                        <option value="Music">Music</option>
-                        <option value="Conference">Conference</option>
-                        <option value="Workshop">Workshop</option>
-                        <option value="Art">Art & Culture</option>
-                        <option value="Sport">Sports</option>
-                    </select>
-                </div>
+                <TagSelector selectedTagIds={formData.tagIds} onChange={handleTagsChange} />
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Event Description</label>

@@ -20,7 +20,7 @@ const initialFormData: EventFormData = {
     eventType: "online",
     venueName: "",
     address: { city: "", district: "", ward: "", street: "" },
-    category: "",
+    tagIds: [],
     description: "<p>Tell your audience about the event!</p>",
     organizer: { name: "", info: "", logo: null },
     time: { start: "", end: "" },
@@ -38,9 +38,9 @@ export default function CreateEvent() {
     const isStepValid = useMemo(() => {
         switch (step) {
             case 1:
-                const { eventName, eventType, address, category, organizer } = formData;
+                const { eventName, eventType, address, tagIds, organizer } = formData;
                 const isAddressValid = eventType === 'online' || (address.city && address.district && address.street);
-                return !!(eventName && isAddressValid && category && organizer.name && organizer.info);
+                return !!(eventName && isAddressValid && tagIds.length > 0 && organizer.name && organizer.info);
             case 2:
                 const { time, tickets } = formData;
                 return !!(time.start && time.end && new Date(time.end) > new Date(time.start) && tickets.length > 0);
@@ -69,8 +69,7 @@ export default function CreateEvent() {
                 type: data.eventType.toUpperCase(),
                 // WARN: using static id, need to wire to the user organizationId 
                 organizationId: "685b76539bfc4952f337313c",
-                // WARN: using static tags, need to wire to live requests
-                tagIds: ["685a09138248d45eada91c95"],
+                tagIds: data.tagIds,
                 // category: data.category.toUpperCase(),
                 // timing: data.time,
                 ticketSchema: {
@@ -131,7 +130,7 @@ export default function CreateEvent() {
             setStep(s => s + 1);
         } else if (step === 3 && isStepValid) {
             // TODO: add an api request
-            // Final submission logic would go here
+
             console.log("FINAL SUBMISSION:", formData);
             handleSubmit(formData, 'abc');
         }

@@ -18,6 +18,7 @@ import { NotificationModule } from './notification/notification.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TicketCleanupService } from './issuedticket/ticket-cleanup.service';
 import { UserModule } from './user/user.module';
+import { VenueModule } from './venue/venue.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { UserModule } from './user/user.module';
     ClaimedTicketModule,
     ReviewModule,
     SharedModule,
+    VenueModule,
     RedisModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (cs: ConfigService): RedisModuleOptions => {

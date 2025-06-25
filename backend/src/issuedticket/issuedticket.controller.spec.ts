@@ -27,33 +27,17 @@ describe('IssuedTicketController (e2e)', () => {
         },
       ],
     }).overrideProvider(APP_GUARD)
-        .useClass(MockAuthGuard)
-        .compile();
+      .useClass(MockAuthGuard)
+      .compile();
 
     app = moduleFixture.createNestApplication();
-    prisma = app.get(PrismaService); // Correctly get prisma instance from the app
+    prisma = moduleFixture.get(PrismaService);
     await app.init();
   });
 
   afterAll(async () => {
     await app.close();
   });
-
-  // Reusable mock ticket data with all required fields
-  const mockTicket = {
-    id: '1',
-    price: 100,
-    class: 'VIP',
-    seat: 'A1',
-    status: TicketStatus.AVAILABLE,
-    eventId: 'e1',
-    organizationId: 'o1',
-    currencyId: 'c1',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    holdExpiresAt: null,
-    claim: null,
-  };
 
   it('/tickets (GET) should return all tickets', async () => {
     jest.spyOn(prisma.issuedTicket, 'findMany').mockResolvedValueOnce([
@@ -79,8 +63,8 @@ describe('IssuedTicketController (e2e)', () => {
       },
     };
     const res = await request(app.getHttpServer())
-        .post('/tickets/generate')
-        .send(dto);
+      .post('/tickets/generate')
+      .send(dto);
     expect(res.status).toBe(201);
   });
 
@@ -107,8 +91,8 @@ describe('IssuedTicketController (e2e)', () => {
       id: '1', price: 200, class: 'VIP', seat: 'A1', status: TicketStatus.AVAILABLE, holdExpiresAt: null, eventId: 'e1', organizationId: 'o1', currencyId: 'c1', createdAt: new Date(), updatedAt: new Date(),
     });
     const res = await request(app.getHttpServer())
-        .patch('/tickets/1')
-        .send({ price: 200 });
+      .patch('/tickets/1')
+      .send({ price: 200 });
     expect(res.status).toBe(200);
     expect(res.body.price).toBe(200);
   });
@@ -118,7 +102,7 @@ describe('IssuedTicketController (e2e)', () => {
       id: '1', price: 100, class: 'VIP', seat: 'A1', status: TicketStatus.AVAILABLE, holdExpiresAt: null, eventId: 'e1', organizationId: 'o1', currencyId: 'c1', createdAt: new Date(), updatedAt: new Date(),
     });
     const res = await request(app.getHttpServer())
-        .delete('/tickets/1');
+      .delete('/tickets/1');
     expect(res.status).toBe(200);
     expect(res.body.id).toBe('1');
   });
@@ -137,8 +121,8 @@ describe('IssuedTicketController (e2e)', () => {
       },
     };
     const res = await request(app.getHttpServer())
-        .post('/tickets/generate')
-        .send(dto);
+      .post('/tickets/generate')
+      .send(dto);
     expect(res.status).toBe(400);
   });
 });

@@ -2,7 +2,7 @@ import { FC } from "react";
 
 interface SeatProps {
     seatId?: string;
-    status: "UNAVAILABLE" | "AVAILABLE" | "HELD" | "PAID" | "SOLD";
+    status: "UNAVAILABLE" | "AVAILABLE" | "HELD" | "PAID" | "CLAIMED";
     color?: string;
     isSelected: boolean;
     onClick: () => void;
@@ -19,12 +19,13 @@ const Seat: FC<SeatProps> = ({
         const baseClasses =
             "w-8 h-8 flex items-center justify-center rounded font-bold text-white text-xs transition-all duration-200";
 
-        if (
-            status === "UNAVAILABLE" ||
-            status === "SOLD" ||
-            status === "PAID" ||
-            status === "HELD"
-        ) {
+        if (status === "PAID" || status === "CLAIMED") {
+            // Give PAID/CLAIMED seats a distinct red color
+            return `${baseClasses} bg-red-500 cursor-not-allowed`;
+        }
+
+        if (status === "UNAVAILABLE" || status === "HELD") {
+            // Keep other unavailable statuses as gray
             return `${baseClasses} bg-gray-400 cursor-not-allowed`;
         }
 

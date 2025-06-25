@@ -25,6 +25,7 @@ import PressPage from "./pages/footer/PressPage";
 import PrivacyPage from "./pages/footer/PrivacyPage";
 import TermsPage from "./pages/footer/TermsPage";
 import PaymentSuccess from "./pages/payment/PaymentSuccess";
+import MyEventPage from "./pages/myEvent/page";
 
 function App() {
     const [isSignUpOpen, setIsSignUpOpen] = useState(false);
@@ -43,6 +44,7 @@ function App() {
                 <main className="flex-grow">
                     <Routes>
                         <Route path="/" element={<Home />} />
+                        <Route path="/my-events" element={<MyEventPage />} />
                         <Route
                             path="/event/:eventId"
                             element={<TicketDetails />}

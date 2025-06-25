@@ -1,7 +1,10 @@
 import { useState, useMemo, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import robotImage from "../../assets/images/robot.jpg";
 import TicketCard from "../../components/TicketCard";
+import { useAuth } from "../../context/AuthContext";
+import LogIn from "../../components/log-in";
+import SignUp from "../../components/sign-up";
 
 interface Ticket {
     id: string;
@@ -26,12 +29,35 @@ type UserProfile = {
 };
 
 const Ticket = () => {
-    const [profile, setProfile] = useState<UserProfile | null>(null); 
+
+    const { isAuthenticated } = useAuth();
+    const navigate = useNavigate();
+    const [showSignUp, setShowSignUp] = useState(false);
+
+    if (!isAuthenticated) {
+        return showSignUp ? (
+            <SignUp
+                onClose={() => {
+                    navigate("/");
+                }}
+            />
+        ) : (
+            <LogIn
+                onClose={() => {
+                    navigate("/");
+                }}
+                onSwitchToSignUp={() => {
+                    setShowSignUp(true);
+                }}
+            />
+        );
+    }
+    const [profile, setProfile] = useState<UserProfile | null>(null);
     const [attendeeId, setAttendeeId] = useState<string | null>(null); // NEW: dynamic attendeeId
 
     const [activeTab, setActiveTab] = useState("All");
     const [activeSubTab, setActiveSubTab] = useState("Upcoming");
-    
+
     const [tickets, setTickets] = useState<Ticket[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");

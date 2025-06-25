@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import LogIn from "../../components/log-in";
+import SignUp from "../../components/sign-up";
 
 // Define the user profile type based on your backend response
 type UserProfile = {
@@ -20,6 +23,29 @@ interface ErrorResponse {
 }
 
 const MyProfile = () => {
+    const { isAuthenticated } = useAuth();
+    const navigate = useNavigate();
+    const [showSignUp, setShowSignUp] = useState(false);
+
+    if (!isAuthenticated) {
+        return showSignUp ? (
+            <SignUp
+                onClose={() => {
+                    navigate("/");
+                }}
+            />
+        ) : (
+            <LogIn
+                onClose={() => {
+                    navigate("/");
+                }}
+                onSwitchToSignUp={() => {
+                    setShowSignUp(true);
+                }}
+            />
+        );
+    }
+
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");

@@ -16,6 +16,14 @@ import CardPaymentPage from "./pages/payment/CardPaymentPage";
 import SeatMap from "./pages/seatMap/SeatMap";
 import CancelPage from "./pages/payment/CancelPage";
 import MyProfile from "./pages/myProfile/page";
+import AboutUsPage from "./pages/footer/AboutUsPage";
+import CustomerTermsPage from "./pages/footer/CustomerTermsPage";
+import HelpCenterPage from "./pages/footer/HelpCenterPage";
+import HowItWorksPage from "./pages/footer/HowItWorksPage";
+import OrganizerTermsPage from "./pages/footer/OrganizerTermsPage";
+import PressPage from "./pages/footer/PressPage";
+import PrivacyPage from "./pages/footer/PrivacyPage";
+import TermsPage from "./pages/footer/TermsPage";
 import PaymentSuccess from "./pages/payment/PaymentSuccess";
 
 function App() {
@@ -69,6 +77,14 @@ function App() {
                             element={<SeatMap />}
                         />
                         <Route path="/profile" element={<MyProfile />} />
+                        <Route path="/about-us" element={<AboutUsPage />} />
+                        <Route path="/customer-terms" element={<CustomerTermsPage />} />
+                        <Route path="/help-center" element={<HelpCenterPage />} />
+                        <Route path="/how-it-works" element={<HowItWorksPage />} />
+                        <Route path="/organizer-terms" element={<OrganizerTermsPage />} />
+                        <Route path="/press" element={<PressPage />} />
+                        <Route path="/privacy" element={<PrivacyPage />} />
+                        <Route path="/terms" element={<TermsPage />} />
                     </Routes>
                 </main>
                 {isSignUpOpen && (

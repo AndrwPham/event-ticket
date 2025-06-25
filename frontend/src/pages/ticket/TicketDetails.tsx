@@ -3,25 +3,61 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import { FaCalendarAlt, FaMapMarkerAlt } from "react-icons/fa";
 import { IoChevronDown } from "react-icons/io5";
 
-// Define a more detailed type for the event data we expect
+// The Skeleton component remains the same
+const EventDetailsSkeleton: FC = () => (
+    <div className="bg-gray-50 p-4 md:p-8 animate-pulse">
+        <div className="max-w-7xl mx-auto">
+            <div className="h-6 w-24 bg-gray-300 rounded-md mb-6"></div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="md:col-span-2 space-y-8">
+                    <div className="w-full h-96 bg-gray-300 rounded-lg"></div>
+                    <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                        <div className="h-8 w-3/4 bg-gray-300 rounded-md mb-4"></div>
+                        <div className="flex items-center space-x-4 mb-4">
+                            <div className="h-6 w-6 bg-gray-300 rounded-full"></div>
+                            <div className="h-6 w-1/2 bg-gray-300 rounded-md"></div>
+                        </div>
+                        <div className="flex items-center space-x-4">
+                            <div className="h-6 w-6 bg-gray-300 rounded-full"></div>
+                            <div className="h-6 w-1/3 bg-gray-300 rounded-md"></div>
+                        </div>
+                    </div>
+                    <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                        <div className="h-7 w-1/4 bg-gray-300 rounded-md mb-4"></div>
+                        <div className="space-y-2">
+                            <div className="h-4 bg-gray-300 rounded-md"></div>
+                            <div className="h-4 bg-gray-300 rounded-md"></div>
+                            <div className="h-4 w-5/6 bg-gray-300 rounded-md"></div>
+                        </div>
+                    </div>
+                </div>
+                <div className="space-y-8">
+                    <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                        <div className="h-7 w-1/3 bg-gray-300 rounded-md mb-4"></div>
+                        <div className="space-y-3">
+                            <div className="h-8 bg-gray-300 rounded-md"></div>
+                            <div className="h-8 bg-gray-300 rounded-md"></div>
+                        </div>
+                    </div>
+                    <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                        <div className="h-7 w-1/2 bg-gray-300 rounded-md mb-4"></div>
+                        <div className="h-8 w-3/4 bg-gray-300 rounded-md"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+);
+
 interface DetailedEvent {
     id: string;
     title: string;
     description: string;
     active_start_date: string;
     images: { url: string }[];
-    venue: {
-        name: string;
-        address?: string;
-    } | null;
-    organization: {
-        name: string;
-        logoUrl?: string;
-    } | null;
-    tickets: {
-        class: string;
-        price: number;
-    }[];
+    venue: { name: string; address?: string; } | null;
+    organization: { name: string; logoUrl?: string; } | null;
+    tickets: { class: string; price: number; }[];
 }
 
 const EventDetails: FC = () => {
@@ -33,31 +69,21 @@ const EventDetails: FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [isAboutExpanded, setIsAboutExpanded] = useState(false);
 
-    // This useEffect hook is now safe from memory leaks.
     useEffect(() => {
-        // Use AbortController to cancel fetch on component unmount
         const controller = new AbortController();
-        const signal = controller.signal;
+        const { signal } = controller;
 
         const fetchEvent = async () => {
-            if (!eventId) {
-                setError("Event ID is missing.");
-                setLoading(false);
-                return;
-            }
-
-            // Reset state for new fetches
             setLoading(true);
             setError(null);
-            setEventData(null);
 
             try {
-                const response = await fetch(
-                    `http://localhost:5000/events/${eventId}`,
-                    { signal },
-                );
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/events/${String(eventId)}`, { signal });
+
+                if (signal.aborted) return;
+
                 if (!response.ok) {
-                    throw new Error("Failed to fetch event details.");
+                    throw new Error("Failed to fetch event data.");
                 }
                 const data = (await response.json()) as DetailedEvent;
                 setEventData(data);
@@ -71,7 +97,9 @@ const EventDetails: FC = () => {
                         : "An unknown error occurred.",
                 );
             } finally {
-                setLoading(false);
+                if (!signal.aborted) {
+                    setLoading(false);
+                }
             }
         };
 
@@ -96,25 +124,14 @@ const EventDetails: FC = () => {
             new Date(isoString),
         );
     };
-
-    if (loading)
-        return (
-            <div className="text-center py-20">Loading Event Details...</div>
-        );
-    if (error)
-        return <div className="text-center py-20 text-red-500">{error}</div>;
+    if (loading) {
+        return <EventDetailsSkeleton />;
+    }
+    if (error) {
+        return <p className="text-center text-red-500 p-8">Error: {error}</p>;
+    }
     if (!eventData) {
-        return (
-            <div className="text-gray-800 text-center py-20">
-                <h1 className="text-3xl font-bold">404 - Event Not Found</h1>
-                <Link
-                    to="/"
-                    className="mt-6 inline-block bg-indigo-600 text-white px-6 py-2 rounded-md"
-                >
-                    Back to Homepage
-                </Link>
-            </div>
-        );
+        return <p className="text-center p-8">Event not found.</p>;
     }
 
     const ticketTiers = Array.from(

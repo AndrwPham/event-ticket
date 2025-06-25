@@ -9,7 +9,7 @@ type UserProfile = {
 
 // Add response types
 // For attendee info GET
-interface AttendeeInfoResponse {
+interface AttendeeInfo {
     first_name?: string;
     last_name?: string;
     phone?: string;
@@ -70,18 +70,18 @@ const MyProfile = () => {
                 if (!response.ok)
                     throw new Error("Failed to fetch personal info");
 
-                const data = (await response.json()) as AttendeeInfoResponse;
-                setFirstName(data.first_name ?? "");
-                setLastName(data.last_name ?? "");
-                setPhone(data.phone ?? "");
-                console.log("Fetched personal info:", data); // Log fetched personal info
+                const dataArr = await response.json();
+                const data = Array.isArray(dataArr) ? dataArr[0] : dataArr;
+                setFirstName(data?.first_name ?? "");
+                setLastName(data?.last_name ?? "");
+                setPhone(data?.phone ?? "");
             } catch (err) {
                 console.error("Failed to fetch personal info:", err);
             }
         };
 
         void fetchInfo();
-    }, []);
+    }, []); // refetch info after successful update
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -205,7 +205,6 @@ const MyProfile = () => {
                                     id="firstName"
                                     name="firstName"
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                    defaultValue={firstName}
                                     value={firstName}
                                     onChange={(e) => {
                                         setFirstName(e.target.value);
@@ -225,7 +224,6 @@ const MyProfile = () => {
                                     id="lastName"
                                     name="lastName"
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                    defaultValue={lastName}
                                     value={lastName}
                                     onChange={(e) => {
                                         setLastName(e.target.value);
@@ -246,7 +244,6 @@ const MyProfile = () => {
                                     name="phone"
                                     placeholder="0123456789"
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                    defaultValue={phone}
                                     value={phone}
                                     onChange={(e) => {
                                         setPhone(e.target.value);

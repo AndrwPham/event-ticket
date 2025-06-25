@@ -122,3 +122,17 @@ export interface User {
     email: string;
     username: string;
 }
+
+export interface FullOrder {
+    id: string;
+    createdAt: string;
+    method: string;
+    totalPrice: number;
+    ticketItems: string[];
+    attendee: {
+        first_name?: string | null;
+        last_name?: string | null;
+    };
+    status: 'PENDING' | 'PAID' | 'FAILED';
+}
+

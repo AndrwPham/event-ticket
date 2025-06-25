@@ -15,7 +15,6 @@ import TicketDetails from "./pages/ticket/TicketDetails";
 import CardPaymentPage from "./pages/payment/CardPaymentPage";
 import SeatMap from "./pages/seatMap/SeatMap";
 import CancelPage from "./pages/payment/CancelPage";
-import PaymentPage from "./pages/payment/PaymentSuccess";
 import MyProfile from "./pages/myProfile/page";
 import PaymentSuccess from "./pages/payment/PaymentSuccess";
 
@@ -58,11 +57,11 @@ function App() {
                             element={<CardPaymentPage />}
                         />
                         <Route
-                            path="/events/:eventId/payment/cancel"
+                            path="/event/:eventId/payment/cancel"
                             element={<CancelPage />}
                         />
                         <Route
-                            path="/events/:eventid/payment/success"
+                            path="/event/:eventid/payment/success/:orderId"
                             element={<PaymentSuccess />}
                         />
                         <Route

@@ -40,21 +40,22 @@ const PaymentPage: FC = () => {
         CHECKOUT_URL: checkoutUrl || "",
         ELEMENT_ID: "payos-container",
         embedded: true,
-        RETURN_URL: "YourHttpInNgrok/payment/return",
-        CANCEL_URL: "YourHttpInNgrok/payment/return",
+        RETURN_URL: "https://11ac-2405-4802-a460-4040-f4df-4cb3-dbd7-a06a.ngrok-free.app/payment/return",
+        CANCEL_URL: "https://11ac-2405-4802-a460-4040-f4df-4cb3-dbd7-a06a.ngrok-free.app/payment/return",
         onExit: () => {
             if (eventDetails?.id) {
-                navigate(`/events/${String(eventDetails.id)}`);
-            } else {
+                navigate(`/event/${String(eventDetails.id)}`);
+            } else
+            {
                 navigate("/");
             }
         },
         onSuccess: () => {
-            navigate(`/events/${String(eventDetails?.id)}/payment/success`);
+            navigate(`/event/${String(eventDetails?.id)}/payment/success/${String(order?.id)}`);
         },
         onCancel: () => {
             if (eventDetails?.id) {
-                navigate(`/events/${String(eventDetails.id)}`);
+                navigate(`/event/${String(eventDetails.id)}`);
             } else {
                 navigate("/");
             }
@@ -69,6 +70,7 @@ const PaymentPage: FC = () => {
             const containerExists = document.getElementById("payos-container");
             if (containerExists) {
                 open();
+                iframeOpenedRef.current = true;
             } else {
                 console.error("Element ID: payos-container not found in DOM");
                 setError(
@@ -113,7 +115,7 @@ const PaymentPage: FC = () => {
                         initialSeconds={900}
                         onTimerEnd={() => {
                             if (eventDetails.id) {
-                                navigate(`/events/${String(eventDetails.id)}`);
+                                navigate(`/event/${String(eventDetails.id)}`);
                             }
                         }}
                     />

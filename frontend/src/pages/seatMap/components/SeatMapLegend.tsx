@@ -31,9 +31,7 @@ const SeatMapLegend: FC<SeatMapLegendProps> = ({ seatClasses }) => {
                 />
             ))}
             <LegendItem color="#3B82F6" label="Selected" />{" "}
-            {/* Blue for selected */}
-            <LegendItem color="#9CA3AF" label="Unavailable" />{" "}
-            {/* Gray for unavailable/sold */}
+
         </div>
     );
 };

@@ -13,6 +13,12 @@ enum Role {
   Admin
 }
 
+enum EventStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum TicketStatus {
   UNAVAILABLE
   AVAILABLE
@@ -48,6 +54,8 @@ model User {
   confirmed             Boolean   @default(false)
   confirmToken          String?
   confirmTokenExpiresAt DateTime?
+
+  attendeeInfo AttendeeInfo? @relation("UserAttendeeInfo")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -108,6 +116,7 @@ model Event {
   ward              String?
   street            String?
   type              String // "online" | "offline" | "hybrid"
+  status            EventStatus @default(PENDING)
 
   organizationId String       @db.ObjectId
   organization   Organization @relation("OrganizationEvents", fields: [organizationId], references: [id], onDelete: Cascade)
@@ -150,7 +159,7 @@ model IssuedTicket {
   currency   Currency @relation("TicketCurrency", fields: [currencyId], references: [id], onDelete: Restrict)
 
   claimedTicket ClaimedTicket?
-  images        Image[]        @relation("TicketImages")
+  images Image[]        @relation("TicketImages")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -161,26 +170,26 @@ model IssuedTicket {
 }
 
 model ClaimedTicket {
-  id           String       @id @map("_id") @db.ObjectId
+  id     String       @id @map("_id") @db.ObjectId
   issuedTicket IssuedTicket @relation(fields: [id], references: [id])
 
   attendeeId String       @db.ObjectId
   attendee   AttendeeInfo @relation("AttendeeClaimedTickets", fields: [attendeeId], references: [id], onDelete: Cascade)
 
-  orderId String @db.ObjectId
-  order   Order  @relation("OrderClaimedTickets", fields: [orderId], references: [id], onDelete: Cascade)
+  orderId    String       @db.ObjectId
+  order      Order        @relation("OrderClaimedTickets", fields: [orderId], references: [id], onDelete: Cascade)
 
-  status ClaimedTicketStatus
+  status    ClaimedTicketStatus
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
 
   @@index([orderId])
   @@index([attendeeId])
 }
 
 model Order {
-  id         String      @id @default(auto()) @map("_id") @db.ObjectId
+  id         String @id @default(auto()) @map("_id") @db.ObjectId
   totalPrice Float
   status     OrderStatus
   method     String

@@ -1,6 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-// import path from 'path';
+import path from 'path';
 
 export default defineConfig({
     plugins: [react()],
@@ -11,5 +11,10 @@ export default defineConfig({
     build: {
         outDir: "dist", // Default output directory
         sourcemap: true, // Optional: Helpful for debugging
+    },
+    resolve: {
+        alias: {
+            '@': path.resolve(__dirname, './src'),
+        },
     },
 });

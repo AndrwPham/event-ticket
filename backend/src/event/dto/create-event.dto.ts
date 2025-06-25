@@ -74,4 +74,10 @@ export class CreateEventDto {
     @IsNotEmpty()
     @Type(() => TicketSchemaDto)
     ticketSchema: TicketSchemaDto;
+
+    // TODO: use mongoId
+    @IsString()
+    @IsOptional()
+    // @IsMongoId()
+    venueId?: string;
 }

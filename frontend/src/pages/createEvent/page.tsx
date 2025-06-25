@@ -7,8 +7,8 @@ import { OrganizerLayout } from "@/components/layout/OrganizerLayout";
 import { Step1EventInfo } from "@/components/event-creation/Step1EventInfo";
 import { Step2TimeAndTickets } from "@/components/event-creation/Step2TimeAndTickets";
 import { Step3Payment } from "@/components/event-creation/Step3Payment";
+import { convertSeatMapToTicketSchema } from "@/lib/seatmap-utils";
 
-// Remember to replace 'YOUR_LICENSE' with your actual Syncfusion license key
 registerLicense('YOUR_LICENSE');
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
@@ -163,26 +163,30 @@ export default function CreateEvent() {
                 // WARN: static Id
                 organizationId: "685b76539bfc4952f337313c",
                 tagIds: formData.tagIds,
-                ticketSchema: {
-                    classes: formData.tickets.map(ticket => ({
-                        label: ticket.label,
-                        description: ticket.description,
-                        quantity: ticket.quantity,
-                        price: ticket.price,
-                        currency: ticket.currency,
-                    })),
-                },
+                ticketSchema: formData.seatMapConfig 
+                    ? convertSeatMapToTicketSchema(formData.seatMapConfig)
+                    : {
+                        classes: formData.tickets.map(ticket => ({
+                            label: ticket.label,
+                            description: ticket.description,
+                            quantity: ticket.quantity,
+                            price: ticket.price,
+                            currency: ticket.currency,
+                        }))
+                    },
+                ...(formData.eventType === 'onsite' && formData.venueType === 'provided' && {
+                    venueId: formData.providedVenueId
+                }),
                 posterImage: posterImageData,
                 images: otherImagesData,
-                seatMapConfig: formData.seatMapConfig,
             };
 
-            console.log(JSON.stringify(finalEventPayload));
-            // const finalResponse = await fetch(`${API_BASE_URL}/events`, {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify(finalEventPayload),
-            // });
+            console.log(finalEventPayload);
+            const finalResponse = await fetch(`${API_BASE_URL}/events`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(finalEventPayload),
+            });
 
             if (!finalResponse.ok) {
                 const errorData = await finalResponse.json().catch(() => ({}));

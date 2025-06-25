@@ -1,4 +1,4 @@
-import { SeatCell, SeatClass, SeatAssignments, ISeat } from "@/types/event";
+import { SeatCell, SeatClass, SeatAssignments, ISeat, SeatMapConfig } from "@/types/event";
 
 /**
  * Generates a detailed seats object required by the VenueMap component.
@@ -46,4 +46,43 @@ export const generateSeatsObject = (
     });
 
     return seats;
+};
+
+export const convertSeatMapToTicketSchema = (config: SeatMapConfig) => {
+    // 1. Create a map for easy lookup of class details.
+    const classDetailsMap = new Map();
+    config.seatClasses.forEach(cls => {
+        if (cls.id !== 'unavailable' && cls.quantity > 0) {
+            classDetailsMap.set(cls.id, {
+                label: cls.name,
+                price: cls.price || 0,
+                seats: []
+            });
+        }
+    });
+
+    // 2. Go through each seat assignment and push it into the correct class.
+    for (const seatId in config.seatAssignments) {
+
+        const classId = config.seatAssignments[seatId];
+
+        if (classDetailsMap.has(classId)) {
+            const classInfo = classDetailsMap.get(classId);
+
+            classInfo.seats.push({
+                seatNumber: seatId,
+                price: classInfo.price
+            });
+        }
+    }
+
+    // 3. Convert the map back to an array and add the quantity.
+    const finalClasses = Array.from(classDetailsMap.values()).map(cls => ({
+        ...cls,
+        quantity: cls.seats.length // The quantity is the count of assigned seats.
+    }));
+
+    return {
+        classes: finalClasses,
+    };
 };

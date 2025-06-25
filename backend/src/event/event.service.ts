@@ -4,7 +4,7 @@ import { IssuedTicketService } from '../issuedticket/issuedticket.service';
 import { ImageService } from '../image/image.service';
 import { Prisma, Tag, Currency } from '@prisma/client';
 import { GenerateIssuedTicketsDto } from '../issuedticket/dto/generate-issued-tickets.dto';
-import { plainToInstance } from 'class-transformer';
+import { plainToInstance, instanceToPlain } from 'class-transformer';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { CreateImageDto } from '../image/dto/create-image.dto';
@@ -18,7 +18,8 @@ export class EventService {
     ) {}
 
     async create(dto: CreateEventDto) {
-        const { currency, ticketSchema, organizationId, tagIds, posterImage, images, ...eventData } = dto;
+        // WARN: currency seems no use?
+        const { currency, venueId, ticketSchema, organizationId, tagIds, posterImage, images, ...eventData } = dto;
 
         try {
             const [resolvedTagIds, posterId, imageIds, currencyRecord] = await Promise.all([
@@ -37,17 +38,9 @@ export class EventService {
                         tagIds: resolvedTagIds,
                         posterId,
                         imageIds,
+                        ticketSchema: ticketSchema ? instanceToPlain(ticketSchema) : undefined,
                     }
                 });
-
-                const ticketDto: GenerateIssuedTicketsDto = {
-                    eventId: createdEvent.id,
-                    organizationId,
-                    currencyId: currencyRecord.id, // Assuming all tickets use the same currency
-                    schema: ticketSchema
-                };
-
-                await this.issuedTicketService.generateTicketsFromSchema(ticketDto);
 
                 return createdEvent;
             });

@@ -104,7 +104,7 @@ model Venue {
     name    String
     address String?
     layout  Json?
-    events  Event[]
+    // events  Event[]
 }
 
 model Event {
@@ -125,14 +125,17 @@ model Event {
     organizationId String       @db.ObjectId
     organization   Organization @relation("OrganizationEvents", fields: [organizationId], references: [id], onDelete: Cascade)
 
+    // WARN: still keep because of seed.ts
     ticketConfiguration Json?
+    ticketSchema        Json?
 
     tagIds   String[] @db.ObjectId
     posterId String   @db.ObjectId
     imageIds String[] @db.ObjectId
 
-    venueId String? @db.ObjectId
-    venue   Venue?  @relation(fields: [venueId], references: [id])
+    // TODO: return this to normal relation
+    venueId String? // @db.ObjectId
+    // venue   Venue?  @relation(fields: [venueId], references: [id])
 
     tickets IssuedTicket[] @relation("EventIssuedTickets")
     reviews Review[]       @relation("EventReviews")

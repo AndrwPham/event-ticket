@@ -79,6 +79,7 @@ export const Step1EventInfo = ({ formData, setFormData }: Step1Props) => {
                     <div className="lg:col-span-3">
                         <ImageUploader id="event-poster-upload" label="Add Event Poster" dimensions="(Recommended: 3:4)" previewUrl={eventLogoPreview} onFileChange={(file) => handleFileChange('eventLogo', file)} />
                     </div>
+                    {/* TODO: allow the cover uploader to support multiple files */}
                     <div className="lg:col-span-7">
                         <ImageUploader id="event-cover-upload" label="Add Event Cover(s)" dimensions="(Recommended: 16:9)" previewUrl={eventCoverPreview} onFileChange={(file) => handleFileChange('eventCover', file)} />
                     </div>
@@ -110,6 +111,7 @@ export const Step1EventInfo = ({ formData, setFormData }: Step1Props) => {
                     )}
                 </fieldset>
 
+                {/* TODO: change to query from database */}
                 <div>
                     <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">Event Category</label>
                     <select name="category" value={formData.category} onChange={handleChange} className="w-full border-gray-300 rounded-md shadow-sm">
@@ -136,6 +138,7 @@ export const Step1EventInfo = ({ formData, setFormData }: Step1Props) => {
                     </RichTextEditorComponent>
                 </div>
 
+                {/* TODO: move organizer info to another window */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-6 border-t">
                     <div className="lg:col-span-3">
                         <ImageUploader id="organizer-logo-upload" label="Add Organizer Logo" dimensions="(Recommended: 1:1)" previewUrl={organizerLogoPreview} onFileChange={handleOrganizerPosterChange} />

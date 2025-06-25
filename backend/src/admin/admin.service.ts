@@ -23,15 +23,14 @@ export class AdminService {
     }
 
     async getPendingEvents() {
-        return this.prisma.event.findMany({
+        console.log('[AdminService] findPendingEvents()');
+        const evts = await this.prisma.event.findMany({
             where: { status: EventStatus.PENDING },
-            include: {
-                organization: {
-                    select: { name: true }, // Include organization name for context
-                },
-            },
-            orderBy: { createdAt: 'asc' },
+            include: { organization: true, venue: true },
+            orderBy: { createdAt: 'desc' },
         });
+        console.log('[AdminService] retrieved', evts.length, 'events');
+        return evts;
     }
 
     async validateEvent(eventId: string, status: EventStatus) {

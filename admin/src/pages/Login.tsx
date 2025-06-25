@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 export const AdminLoginPage = () => {
-    const [email, setEmail] = useState('');
+    const [credential, setcredential] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const { login } = useAuth();
@@ -13,8 +13,7 @@ export const AdminLoginPage = () => {
         e.preventDefault();
         setError('');
         try {
-            // Using username for login as required by the backend
-            await login(email, password);
+            await login(credential, password);
             navigate('/dashboard');
         } catch (err) {
             setError(err instanceof Error ? err.message : 'An unknown error occurred.');
@@ -30,8 +29,8 @@ export const AdminLoginPage = () => {
                     <input
                         type="text" // Changed to text to allow username
                         placeholder="Username"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        value={credential}
+                        onChange={(e) => setcredential(e.target.value)}
                         style={{ width: '100%', padding: '8px' }}
                         required
                     />

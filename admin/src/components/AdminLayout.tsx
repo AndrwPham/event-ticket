@@ -13,7 +13,7 @@ export const AdminLayout = () => {
     const sidebarStyle: React.CSSProperties = {
         width: '220px',
         padding: '20px',
-        backgroundColor: '#f9fafb',
+        backgroundColor: '#1f2937',
         height: '100vh',
         borderRight: '1px solid #e5e7eb',
         boxSizing: 'border-box'
@@ -53,9 +53,9 @@ export const AdminLayout = () => {
     };
 
     return (
-        <div style={{ display: 'flex', minHeight: '100vh', width: '100vw', backgroundColor: '#ffffff' }}>
+        <div style={{ display: 'flex', minHeight: '100vh', width: '100vw', backgroundColor: '#000' }}>
             <aside style={sidebarStyle}>
-                <h2 style={{ marginBottom: '30px', color: '#1f2937' }}>Admin Panel</h2>
+                <h2 style={{ marginBottom: '30px', color: '#ffffff' }}>Admin Panel</h2>
                 <nav>
                     <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                         <li style={navItemStyle}>

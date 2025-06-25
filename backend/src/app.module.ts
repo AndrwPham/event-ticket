@@ -18,6 +18,7 @@ import { NotificationModule } from './notification/notification.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TicketCleanupService } from './issuedticket/ticket-cleanup.service';
 import { UserModule } from './user/user.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { UserModule } from './user/user.module';
     NotificationModule,
     ScheduleModule.forRoot(),
     UserModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService, TicketCleanupService],

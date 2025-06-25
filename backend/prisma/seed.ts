@@ -1,4 +1,4 @@
-import { PrismaClient, Role, Prisma } from '@prisma/client';
+import {PrismaClient, Role, Prisma, EventStatus} from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -12,7 +12,7 @@ async function main() {
     await prisma.event.deleteMany({});
     await prisma.venue.deleteMany({});
     await prisma.organization.deleteMany({});
-    await prisma.user.deleteMany({});
+   // await prisma.user.deleteMany({});
     await prisma.currency.deleteMany({});
 
     // 1. Create a Currency
@@ -75,6 +75,32 @@ async function main() {
     };
 
     // 6. Create an Event
+    const pendingEvent = await prisma.event.create({
+        data: {
+            title: 'Mock Pending Event',
+            description: 'This is a mock event awaiting admin approval.',
+            active_start_date: new Date('2025-07-10T10:00:00.000Z'),
+            active_end_date: new Date('2025-07-10T18:00:00.000Z'),
+            sale_start_date: new Date('2025-06-27T00:00:00.000Z'),
+            sale_end_date: new Date('2025-07-09T23:59:59.000Z'),
+            city: 'Test City',
+            district: 'Test District',
+            ward: 'Test Ward',
+            street: '123 Mock Street',
+            type: 'offline',
+            status: EventStatus.PENDING,
+            organization: { connect: { id: organization.id } },
+            ticketConfiguration: ticketConfig,
+
+            venue: {
+                connect: { id: venue.id }
+            }
+        }
+    });
+
+    console.log('Seeded mock pending event:', pendingEvent.id);
+
+
     const event = await prisma.event.create({
         data: {
             title: 'Live Beauty Night',

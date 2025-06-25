@@ -1,110 +1,119 @@
-import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { jwtDecode } from 'jwt-decode';
 
-interface DecodedJwtPayload {
-    sub: string;
-    username: string;
-    roles: string[];
-    iat: number;
-    exp: number;
-}
+import {
+    createContext,
+    useContext,
+    useState,
+    useEffect,
+    ReactNode
+} from 'react';
 
 interface User {
     id: string;
     username: string;
     roles: string[];
+    activeRole: string;
 }
 
 interface AuthContextType {
     user: User | null;
-    token: string | null;
-    login: (username: string, password: string) => Promise<User>;
-    logout: () => void;
+    loading: boolean;
+    login: (credential: string, password: string) => Promise<User>;
+    logout: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType>({
+    user: null,
+    loading: true,
+    login: async () => { throw new Error('AuthContext not initialized'); },
+    logout: async () => {},
+});
 
-const getUserFromToken = (token: string): User | null => {
-    try {
-        const decoded = jwtDecode<DecodedJwtPayload>(token);
-        // Based on your new schema, username is not in the token payload by default
-        // 'sub' is the userId, and roles are included. We can fetch username later if needed.
-        return { id: decoded.sub, username: 'Admin', roles: decoded.roles || [] };
-    } catch (error) {
-        console.error('Failed to decode token:', error);
-        return null;
-    }
-};
+export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
-    const [token, setToken] = useState<string | null>(localStorage.getItem('adminToken'));
+    const [loading, setLoading] = useState<boolean>(true);
 
+    // On mount: check “who am I?” via cookie
     useEffect(() => {
-        if (token) {
-            const userData = getUserFromToken(token);
-            if (userData && userData.roles.includes('Admin')) {
-                setUser(userData);
-            } else {
-                logout();
+        (async () => {
+            try {
+                const res = await fetch('http://localhost:5000/auth/me', {
+                    credentials: 'include',
+                });
+                if (!res.ok) {
+                    const text = await res.text();
+                    console.warn('[AuthContext] /auth/me failed:', res.status, text);
+                    setUser(null);
+                } else {
+                    const data = await res.json();
+                    console.log('[AuthContext] /auth/me success:', data);
+                    setUser(data.user);
+                }
+            } catch (err) {
+                console.error('[AuthContext] /auth/me error:', err);
+                setUser(null);
+            } finally {
+                setLoading(false);
             }
+        })();
+    }, []);
+
+    const login = async (credential: string, password: string) => {
+        console.log('[AuthContext] attempting login with →', { credential, password });
+        try {
+            const res = await fetch('http://localhost:5000/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ credential, password, activeRole: 'Admin' }),
+            });
+
+            if (!res.ok) {
+                const body = await res.text();
+                console.error('[AuthContext] login failed:', res.status, body);
+                throw new Error(`Login failed: ${res.status} ${res.statusText}`);
+            }
+
+            const data = await res.json();
+            console.log('[AuthContext] login success:', data);
+
+            if (!data.user) {
+                console.error('[AuthContext] login response missing user:', data);
+                throw new Error('Login succeeded but no user returned');
+            }
+
+            setUser(data.user);
+            return data.user;
+        } catch (err: any) {
+            console.error('[AuthContext] login error:', err);
+            throw err;
         }
-    }, [token]);
-
-    const login = async (username: string, password: string) => {
-        const response = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                username,
-                password,
-                activeRole: 'Admin',
-            }),
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Login failed');
-        }
-
-        const data = await response.json();
-
-        // **FIX:** Access the token from the nested 'tokens' object
-        const accessToken = data.tokens.accessToken;
-
-        if (!accessToken) {
-            throw new Error("Login successful, but no access token received from server.");
-        }
-
-        const loggedInUser = getUserFromToken(accessToken);
-
-        if (!loggedInUser || !loggedInUser.roles.includes('Admin')) {
-            throw new Error('User is not an administrator.');
-        }
-
-        localStorage.setItem('adminToken', accessToken);
-        setToken(accessToken);
-        setUser(loggedInUser);
-        return loggedInUser;
     };
 
-    const logout = () => {
-        localStorage.removeItem('adminToken');
-        setToken(null);
-        setUser(null);
+    const logout = async () => {
+        console.log('[AuthContext] attempting logout');
+        try {
+            const res = await fetch('http://localhost:5000/auth/logout', {
+                method: 'POST',
+                credentials: 'include',
+            });
+            if (!res.ok) {
+                const text = await res.text();
+                console.error('[AuthContext] logout failed:', res.status, text);
+            } else {
+                console.log('[AuthContext] logout success');
+            }
+        } catch (err) {
+            console.error('[AuthContext] logout error:', err);
+        } finally {
+            setUser(null);
+        }
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, login, logout }}>
+        <AuthContext.Provider value={{ user, loading, login, logout }}>
             {children}
         </AuthContext.Provider>
     );
-};
-
-export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
 };

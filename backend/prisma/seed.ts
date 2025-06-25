@@ -131,7 +131,7 @@ async function main() {
 
     // --- Tie claimed tickets to your real AttendeeInfo ---
     // Use your provided AttendeeInfo id and userId
-    const attendeeId = '685c39c9366ef3111dfeb1d9'; // updated id
+    const attendeeId = '685c5748bb74c60c1d4dd6d3'; // PeppaPig's new _id
 
     // Create an order for this attendee
     const order = await prisma.order.create({

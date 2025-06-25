@@ -3,48 +3,87 @@ import { Link } from "react-router-dom";
 import robotImage from "../../assets/images/robot.jpg";
 import TicketCard from "../../components/TicketCard";
 
-const attendeeId = "685c39c9366ef3111dfeb1d9"; // Your real attendeeId
-
-const Ticket = () => {
-    const [activeTab, setActiveTab] = useState("All");
-    const [activeSubTab, setActiveSubTab] = useState("Upcoming");
-    interface Ticket {
-        id: string;
+interface Ticket {
+    id: string;
+    title?: string;
+    location?: string;
+    image?: string;
+    date?: string;
+    status?: string;
+    issuedTicket?: {
         title?: string;
         location?: string;
         image?: string;
         date?: string;
         status?: string;
-        issuedTicket?: {
-            title?: string;
-            location?: string;
-            image?: string;
-            date?: string;
-            status?: string;
-        };
-        [key: string]: any; // Add this if there are more fields
-    }
+    };
+    [key: string]: any; // Add this if there are more fields
+}
+
+type UserProfile = {
+    username: string;
+    // Add other fields if needed
+};
+
+const Ticket = () => {
+    const [profile, setProfile] = useState<UserProfile | null>(null); 
+    const [attendeeId, setAttendeeId] = useState<string | null>(null); // NEW: dynamic attendeeId
+
+    const [activeTab, setActiveTab] = useState("All");
+    const [activeSubTab, setActiveSubTab] = useState("Upcoming");
     
     const [tickets, setTickets] = useState<Ticket[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
+    // Fetch profile and attendeeId first
     useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const response = await fetch(
+                    `${import.meta.env.VITE_API_URL}/auth/me`,
+                    {
+                        method: "GET",
+                        credentials: "include", // Send cookies
+                    },
+                );
+                if (!response.ok) throw new Error("Failed to fetch profile");
+                const data = (await response.json()) as UserProfile & { id?: string; _id?: string; attendeeId?: string };
+                setProfile(data);
+                // Try to get attendeeId from various possible fields
+                const id = data.attendeeId || data._id || data.id;
+                if (id) setAttendeeId(id);
+                else throw new Error("No attendeeId found in user profile");
+            } catch (err) {
+                setError("Failed to fetch profile or attendee ID");
+                setLoading(false);
+                console.error("Failed to fetch profile:", err);
+            }
+        };
+        fetchProfile();
+    }, []);
+
+    // Fetch tickets when attendeeId is available
+    useEffect(() => {
+        if (!attendeeId) return;
         setLoading(true);
+        console.log("Fetching tickets for attendeeId:", attendeeId); // DEBUG
         fetch(`${import.meta.env.VITE_API_URL}/claimed-tickets/attendee/${attendeeId}`)
             .then((res) => {
                 if (!res.ok) throw new Error("Failed to fetch tickets");
                 return res.json();
             })
             .then((data) => {
+                console.log("Fetched tickets:", data); // DEBUG
                 setTickets(data);
                 setLoading(false);
             })
             .catch((err) => {
                 setError(err.message);
                 setLoading(false);
+                console.error("Ticket fetch error:", err); // DEBUG
             });
-    }, []);
+    }, [attendeeId]);
 
     // Enhanced filtering logic for both sets of tabs
     const displayedTickets = useMemo(() => {
@@ -136,7 +175,7 @@ const Ticket = () => {
                                     Account of
                                 </h3>
                                 <p className="font-bold text-lg">
-                                    Nguyen Van A
+                                    {profile ? profile.username : "Loading..."}
                                 </p>
                             </div>
                             <nav className="space-y-2 text-gray-600">

@@ -17,7 +17,8 @@ const STEPS = ["Event information", "Show time & Ticket", "Payment"];
 const initialFormData: EventFormData = {
     eventName: "",
     eventType: "online",
-    venueName: "",
+    venueType: "provided", 
+    providedVenueId: null,
     address: { city: "", district: "", ward: "", street: "" },
     tagIds: [],
     description: "<p>Tell your audience about the event!</p>",
@@ -45,9 +46,18 @@ export default function CreateEvent() {
     const isStepValid = useMemo(() => {
         switch (step) {
             case 1:
-                const { eventName, eventType, address, tagIds, organizer } = formData;
-                const isAddressValid = eventType === 'online' || (address.city && address.district && address.street);
-                return !!(eventName && isAddressValid && tagIds.length > 0 && organizer.name);
+                const { eventName, eventType, address, tagIds, organizer, eventPoster, venueType, providedVenueId } = formData;
+
+                let isVenueDetailsValid = false;
+                if (eventType === 'online') {
+                    isVenueDetailsValid = true;
+                } else if (venueType === 'provided') {
+                    isVenueDetailsValid = !!providedVenueId;
+                } else { // 'custom'
+                    isVenueDetailsValid = !!(address.city && address.district && address.street);
+                }
+
+                return !!(eventPoster && eventName && isVenueDetailsValid && tagIds.length > 0 && organizer.name);
             case 2:
                 const { time, tickets } = formData;
                 return !!(time.start && time.end && new Date(time.end) > new Date(time.start) && tickets.length > 0);

@@ -18,10 +18,25 @@ export type UploadedImage = {
     contentType: string;
 };
 
+export type ProvidedVenue = {
+    id: string;
+    name: string;
+    address: {
+        street: string;
+        ward: string;
+        district: string;
+        city: string;
+    }
+}
+
 export type EventFormData = {
     eventName: string;
     eventType: 'online' | 'onsite';
-    venueName: string;
+    // IMPROVEMENT: Removed venueType. The presence of providedVenueId will determine the type.
+    providedVenueId: string | null;
+    venueType: 'custom' | 'provided';
+    // IMPROVEMENT: These fields are now optional, only used for custom venues.
+    venueName?: string; 
     address: {
         city: string;
         district: string;

@@ -6,6 +6,7 @@ async function main() {
     console.log('Start seeding...');
 
     // Clear existing data to ensure a clean slate
+    await prisma.claimedTicket.deleteMany({});
     await prisma.issuedTicket.deleteMany({});
     await prisma.image.deleteMany({});
     await prisma.event.deleteMany({});

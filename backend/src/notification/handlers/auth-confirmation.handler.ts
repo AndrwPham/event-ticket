@@ -9,8 +9,8 @@ export class AuthConfirmationHandler {
 
   async handle(event: UserCreatedEvent) {
     if (!event.confirmationCode) throw new Error('Missing confirmation code');
-    const baseUrl = process.env.FRONTEND_BASE_URL || 'http://localhost:5173';
-    const confirmationLink = `${baseUrl}/confirm?code=${encodeURIComponent(event.confirmationCode)}`;
+    const baseUrl = process.env.BACKEND_BASE_URL || 'http://localhost:5000';
+    const confirmationLink = `${baseUrl}/auth/confirm?token=${encodeURIComponent(event.confirmationCode)}`;
     const templateData = { name: event.name, confirmationLink };
     const subject = 'Confirm your account';
     const html = renderTemplateFromFile('auth-confirmation', templateData, 'html');

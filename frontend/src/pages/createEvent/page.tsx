@@ -26,8 +26,8 @@ const initialFormData: EventFormData = {
     time: { start: "", end: "" },
     tickets: [],
     payment: { accountOwner: "", accountNumber: "", bank: "", branch: "" },
-    eventLogo: null,
-    eventCover: null,
+    eventPoster: null,
+    eventCovers: [],
 };
 
 export default function CreateEvent() {
@@ -119,7 +119,7 @@ export default function CreateEvent() {
         // NOTE: Saving File objects to localStorage is not possible.
         // You would typically upload them and save the URL.
         // For this example, we'll save without the files.
-        const draftData = { ...formData, eventLogo: null, eventCover: null, 'organizer.logo': null };
+        const draftData = { ...formData, eventPoster: null, eventCovers: null, 'organizer.logo': null };
         localStorage.setItem("draftEvent", JSON.stringify(draftData));
         alert("Draft saved!");
         console.log("Draft Data:", draftData);

@@ -12,6 +12,12 @@ export type Ticket = {
     currency: 'VND' | 'USD';
 };
 
+export type UploadedImage = {
+    key: string;
+    isPublic: boolean;
+    contentType: string;
+};
+
 export type EventFormData = {
     eventName: string;
     eventType: 'online' | 'onsite';
@@ -40,6 +46,6 @@ export type EventFormData = {
         bank: string;
         branch: string;
     };
-    eventLogo: File | null;
-    eventCover: File | null;
+    eventPoster: File | null;
+    eventCovers: File[];
 };

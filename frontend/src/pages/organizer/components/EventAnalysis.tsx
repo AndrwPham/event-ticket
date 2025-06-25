@@ -47,9 +47,10 @@ const EventAnalysis: FC<{ event: EventWithStats }> = ({ event }) => {
             (acc, seat) => {
                 if (seat.status === "available") acc.AVAILABLE += 1;
                 else if (seat.status === "sold") acc.PAID += 1;
+                else if (seat.status === "held") acc.HELD += 1;
                 return acc;
             },
-            { AVAILABLE: 0, HELD: 15, PAID: 0 },
+            { AVAILABLE: 0, HELD: 0, PAID: 0 },
         );
 
         return [

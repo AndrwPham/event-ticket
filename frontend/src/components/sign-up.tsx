@@ -152,7 +152,7 @@ export default function SignUp({ onClose }: SignUpProps) {
                         </label>
                         <input
                             id="username"
-                            type="username"
+                            type="text"
                             placeholder="Your username"
                             value={username}
                             onChange={(e) => {

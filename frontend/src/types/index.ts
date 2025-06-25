@@ -68,7 +68,7 @@ export interface ISeat {
     id: string; // e.g., "A1"
     tier: string; // e.g., "VIP", "Standard"
     price: number;
-    status: "available" | "sold" | "reserved";
+    status: "available" | "sold" | "held";
 }
 
 export type LayoutCell =
@@ -97,5 +97,13 @@ export interface User {
 }
 
 export function isApiError(data: unknown): data is ApiError {
-    return typeof data === "object" && data !== null && "message" in data;
+    return (
+        typeof data === "object" &&
+        data !== null &&
+        "message" in data &&
+        (
+            "statusCode" in data ||
+            "error" in data
+        )
+    );
 }

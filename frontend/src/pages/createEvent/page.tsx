@@ -66,8 +66,7 @@ export default function CreateEvent() {
                 city: data.address.city,
                 district: data.address.district,
                 street: data.address.street,
-                // FIX: temporary fix for the unmatched type
-                type: data.eventType == 'onsite' ? 'offline' : data.eventType,
+                type: data.eventType.toUpperCase(),
                 // WARN: using static id, need to wire to the user organizationId 
                 organizationId: "685b76539bfc4952f337313c",
                 // WARN: using static tags, need to wire to live requests

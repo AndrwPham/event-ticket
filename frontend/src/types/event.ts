@@ -9,7 +9,7 @@ export type Ticket = {
 
 export type EventFormData = {
     eventName: string;
-    eventType: 'online' | 'onsite'; //BUG:  conflict onsite and offline in backend
+    eventType: 'online' | 'onsite';
     venueName: string;
     address: {
         city: string;

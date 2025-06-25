@@ -2,11 +2,7 @@ import { IsMongoId, IsDate, IsEnum, IsNotEmpty, IsArray, IsOptional, IsString, V
 import { Type } from 'class-transformer';
 import { TicketSchemaDto } from './ticket-schema.dto';
 import { CreateImageDto } from '../../image/dto/create-image.dto';
-
-export enum EventType {
-  ONLINE = 'online',
-  OFFLINE = 'offline',
-}
+import { EventType } from '@prisma/client';
 
 export class CreateEventDto {
     @IsString()

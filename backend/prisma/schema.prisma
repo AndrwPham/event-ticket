@@ -36,6 +36,11 @@ enum OrderStatus {
     FAILED
 }
 
+enum EventType {
+    ONLINE
+    ONSITE
+}
+
 model User {
     id             String        @id @default(auto()) @map("_id") @db.ObjectId
     username       String        @unique
@@ -88,7 +93,7 @@ model Organization {
 }
 
 model Event {
-    id                String   @id @default(auto()) @map("_id") @db.ObjectId
+    id                String    @id @default(auto()) @map("_id") @db.ObjectId
     title             String
     description       String
     active_start_date DateTime
@@ -99,7 +104,7 @@ model Event {
     district          String?
     ward              String?
     street            String?
-    type              String // "online" | "offline" | "hybrid"
+    type              EventType
 
     organizationId String       @db.ObjectId
     organization   Organization @relation("OrganizationEvents", fields: [organizationId], references: [id], onDelete: Cascade)

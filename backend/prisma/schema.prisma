@@ -63,8 +63,10 @@ model User {
   attendeeInfo AttendeeInfo? @relation("UserAttendeeInfo")
   pendingEmail String?
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  attendeeInfo AttendeeInfo[] @relation("UserAttendeeInfo")
 }
 
 model AttendeeInfo {

@@ -105,7 +105,7 @@ async function main() {
         data: {
             title: 'Live Beauty Night',
             description: "Perfect Beauty",
-            type: 'offline',
+            type: 'ONSITE',
             active_start_date: new Date('2025-08-31T19:00:00Z'),
             active_end_date: new Date('2025-08-31T22:00:00Z'),
             sale_start_date: new Date(),
@@ -114,6 +114,7 @@ async function main() {
             organizationId: organization.id,
             venueId: venue.id,
             tagIds: [],
+            posterId: '',
         },
     });
     console.log(`Created event: ${event.title}`);

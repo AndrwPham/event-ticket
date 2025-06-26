@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
-import LogIn from "../../components/log-in";
-import SignUp from "../../components/sign-up";
+import { Link } from "react-router-dom";
 
 // Define the user profile type based on your backend response
 type UserProfile = {
@@ -12,7 +9,7 @@ type UserProfile = {
 
 // Add response types
 // For attendee info GET
-interface AttendeeInfo {
+interface AttendeeInfoResponse {
     first_name?: string;
     last_name?: string;
     phone?: string;
@@ -23,29 +20,6 @@ interface ErrorResponse {
 }
 
 const MyProfile = () => {
-    const { isAuthenticated } = useAuth();
-    const navigate = useNavigate();
-    const [showSignUp, setShowSignUp] = useState(false);
-
-    if (!isAuthenticated) {
-        return showSignUp ? (
-            <SignUp
-                onClose={() => {
-                    navigate("/");
-                }}
-            />
-        ) : (
-            <LogIn
-                onClose={() => {
-                    navigate("/");
-                }}
-                onSwitchToSignUp={() => {
-                    setShowSignUp(true);
-                }}
-            />
-        );
-    }
-
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
@@ -96,18 +70,18 @@ const MyProfile = () => {
                 if (!response.ok)
                     throw new Error("Failed to fetch personal info");
 
-                const dataArr = await response.json();
-                const data = Array.isArray(dataArr) ? dataArr[0] : dataArr;
-                setFirstName(data?.first_name ?? "");
-                setLastName(data?.last_name ?? "");
-                setPhone(data?.phone ?? "");
+                const data = (await response.json()) as AttendeeInfoResponse;
+                setFirstName(data.first_name ?? "");
+                setLastName(data.last_name ?? "");
+                setPhone(data.phone ?? "");
+                console.log("Fetched personal info:", data); // Log fetched personal info
             } catch (err) {
                 console.error("Failed to fetch personal info:", err);
             }
         };
 
         void fetchInfo();
-    }, []); // refetch info after successful update
+    }, []);
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();

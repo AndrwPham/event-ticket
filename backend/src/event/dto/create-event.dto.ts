@@ -1,30 +1,83 @@
+import { IsMongoId, IsDate, IsEnum, IsNotEmpty, IsArray, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+import { TicketSchemaDto } from './ticket-schema.dto';
+import { CreateImageDto } from '../../image/dto/create-image.dto';
+import { EventType } from '@prisma/client';
+
 export class CreateEventDto {
-  title: string;
-  description: string;
-  active_start_date: Date;
-  active_end_date: Date;
-  sale_start_date: Date;
-  sale_end_date: Date;
-  city?: string;
-  ward?: string;
-  street?: string;
-  district?: string;
-  type: string;
-  tagIds: string[];
-  organizationId: string;
-  imageIds: string[];
-  tickets: {
-    price: number;
-    class: string;
-    status: "AVAILABLE" | "UNAVAILABLE";
-    organizationId: string; // Organizer ID for the ticke
-    eventId: string; // Event ID for the ticket
-    currencyId: string;
-    quantity: number; // Number of tickets to create within the seat map
-    seatMapDesign: {
-      StartCoordinate: [number, number];
-      EndCoordinate: [number, number];
-      Class: string;
-    };
-  }[];
+    @IsString()
+    @IsNotEmpty()
+    title: string;
+
+    @IsString()
+    @IsNotEmpty()
+    description: string;
+
+    @IsDate()
+    @Type(() => Date)
+    active_start_date: Date;
+
+    @IsDate()
+    @Type(() => Date)
+    active_end_date: Date;
+
+    @IsDate()
+    @Type(() => Date)
+    sale_start_date: Date;
+
+    @IsDate()
+    @Type(() => Date)
+    sale_end_date: Date;
+
+    @IsOptional()
+    @IsString()
+    city?: string;
+
+    @IsOptional()
+    @IsString()
+    district?: string;
+
+    @IsOptional()
+    @IsString()
+    ward?: string;
+
+    @IsOptional()
+    @IsString()
+    street?: string;
+
+    @IsEnum(EventType)
+    type: EventType;
+
+    @IsString()
+    @IsOptional()
+    currency?: string // "VND"
+
+    @IsString()
+    organizationId: string;
+
+    @IsOptional()
+    @IsArray()
+    @IsMongoId({ each: true })
+    tagIds?: string[];
+
+    @IsNotEmpty()
+    @ValidateNested()
+    @Type(() => CreateImageDto)
+    posterImage: CreateImageDto;
+
+    @IsOptional()
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => CreateImageDto)
+    images?: CreateImageDto[];
+
+    @IsNotEmpty()
+    @Type(() => TicketSchemaDto)
+    ticketSchema: TicketSchemaDto;
+
+    // TODO: use mongoId
+    @IsString()
+    @IsOptional()
+    // @IsMongoId()
+    venueId?: string;
 }

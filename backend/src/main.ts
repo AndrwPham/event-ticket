@@ -18,13 +18,15 @@ async function bootstrap() {
 
   app.use(cookieParser());
 
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    forbidNonWhitelisted: true,
-    // transform: true,
-  }));
+  app.use(cookieParser());
 
-  const port = configService.get('SERVER_PORT');
-  await app.listen(port);
+    app.useGlobalPipes(new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        // transform: true,
+    }));
+
+    const port = configService.get('SERVER_PORT');
+    await app.listen(port);
 }
 bootstrap();

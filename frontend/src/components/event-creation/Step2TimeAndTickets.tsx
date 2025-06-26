@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
-import { EventFormData, Ticket } from '@/types/event';
+import React, { useState, useMemo } from 'react'; // FIX: Imported useMemo
+import { EventFormData, SeatMapConfig, Ticket, ProvidedVenue } from '@/types/event'; // FIX: Imported ProvidedVenue
 import { TicketModal } from './TicketModal';
-// IMPROVEMENT: Import the new TicketCard component
 import { TicketCard } from './TicketCard';
+// FIX: Changed component name to match the file we are using
+import { SeatMapEditor } from './SeatMapEditor'; 
+import { allVenues } from '@/data/_mock_venues';
 
 interface Step2Props {
     formData: EventFormData;
@@ -15,6 +17,20 @@ export const Step2TimeAndTickets = ({ formData, updateFormData }: Step2Props) =>
     const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         updateFormData('time', { ...formData.time, [e.target.name]: e.target.value });
     };
+
+    const handleSeatMapConfigChange = (config: SeatMapConfig) => {
+        updateFormData('seatMapConfig', config);
+        if (formData.tickets.length > 0) {
+            updateFormData('tickets', []);
+        }
+    };
+
+    const selectedVenueData = useMemo(() => {
+        // FIX: Compare strings to strings to prevent type mismatches
+        return allVenues.find(v => String(v.id) === formData.providedVenueId) as ProvidedVenue | undefined;
+    }, [formData.providedVenueId]);
+
+    const showSeatMapEditor = formData.eventType === 'onsite' && formData.venueType === 'provided' && !!selectedVenueData;
 
     const handleAddTicket = (newTicket: Omit<Ticket, 'id'>) => {
         const ticketWithId = { ...newTicket, id: crypto.randomUUID() };
@@ -41,39 +57,49 @@ export const Step2TimeAndTickets = ({ formData, updateFormData }: Step2Props) =>
                 </div>
             </section>
 
-            <section>
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-semibold text-gray-800">Ticket Classes</h3>
-                    <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 text-sm text-white bg-primary hover:bg-primary-dark px-4 py-2 rounded-md transition-colors">
-                        <span className="text-xl leading-none">＋</span> Add Ticket Class
-                    </button>
-                </div>
-                <div className="space-y-4">
-                    {/* IMPROVEMENT: Replaced the old list with the new TicketCard component */}
-                    {formData.tickets.length > 0 ? (
-                        formData.tickets.map(ticket => (
-                            <TicketCard 
-                                key={ticket.id}
-                                ticket={ticket}
-                                onDelete={handleDeleteTicket}
-                            />
-                        ))
-                    ) : (
+            {/* Conditionally render Seat Map or standard Ticket Classes */}
+            {/* FIX: Added a check to ensure selectedVenueData exists before trying to render the editor */}
+            {showSeatMapEditor && selectedVenueData ? (
+                <SeatMapEditor
+                    venueLayout={selectedVenueData.layout}
+                    initialConfig={formData.seatMapConfig || selectedVenueData.defaultSeatConfig}
+                    onChange={handleSeatMapConfigChange}
+                />
+            ) : (
+                <section>
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-xl font-semibold text-gray-800">Ticket Classes</h3>
+                        <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 text-sm text-white bg-primary hover:bg-primary-dark px-4 py-2 rounded-md transition-colors">
+                            <span className="text-xl leading-none">＋</span> Add Ticket Class
+                        </button>
+                    </div>
+                    <div className="space-y-4">
+                        {formData.tickets.length > 0 ? (
+                            formData.tickets.map(ticket => (
+                                <TicketCard 
+                                    key={ticket.id}
+                                    ticket={ticket}
+                                    onDelete={handleDeleteTicket}
+                                />
+                            ))
+                        ) : (
                             <div className="text-center text-gray-500 py-10 bg-gray-50 border-2 border-dashed rounded-lg">
                                 <p>No ticket classes added yet.</p>
                                 <p className="text-sm">Click 'Add Ticket Class' to create your first one.</p>
                             </div>
                         )}
-                </div>
-            </section>
+                    </div>
+                </section>
+            )}
 
-            <TicketModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onSave={handleAddTicket}
-                // IMPROVEMENT: Pass existing tickets to the modal for uniqueness validation.
-                existingTickets={formData.tickets}
-            />
+            {!showSeatMapEditor && (
+                <TicketModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    onSave={handleAddTicket}
+                    existingTickets={formData.tickets}
+                />
+            )}
         </div>
     );
 };

@@ -1,7 +1,13 @@
+import { IsString, IsBoolean, IsOptional, IsMongoId, IsNotEmpty } from 'class-validator';
+
 export class CreateImageDto {
-  url: string;
-  type: string;
-  userId?: string;
-  eventId?: string;
-  ticketId?: string;
+    @IsString()
+    @IsNotEmpty()
+    key: string;
+
+    @IsBoolean()
+    isPublic: boolean;
+
+    @IsString()
+    contentType: string;
 }

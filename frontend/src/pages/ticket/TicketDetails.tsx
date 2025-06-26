@@ -1,67 +1,26 @@
 import { FC, useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { FaCalendarAlt, FaMapMarkerAlt } from "react-icons/fa";
+import { IoChevronDown } from "react-icons/io5";
 
-// The Skeleton component remains the same
-const EventDetailsSkeleton: FC = () => (
-    <div className="bg-gray-50 p-4 md:p-8 animate-pulse">
-        <div className="max-w-7xl mx-auto">
-            <div className="h-6 w-24 bg-gray-300 rounded-md mb-6"></div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="md:col-span-2 space-y-8">
-                    <div className="w-full h-96 bg-gray-300 rounded-lg"></div>
-                    <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                        <div className="h-8 w-3/4 bg-gray-300 rounded-md mb-4"></div>
-                        <div className="flex items-center space-x-4 mb-4">
-                            <div className="h-6 w-6 bg-gray-300 rounded-full"></div>
-                            <div className="h-6 w-1/2 bg-gray-300 rounded-md"></div>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                            <div className="h-6 w-6 bg-gray-300 rounded-full"></div>
-                            <div className="h-6 w-1/3 bg-gray-300 rounded-md"></div>
-                        </div>
-                    </div>
-                    <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                        <div className="h-7 w-1/4 bg-gray-300 rounded-md mb-4"></div>
-                        <div className="space-y-2">
-                            <div className="h-4 bg-gray-300 rounded-md"></div>
-                            <div className="h-4 bg-gray-300 rounded-md"></div>
-                            <div className="h-4 w-5/6 bg-gray-300 rounded-md"></div>
-                        </div>
-                    </div>
-                </div>
-                <div className="space-y-8">
-                    <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                        <div className="h-7 w-1/3 bg-gray-300 rounded-md mb-4"></div>
-                        <div className="space-y-3">
-                            <div className="h-8 bg-gray-300 rounded-md"></div>
-                            <div className="h-8 bg-gray-300 rounded-md"></div>
-                        </div>
-                    </div>
-                    <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                        <div className="h-7 w-1/2 bg-gray-300 rounded-md mb-4"></div>
-                        <div className="h-8 w-3/4 bg-gray-300 rounded-md"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-);
-type TicketStatus = 'UNAVAILABLE' | 'AVAILABLE' | 'HELD' |  'CLAIMED';
-
-
+// Define a more detailed type for the event data we expect
 interface DetailedEvent {
     id: string;
     title: string;
     description: string;
     active_start_date: string;
     images: { url: string }[];
-    venue: { name: string; address?: string; } | null;
-    organization: { name: string; logoUrl?: string; } | null;
+    venue: {
+        name: string;
+        address?: string;
+    } | null;
+    organization: {
+        name: string;
+        logoUrl?: string;
+    } | null;
     tickets: {
         class: string;
         price: number;
-        status: TicketStatus;
     }[];
 }
 
@@ -74,21 +33,31 @@ const EventDetails: FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [isAboutExpanded, setIsAboutExpanded] = useState(false);
 
+    // This useEffect hook is now safe from memory leaks.
     useEffect(() => {
+        // Use AbortController to cancel fetch on component unmount
         const controller = new AbortController();
-        const { signal } = controller;
+        const signal = controller.signal;
 
         const fetchEvent = async () => {
+            if (!eventId) {
+                setError("Event ID is missing.");
+                setLoading(false);
+                return;
+            }
+
+            // Reset state for new fetches
             setLoading(true);
             setError(null);
+            setEventData(null);
 
             try {
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/events/${String(eventId)}`, { signal });
-
-                if (signal.aborted) return;
-
+                const response = await fetch(
+                    `http://localhost:5000/events/${eventId}`,
+                    { signal },
+                );
                 if (!response.ok) {
-                    throw new Error("Failed to fetch event data.");
+                    throw new Error("Failed to fetch event details.");
                 }
                 const data = (await response.json()) as DetailedEvent;
                 setEventData(data);
@@ -138,6 +107,13 @@ const EventDetails: FC = () => {
     if (!eventData) {
         return <p className="text-center p-8">Event not found.</p>;
     }
+
+    const ticketTiers = Array.from(
+        new Map(eventData.tickets.map((t) => [t.class, t])).values(),
+    );
+    const bannerImage =
+        eventData.images[0]?.url ||
+        "https://placehold.co/800x400/cccccc/ffffff?text=Event+Banner";
 
     const ticketTiers = Array.from(
         new Map(eventData.tickets.map((t) => [t.class, t])).values(),

@@ -10,10 +10,11 @@ import { GenerateIssuedTicketsDto } from './dto/generate-issued-tickets.dto';
 export class IssuedTicketService {
   constructor(private prisma: PrismaService) { }
 
+    //TODO: fix all image relations
   async findAll() {
     try {
       return await this.prisma.issuedTicket.findMany({
-        include: { event: true, images: true },
+        // include: { event: true, images: true },
       });
     } catch (error) {
       throw new InternalServerErrorException('Failed to fetch issued tickets.');
@@ -24,7 +25,7 @@ export class IssuedTicketService {
     try {
       const ticket = await this.prisma.issuedTicket.findUnique({
         where: { id },
-        include: { event: true, images: true },
+        // include: { event: true, images: true },
       });
       if (!ticket) throw new NotFoundException('Issued ticket not found.');
       return ticket;
@@ -38,7 +39,7 @@ export class IssuedTicketService {
     try {
       return await this.prisma.issuedTicket.findMany({
         where: { eventId },
-        include: { event: true, images: true },
+        // include: { event: true, images: true },
       });
     } catch (error) {
       throw new InternalServerErrorException('Failed to fetch issued tickets for event.');
@@ -130,7 +131,7 @@ export class IssuedTicketService {
         if (ticketClass.seats && ticketClass.seats.length > 0) {
           for (const seat of ticketClass.seats) {
             ticketsToCreate.push({
-              price: seat.price,
+              price: seat?.price ?? ticketClass.price, // TODO: dirty fix
               class: ticketClass.label,
               seat: seat.seatNumber,
               status: TicketStatus.UNAVAILABLE,

@@ -43,6 +43,8 @@ export class EventService {
                     }
                 });
 
+                await this.issuedTicketService.generateTicketsFromSchema(ticketSchema);
+
                 return createdEvent;
             });
 

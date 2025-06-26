@@ -1,7 +1,9 @@
 import { FC } from "react"; // Add FC for TypeScript
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
-import firstBanner from "../../../assets/images/special_event_carousel_banner.png";
+import firstBanner from "../../../assets/images/billie_eilish.png";
+import secondBanner from "../../../assets/images/IVE.jpg";
+import thirdBanner from "../../../assets/images/thinh_suy.png";
 
 import "swiper/css";
 import "swiper/css/navigation";
@@ -10,8 +12,8 @@ import "swiper/css/autoplay";
 
 const carouselImages = [
   firstBanner,
-  "https://placehold.co/1100x600",
-  "https://placehold.co/1100x600",
+  secondBanner,
+  thirdBanner,
 ];
 
 const SpecialEventsCarousel: FC = () => {

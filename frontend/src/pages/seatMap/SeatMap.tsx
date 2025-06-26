@@ -4,6 +4,8 @@ import VenueMap from "./components/VenueMap";
 import SeatMapLegend from "./components/SeatMapLegend";
 import SeatMapOrderSummary from "./components/SeatMapOrderSummary";
 import BuyerInfoForm from "./components/BuyerInfoForm";
+import { useAuth } from "../../context/AuthContext";
+
 import {
     EventData,
     IssuedTicket,
@@ -16,6 +18,8 @@ import {
 export default function SeatMap() {
     const { eventId } = useParams<{ eventId: string }>();
     const navigate = useNavigate();
+    const { isAuthenticated, user } = useAuth();
+
 
     const [event, setEvent] = useState<EventData | null>(null);
     const [selectedSeats, setSelectedSeats] = useState<IssuedTicket[]>([]);
@@ -29,6 +33,28 @@ export default function SeatMap() {
     const [error, setError] = useState<string | null>(null);
 
     // This useEffect hook fetches the event data and remains unchanged.
+    useEffect(() => {
+        const fetchAttendeeInfo = async () => {
+            if (!isAuthenticated) return;
+            try {
+                const res = await fetch(`${import.meta.env.VITE_API_URL}/user/me`, {
+                    credentials: "include",
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                const info = data.attendeeInfo ?? {};
+                setAttendeeInfo({
+                    firstName: info.first_name ?? "",
+                    lastName: info.last_name ?? "",
+                    email: info.email ?? user?.email ?? "",
+                });
+            } catch (err) {
+                console.error("Failed to fetch attendee info", err);
+            }
+        };
+        void fetchAttendeeInfo();
+    }, [isAuthenticated, user]);
+
     useEffect(() => {
         const fetchEventData = async () => {
             if (!eventId) {

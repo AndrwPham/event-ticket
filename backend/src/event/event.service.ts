@@ -2,7 +2,7 @@ import { Injectable, BadRequestException, NotFoundException, InternalServerError
 import { PrismaService } from '../prisma/prisma.service';
 import { IssuedTicketService } from '../issuedticket/issuedticket.service';
 import { ImageService } from '../image/image.service';
-import { Prisma, Tag, Currency } from '@prisma/client';
+import {Prisma, Tag, Currency, EventStatus} from '@prisma/client';
 import { GenerateIssuedTicketsDto } from '../issuedticket/dto/generate-issued-tickets.dto';
 import { plainToInstance, instanceToPlain } from 'class-transformer';
 import { CreateEventDto } from './dto/create-event.dto';

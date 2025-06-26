@@ -8,8 +8,10 @@ export interface LiveEvent {
     id: string;
     title: string;
     active_start_date: string;
+    active_end_date: string;
     venue: { name: string } | null;
-    images: { url: string }[];
+    posterImage: string;
+    otherImages: string[];
 }
 
 const Home: FC = () => {

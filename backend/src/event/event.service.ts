@@ -8,6 +8,7 @@ import { plainToInstance, instanceToPlain } from 'class-transformer';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { CreateImageDto } from '../image/dto/create-image.dto';
+import { GetFileDto } from '../common/aws/dto/get-file.dto';
 
 @Injectable()
 export class EventService {
@@ -90,23 +91,54 @@ export class EventService {
 
         return currency;
     }
+
+    async findAll() {
+        const events = await this.prisma.event.findMany();
+        let imageIds: string[] = [];
+
+        // 1. Collect all unique keys: posterId + imageIds
+        events.forEach((event) => {
+            if (event.posterId) imageIds.push(event.posterId);
+            if (event.imageIds?.length) {
+                event.imageIds.forEach((id) => imageIds.push(id));
+            }
+        });
+        const images = await this.imageService.getByIds(imageIds);
+        const imageIdToKey = new Map(images.map(img => [img.id, img.key]));
+        
+        const getFileDtos: GetFileDto[] = Array.from(images).map((img) => ({
+            key: img.key,
+            isPublic: true,
+        }));
+
+        // 2. Fetch signed/public URLs
+        const fileResults = await this.imageService.getPublicOrSignedUrls(getFileDtos);
+
+        // 3. Map key => URL
+        const keyToUrl = new Map(fileResults
+            .filter(res => res.status === 'ok' && res.url)
+            .map(res => [res.key, res.url!])
+        );
+
+        // 4. Construct simplified output
+        const imageIdToUrl = new Map<string, string>();
+        images.forEach((img) => {
+            const url = keyToUrl.get(img.key);
+            if (url) imageIdToUrl.set(img.id, url);
+        });
+
+        const enrichedEvents = events.map(event => ({
+            ...event,
+            posterImage: event.posterId ? imageIdToUrl.get(event.posterId) ?? null : null,
+            otherImages: event.imageIds?.map(id => imageIdToUrl.get(id)).filter(Boolean) ?? [],
+        }));
+
+        return enrichedEvents;
+    }
 }
 
 //TODO:fix all related tagIds and imageIds relation
 
-// async findAll() {
-//     try {
-//         return await this.prisma.event.findMany({
-//             include: {
-//                 images: true,
-//                 tickets: true,
-//                 organization: true,
-//             },
-//         });
-//     } catch (error) {
-//         throw new InternalServerErrorException('Failed to fetch events.');
-//     }
-// }
 //
 // async findOne(id: string) {
 //     try {

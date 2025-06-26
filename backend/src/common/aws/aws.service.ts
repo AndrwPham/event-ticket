@@ -110,7 +110,7 @@ export class AWSService {
 
                         url = await getSignedUrl(this.s3Client, command, { expiresIn: expiresInSeconds });
                     } else {
-                        url =  this.baseUrl + key;
+                        url =  this.baseUrl + '/' + key;
                     }
 
                     return {

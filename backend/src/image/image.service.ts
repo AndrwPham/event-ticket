@@ -23,6 +23,16 @@ export class ImageService {
         } });
     }
 
+    async getByIds(ids: string[]) {
+        if (!ids?.length) return [];
+
+        return this.prisma.image.findMany({
+            where: {
+                id: { in: ids },
+            },
+        });
+    }
+
     // @UseGuards(JwtAuthGuard)
     generateUploadUrls(dtos: UploadFileDto[]) {
         return this.awsService.generateSignedPutUrl(dtos);

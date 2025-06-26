@@ -33,19 +33,19 @@ export class EventController {
             throw error;
         }
     }
+
+    @Get()
+    @HttpCode(HttpStatus.OK)
+    async findAll() {
+        try {
+            return await this.eventService.findAll();
+        } catch (error) {
+            this.logger.error(`Failed to fetch events: ${error.message}`);
+            throw error;
+        }
+    }
 }
 
-// @Get()
-// @HttpCode(HttpStatus.OK)
-// async findAll() {
-//     try {
-//         return await this.eventService.findAll();
-//     } catch (error) {
-//         this.logger.error(`Failed to fetch events: ${error.message}`);
-//         throw error;
-//     }
-// }
-//
 // @Get(':id')
 // @HttpCode(HttpStatus.OK)
 // async findOne(@Param('id') id: string) {

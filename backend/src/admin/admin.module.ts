@@ -5,8 +5,8 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { IssuedTicketModule } from '../issuedticket/issuedticket.module';
 
 @Module({
-    imports: [PrismaModule],
-    controllers: [AdminController, IssuedTicketModule],
+    imports: [PrismaModule, IssuedTicketModule],
+    controllers: [AdminController],
     providers: [AdminService],
 })
 export class AdminModule {}

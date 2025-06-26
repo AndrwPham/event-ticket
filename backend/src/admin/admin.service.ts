@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { Injectable, NotFoundException, InternalServerErrorException, BadRequestException } from '@nestjs/common';import { PrismaService } from '../prisma/prisma.service';
 import { EventStatus } from '../event/types/event-status.enum';
 import { IssuedTicketService } from '../issuedticket/issuedticket.service';
 import { TicketSchemaDto } from '../event/dto/ticket-schema.dto';
+
 
 @Injectable()
 export class AdminService {
@@ -50,12 +50,7 @@ export class AdminService {
 
         if (status === EventStatus.APPROVED && event.ticketSchema) {
             try {
-                const currency = await this.prisma.currency.findFirst({
-                    where: { symbol: 'VND' },
-                });
-                if (!currency) {
-                    throw new InternalServerErrorException('Default currency not found');
-                }
+                const currency = await this.getOrCreateDefaultCurrency();
 
                 // —— cast via unknown to satisfy TS ——
                 const schema = event.ticketSchema as unknown as TicketSchemaDto;
@@ -67,6 +62,9 @@ export class AdminService {
                     schema,  // now typed as TicketSchemaDto
                 });
             } catch (error) {
+                if (error instanceof BadRequestException) {
+                    throw error;
+                }
                 throw new InternalServerErrorException(
                     'Failed to generate issued tickets',
                 );
@@ -74,5 +72,19 @@ export class AdminService {
         }
 
         return updated;
+    }
+
+    private async getOrCreateDefaultCurrency() {
+        const symbol = 'VND';
+        let currency = await this.prisma.currency.findFirst({ where: { symbol } });
+        if (!currency) {
+            currency = await this.prisma.currency.create({
+                data: {
+                    name: 'Vietnamese Dong',
+                    symbol,
+                },
+            });
+        }
+        return currency;
     }
 }

@@ -2,7 +2,7 @@ import { Injectable, BadRequestException, NotFoundException, InternalServerError
 import { PrismaService } from '../prisma/prisma.service';
 import { IssuedTicketService } from '../issuedticket/issuedticket.service';
 import { ImageService } from '../image/image.service';
-import { Prisma, Tag, Currency } from '@prisma/client';
+import {Prisma, Tag, Currency, EventStatus} from '@prisma/client';
 import { GenerateIssuedTicketsDto } from '../issuedticket/dto/generate-issued-tickets.dto';
 import { plainToInstance, instanceToPlain } from 'class-transformer';
 import { CreateEventDto } from './dto/create-event.dto';
@@ -90,6 +90,40 @@ export class EventService {
 
         return currency;
     }
+    async findAll() {
+        try {
+            const events = await this.prisma.event.findMany({
+                where: { status: EventStatus.APPROVED },
+                orderBy: { active_start_date: 'asc' },
+            });
+
+            return Promise.all(
+                events.map(async (evt) => {
+                    const images = evt.imageIds?.length
+                        ? await this.prisma.image.findMany({ where: { id: { in: evt.imageIds } } })
+                        : [];
+
+                    const imageUrls = await this.imageService.getPublicOrSignedUrls(
+                        images.map((img) => ({ key: img.key, isPublic: img.isPublic }))
+                    );
+
+                    const venue = evt.venueId
+                        ? await this.prisma.venue.findUnique({ where: { id: evt.venueId }, select: { name: true } })
+                        : null;
+
+                    return {
+                        id: evt.id,
+                        title: evt.title,
+                        active_start_date: evt.active_start_date,
+                        venue,
+                        images: imageUrls.map((res) => ({ url: res.url ?? '' })),
+                    };
+                })
+            );
+        } catch (error) {
+            throw new InternalServerErrorException('Failed to fetch events.');
+        }
+    }
 }
 
 //TODO:fix all related tagIds and imageIds relation
@@ -107,6 +141,7 @@ export class EventService {
 //         throw new InternalServerErrorException('Failed to fetch events.');
 //     }
 // }
+
 //
 // async findOne(id: string) {
 //     try {

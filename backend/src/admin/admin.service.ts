@@ -1,10 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EventStatus } from '../event/types/event-status.enum';
+import { IssuedTicketService } from '../issuedticket/issuedticket.service';
+import { TicketSchemaDto } from '../event/dto/ticket-schema.dto';
 
 @Injectable()
 export class AdminService {
-    constructor(private readonly prisma: PrismaService) {}
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly issuedTicketService: IssuedTicketService,
+    ) {}
 
     async getDashboardStats() {
         const pendingEvents = await this.prisma.event.count({
@@ -15,11 +20,7 @@ export class AdminService {
         });
         const userCount = await this.prisma.user.count();
 
-        return {
-            pendingEvents,
-            approvedEvents,
-            userCount,
-        };
+        return { pendingEvents, approvedEvents, userCount };
     }
 
     async getPendingEvents() {
@@ -42,9 +43,36 @@ export class AdminService {
             throw new NotFoundException('Event not found');
         }
 
-        return this.prisma.event.update({
+        const updated = await this.prisma.event.update({
             where: { id: eventId },
             data: { status },
         });
+
+        if (status === EventStatus.APPROVED && event.ticketSchema) {
+            try {
+                const currency = await this.prisma.currency.findFirst({
+                    where: { symbol: 'VND' },
+                });
+                if (!currency) {
+                    throw new InternalServerErrorException('Default currency not found');
+                }
+
+                // —— cast via unknown to satisfy TS ——
+                const schema = event.ticketSchema as unknown as TicketSchemaDto;
+
+                await this.issuedTicketService.generateTicketsFromSchema({
+                    eventId:        event.id,
+                    organizationId: event.organizationId,
+                    currencyId:     currency.id,
+                    schema,  // now typed as TicketSchemaDto
+                });
+            } catch (error) {
+                throw new InternalServerErrorException(
+                    'Failed to generate issued tickets',
+                );
+            }
+        }
+
+        return updated;
     }
 }

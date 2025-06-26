@@ -121,6 +121,8 @@ export interface User {
     id: string;
     email: string;
     username: string;
+    organizationId?: string;
+
 }
 
 export interface FullOrder {

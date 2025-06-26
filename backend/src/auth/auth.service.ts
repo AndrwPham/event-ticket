@@ -91,7 +91,7 @@ export class AuthService {
     }
 
     if (user.pendingEmail) {
-      if (!user.attendeeInfo || user.attendeeInfo.length === 0) {
+      if (!user.attendeeInfo) {
         throw new BadRequestException('Attendee info not found for user');
       }
       await this.prisma.attendeeInfo.update({

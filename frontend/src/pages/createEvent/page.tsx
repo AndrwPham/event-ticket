@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { registerLicense } from '@syncfusion/ej2-base';
+import { useNavigate } from "react-router-dom";
 
 import { EventFormData, UploadedImage } from "@/types/event";
 import { Stepper } from "@/components/event-creation/Stepper";
@@ -8,10 +9,13 @@ import { Step1EventInfo } from "@/components/event-creation/Step1EventInfo";
 import { Step2TimeAndTickets } from "@/components/event-creation/Step2TimeAndTickets";
 import { Step3Payment } from "@/components/event-creation/Step3Payment";
 import { convertSeatMapToTicketSchema } from "@/lib/seatmap-utils";
+import { useAuth } from "../../context/AuthContext";
+import LogIn from "../../components/log-in";
+import SignUp from "../../components/sign-up";
 
 registerLicense('YOUR_LICENSE');
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const STEPS = ["Event information", "Show time & Ticket", "Payment"];
 
 const initialFormData: EventFormData = {
@@ -37,7 +41,28 @@ const LoadingOverlay = ({ message }: { message: string }) => (
     </div>
 );
 
-export default function CreateEvent() {
+export default function CreateEvent() {const { isAuthenticated } = useAuth();
+    const navigate = useNavigate();
+    const [showSignUp, setShowSignUp] = useState(false);
+
+    if (!isAuthenticated) {
+        return showSignUp ? (
+            <SignUp
+                onClose={() => {
+                    navigate("/");
+                }}
+            />
+        ) : (
+            <LogIn
+                onClose={() => {
+                    navigate("/");
+                }}
+                onSwitchToSignUp={() => {
+                    setShowSignUp(true);
+                }}
+            />
+        );
+    }
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState<EventFormData>(initialFormData);
     const [isSubmitting, setIsSubmitting] = useState(false);

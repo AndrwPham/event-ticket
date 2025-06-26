@@ -1,11 +1,12 @@
 // frontend/src/data/_mock_venues.ts
 
-import { IVenue } from "../types";
+import { ProvidedVenue } from "../types/event";
 
-export const allVenues: IVenue[] = [
+export const allVenues: ProvidedVenue[] = [
     {
         id: '1',
         name: "Standard Auditorium",
+        address: "123 Main Street, District 1, Ho Chi Minh City",
         layout: [
             [
                 { type: "stage" },
@@ -66,10 +67,19 @@ export const allVenues: IVenue[] = [
                 { type: "seat", seatId: "D7" },
             ],
         ],
+        defaultSeatConfig: {
+            seatClasses: [
+                { id: "unavailable", name: "Unavailable", price: null, color: "#D1D5DB" },
+                { id: "standard", name: "Standard", price: 500000, color: "#4B5563" },
+                { id: "vip", name: "VIP", price: 1000000, color: "#22c55e" },
+            ],
+            seatAssignments: {}
+        }
     },
     {
         id: '2',
         name: "Large Stadium",
+        address: "456 Sports Avenue, District 3, Ho Chi Minh City",
         layout: [
             [
                 { type: "stage" },
@@ -154,10 +164,20 @@ export const allVenues: IVenue[] = [
                 { type: "seat", seatId: "E9" },
             ],
         ],
+        defaultSeatConfig: {
+            seatClasses: [
+                { id: "unavailable", name: "Unavailable", price: null, color: "#D1D5DB" },
+                { id: "standard", name: "Standard", price: 300000, color: "#4B5563" },
+                { id: "premium", name: "Premium", price: 600000, color: "#f59e0b" },
+                { id: "vip", name: "VIP", price: 1200000, color: "#22c55e" },
+            ],
+            seatAssignments: {}
+        }
     },
     {
         id: '3',
         name: "Intimate Workshop Room",
+        address: "789 Learning Street, District 7, Ho Chi Minh City",
         layout: [
             [{ type: "lectern" }, { type: "lectern" }, { type: "lectern" }],
             [{ type: "empty" }, { type: "empty" }, { type: "empty" }],
@@ -177,5 +197,12 @@ export const allVenues: IVenue[] = [
                 { type: "seat", seatId: "C3" },
             ],
         ],
+        defaultSeatConfig: {
+            seatClasses: [
+                { id: "unavailable", name: "Unavailable", price: null, color: "#D1D5DB" },
+                { id: "standard", name: "Standard", price: 200000, color: "#4B5563" },
+            ],
+            seatAssignments: {}
+        }
     },
 ];

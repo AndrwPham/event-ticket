@@ -1,4 +1,12 @@
-import { SeatCell, SeatClass, SeatAssignments, ISeat, SeatMapConfig } from "@/types/event";
+import { SeatCell, SeatClass, SeatAssignments, SeatMapConfig } from "@/types/event";
+
+// Define the ISeat interface that was missing
+export interface ISeat {
+    id: string;
+    tier: string;
+    price: number;
+    status: 'available' | 'sold' | 'reserved';
+}
 
 /**
  * Generates a detailed seats object required by the VenueMap component.
@@ -35,7 +43,7 @@ export const generateSeatsObject = (
                 if (seatClass) {
                     seats[seatId] = {
                         id: seatId,
-                        tier: seatClass.name as "Seated VIP" | "Seated A", // You may need to make this type more flexible
+                        tier: seatClass.name,
                         price: seatClass.price ?? 0,
                         // For the editor, all seats are 'available' by default. 'sold' status would come from an event's booking data.
                         status: 'available',
@@ -49,10 +57,18 @@ export const generateSeatsObject = (
 };
 
 export const convertSeatMapToTicketSchema = (config: SeatMapConfig) => {
+    // Define the type for class details
+    interface ClassDetails {
+        label: string;
+        price: number;
+        seats: Array<{ seatNumber: string; price: number }>;
+    }
+
     // 1. Create a map for easy lookup of class details.
-    const classDetailsMap = new Map();
+    const classDetailsMap = new Map<string, ClassDetails>();
     config.seatClasses.forEach(cls => {
-        if (cls.id !== 'unavailable' && cls.quantity > 0) {
+        // Fix: Remove the incorrect quantity check - SeatClass doesn't have a quantity property
+        if (cls.id !== 'unavailable') {
             classDetailsMap.set(cls.id, {
                 label: cls.name,
                 price: cls.price || 0,
@@ -63,12 +79,10 @@ export const convertSeatMapToTicketSchema = (config: SeatMapConfig) => {
 
     // 2. Go through each seat assignment and push it into the correct class.
     for (const seatId in config.seatAssignments) {
-
         const classId = config.seatAssignments[seatId];
 
-        if (classDetailsMap.has(classId)) {
-            const classInfo = classDetailsMap.get(classId);
-
+        const classInfo = classDetailsMap.get(classId);
+        if (classInfo) {
             classInfo.seats.push({
                 seatNumber: seatId,
                 price: classInfo.price

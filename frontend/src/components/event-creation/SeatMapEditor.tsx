@@ -49,27 +49,67 @@ const SeatMap = ({ layout, seatAssignments, onAssignClass, seatClasses, selected
         return seatClasses.find((cls) => cls.id === classId)?.color ?? "#4B5563";
     };
 
+    const getSeatDisplayText = (seatId: string): string => {
+        // Extract just the number part for display (e.g., "A1" -> "1", "B12" -> "12")
+        return seatId.replace(/^[A-Z]+/, '');
+    };
+
     return (
-        <div className="inline-block border border-gray-300 select-none" onMouseUp={handleMouseUp} onMouseLeave={() => setIsMouseDown(false)}>
+        <div className="inline-block border-2 border-gray-400 rounded-lg p-4 bg-white shadow-lg select-none" onMouseUp={handleMouseUp} onMouseLeave={() => setIsMouseDown(false)}>
             {layout.map((rowArr, rowIdx) => (
-                <div className="flex" key={rowIdx}>
+                <div className="flex justify-center" key={rowIdx}>
                     {rowArr.map((cell, colIdx) => {
                         if (cell.type === "seat") {
+                            const seatColor = getSeatColor(cell.seatId);
+                            const isAssigned = cell.seatId && seatAssignments[cell.seatId];
+                            
                             return (
-                                <div
+                                <button
                                     key={cell.seatId}
-                                    className={`w-[30px] h-[30px] m-[2px] border border-gray-300 cursor-pointer text-center text-white text-xs flex items-center justify-center`}
-                                    style={{ backgroundColor: getSeatColor(cell.seatId) }}
+                                    className={`w-[40px] h-[40px] m-[1px] border-2 border-gray-400 cursor-pointer text-center text-white text-xs font-bold flex items-center justify-center rounded-md transition-all duration-200 hover:scale-110 hover:shadow-md ${
+                                        isAssigned ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
+                                    }`}
+                                    style={{ 
+                                        backgroundColor: seatColor,
+                                        boxShadow: isAssigned ? '0 0 0 2px rgba(59, 130, 246, 0.5)' : 'none'
+                                    }}
                                     onMouseDown={() => handleMouseDown(rowIdx, colIdx)}
                                     onMouseEnter={() => handleMouseEnter(rowIdx, colIdx)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            handleMouseDown(rowIdx, colIdx);
+                                        }
+                                    }}
+                                    title={`Seat ${cell.seatId} - ${seatClasses.find(cls => cls.id === (seatAssignments[cell.seatId || ''] || 'standard'))?.name || 'Standard'}`}
+                                    type="button"
                                 >
-                                    {cell.seatId}
+                                    {cell.seatId ? getSeatDisplayText(cell.seatId) : ''}
+                                </button>
+                            );
+                        }
+                        if (cell.type === "aisle") {
+                            return (
+                                <div key={colIdx} className="w-[40px] h-[40px] m-[1px] flex items-center justify-center">
+                                    <div className="w-1 h-6 bg-gray-300 rounded-full"></div>
                                 </div>
                             );
                         }
-                        if (cell.type === "aisle") return <div key={colIdx} className="w-[30px] h-[30px] m-[2px]" />;
-                        if (cell.type === "stage" || cell.type === "lectern") return <div key={colIdx} className="w-[30px] h-[30px] m-[2px] bg-blue-300" />;
-                        return <div key={colIdx} className="w-[30px] h-[30px] m-[2px]" />;
+                        if (cell.type === "stage") {
+                            return (
+                                <div key={colIdx} className="w-[40px] h-[40px] m-[1px] bg-gradient-to-b from-blue-400 to-blue-600 rounded-md flex items-center justify-center text-white text-xs font-bold">
+                                    ST
+                                </div>
+                            );
+                        }
+                        if (cell.type === "lectern") {
+                            return (
+                                <div key={colIdx} className="w-[40px] h-[40px] m-[1px] bg-gradient-to-b from-purple-400 to-purple-600 rounded-md flex items-center justify-center text-white text-xs font-bold">
+                                    LE
+                                </div>
+                            );
+                        }
+                        return <div key={colIdx} className="w-[40px] h-[40px] m-[1px]" />;
                     })}
                 </div>
             ))}
@@ -78,13 +118,18 @@ const SeatMap = ({ layout, seatAssignments, onAssignClass, seatClasses, selected
 };
 
 const Legend = ({ seatClasses, seatMapHeight }: { seatClasses: SeatClass[], seatMapHeight: number | null }) => (
-    <div className="flex flex-col min-w-[120px]" style={{ maxHeight: seatMapHeight || undefined }}>
-        <h2 className="mb-2 font-semibold sticky top-0 bg-gray-50 z-10">Legend:</h2>
+    <div className="flex flex-col min-w-[140px]" style={{ maxHeight: seatMapHeight || undefined }}>
+        <h2 className="mb-3 font-semibold sticky top-0 bg-gray-50 z-10 text-gray-800">Legend:</h2>
         <div className="flex flex-col gap-3 pr-4 overflow-y-auto">
             {seatClasses.map((cls) => (
-                <div key={cls.id} className="flex items-center gap-2">
-                    <span className="inline-block w-6 h-6 border border-gray-300 rounded" style={{ backgroundColor: cls.color }} />
-                    <span>{cls.name}</span>
+                <div key={cls.id} className="flex items-center gap-3 p-2 bg-white rounded-md border">
+                    <span className="inline-block w-6 h-6 border-2 border-gray-300 rounded-md" style={{ backgroundColor: cls.color }} />
+                    <div className="flex flex-col">
+                        <span className="text-sm font-medium text-gray-800">{cls.name}</span>
+                        {cls.price !== null && (
+                            <span className="text-xs text-gray-500">{cls.price.toLocaleString()}đ</span>
+                        )}
+                    </div>
                 </div>
             ))}
         </div>

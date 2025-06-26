@@ -144,7 +144,7 @@ const EventDetails: FC = () => {
     );
     const bannerImage =
         eventData.images[0]?.url ||
-        "https://placehold.co/800x400/cccccc/ffffff?text=Event+Banner";
+        "https://raw.githubusercontent.com/fuisl/cfied25-ticket/main/src/assets/banner.jpg";
 
     return (
         <div className="bg-gray-50">

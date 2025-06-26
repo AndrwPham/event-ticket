@@ -40,8 +40,8 @@ const PaymentPage: FC = () => {
         CHECKOUT_URL: checkoutUrl || "",
         ELEMENT_ID: "payos-container",
         embedded: true,
-        RETURN_URL: "https://11ac-2405-4802-a460-4040-f4df-4cb3-dbd7-a06a.ngrok-free.app/payment/return",
-        CANCEL_URL: "https://11ac-2405-4802-a460-4040-f4df-4cb3-dbd7-a06a.ngrok-free.app/payment/return",
+        RETURN_URL: "https://46ee-42-113-114-116.ngrok-free.app/payment/return",
+        CANCEL_URL: "https://46ee-42-113-114-116.ngrok-free.app/payment/return",
         onExit: () => {
             if (eventDetails?.id) {
                 navigate(`/event/${String(eventDetails.id)}`);

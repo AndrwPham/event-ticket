@@ -37,9 +37,12 @@ const EventCard: FC<EventCardProps> = ({ event }) => {
         },
     );
 
-    const bannerImage =
-        event.images[0]?.url ||
-        "https://placehold.co/600x400/cccccc/ffffff?text=Event";
+    const bannerImage = "https://raw.githubusercontent.com/fuisl/cfied25-ticket/main/src/assets/banner.jpg";
+
+    // const bannerImage =
+    //     event.images[0]?.url ||
+    //     "https://raw.githubusercontent.com/fuisl/cfied25-ticket/main/src/assets/banner.jpg";
+        
 
     return (
         // The `to` prop uses a template literal (backticks ``) to correctly build the URL.

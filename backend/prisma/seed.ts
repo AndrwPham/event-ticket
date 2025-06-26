@@ -41,8 +41,8 @@ async function main() {
     // 4. Create a Venue
     const venue = await prisma.venue.create({
         data: {
-            name: 'Grand Theater',
-            address: '123 Main St, Cityville',
+            name: 'Conventional Hall',
+            address: 'Vanh Dai 4, Thoi Hoa Str., Binh Duong',
             layout: {
                 rows: [
                     [{ type: 'stage' }, { type: 'stage' }, { type: 'stage' }, { type: 'stage' }, { type: 'stage' }],
@@ -61,8 +61,8 @@ async function main() {
     // 5. Define the ticket configuration
     const ticketConfig = {
         seatClasses: [
-            { id: "premium", name: "Premium Test Seating", price: 2000, color: "#8b5cf6" },
-            { id: "standard", name: "Standard Seating", price: 1000, color: "#7DDA58" },
+            { id: "premium", name: "Industrial Seat", price: 20000, color: "#8b5cf6" },
+            { id: "standard", name: "Student Seat", price: 10000, color: "#7DDA58" },
             { id: "unavailable", name: "Unavailable", price: 0, color: "#D1D5DB" },
         ],
         seatAssignments: {
@@ -103,8 +103,8 @@ async function main() {
 
     const event = await prisma.event.create({
         data: {
-            title: 'Live Beauty Night',
-            description: "Perfect Beauty",
+            title: 'Career Fair and Exploration Day',
+            description: "Explore various career opportunities and meet potential employers.",
             type: 'offline',
             active_start_date: new Date('2025-08-31T19:00:00Z'),
             active_end_date: new Date('2025-08-31T22:00:00Z'),

@@ -28,7 +28,7 @@ const UpcomingEvents: React.FC<UpcomingEventsProps> = ({ events }) => {
                     {events.map((event) => {
                         const bannerImage =
                             event.images[0]?.url ||
-                            "https://placehold.co/400x300/cccccc/ffffff?text=Event";
+                            "https://raw.githubusercontent.com/fuisl/cfied25-ticket/main/src/assets/banner.jpg";
                         return (
                             // This link now points to the Event Details page
                             <Link
